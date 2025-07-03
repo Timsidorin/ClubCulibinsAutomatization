@@ -1,83 +1,159 @@
-<script setup>
-import { RouterLink, RouterView } from 'vue-router'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div id="app">
+    <div class="app-container">
+      <!-- Sidebar Navigation (Desktop) -->
+      <Sidebar 
+        :current-section="currentSection" 
+        @navigate="handleNavigation" 
+      />
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+      <!-- Main Content Area -->
+      <main class="main-content">
+        <MainHeader :current-section="currentSection" />
+        
+        <!-- Dynamic Component Rendering -->
+        <component 
+          :is="currentComponent" 
+          :data="appData"
+          @update-data="updateData"
+          @navigate="handleNavigation"
+        />
+      </main>
 
-      <nav>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+      <!-- Bottom Tab Bar Navigation (Mobile) -->
+      <BottomTabBar 
+        :current-section="currentSection" 
+        @navigate="handleNavigation" 
+      />
     </div>
-  </header>
 
-  <RouterView />
+    <!-- Confirmation Modal -->
+    <ConfirmationModal 
+      v-if="showModal"
+      :message="modalMessage"
+      @confirm="handleModalConfirm"
+      @cancel="handleModalCancel"
+    />
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
+<script>
+import { ref, computed, onMounted } from 'vue'
+import Sidebar from './components/Sidebar.vue'
+import MainHeader from './components/MainHeader.vue'
+import BottomTabBar from './components/BottomTabBar.vue'
+import ConfirmationModal from './components/ConfirmationModal.vue'
+import Dashboard from './components/Dashboard.vue'
+import Groups from './components/Groups.vue'
+import Teachers from './components/Teachers.vue'
+import Children from './components/Children.vue'
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
 
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
+export default {
+  name: 'App',
+  components: {
+    Sidebar,
+    MainHeader,
+    BottomTabBar,
+    ConfirmationModal,
+    Dashboard,
+    Groups,
+    Teachers,
+    Children,
+    
+  },
+  setup() {
+    const currentSection = ref('dashboard')
+    const showModal = ref(false)
+    const modalMessage = ref('')
+    const modalConfirmCallback = ref(null)
+    
+    const appData = ref({
+      groups: [],
+      teachers: [],
+      children: [],
+      activities: []
+    })
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
+    const currentComponent = computed(() => {
+      const components = {
+        dashboard: 'Dashboard',
+        groups: 'Groups',
+        teachers: 'Teachers',
+        children: 'Children'
+      }
+      return components[currentSection.value] || 'Dashboard'
+    })
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
+    const handleNavigation = (section) => {
+      currentSection.value = section
+    }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
+    const updateData = (newData) => {
+      appData.value = { ...appData.value, ...newData }
+    }
 
-nav a:first-of-type {
-  border: 0;
-}
+    const showConfirmationModal = (message, callback) => {
+      modalMessage.value = message
+      modalConfirmCallback.value = callback
+      showModal.value = true
+    }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
+    const handleModalConfirm = () => {
+      if (modalConfirmCallback.value) {
+        modalConfirmCallback.value()
+      }
+      showModal.value = false
+    }
+
+    const handleModalCancel = () => {
+      showModal.value = false
+    }
+
+    onMounted(() => {
+      // Load initial data
+      loadData()
+    })
+
+    const loadData = async () => {
+      // Simulate data loading
+      // Replace with actual API calls
+      appData.value = {
+        groups: [
+          { id: 1, name: 'Группа А', studentsCount: 15, teacher: 'Иванов И.И.' },
+          { id: 2, name: 'Группа Б', studentsCount: 12, teacher: 'Петрова П.П.' }
+        ],
+        teachers: [
+          { id: 1, name: 'Иванов Иван Иванович', email: 'ivanov@example.com', groups: ['Группа А'] },
+          { id: 2, name: 'Петрова Петра Петровна', email: 'petrova@example.com', groups: ['Группа Б'] }
+        ],
+        children: [
+          { id: 1, name: 'Алексей Смирнов', group: 'Группа А', coins: 150 },
+          { id: 2, name: 'Мария Козлова', group: 'Группа Б', coins: 200 }
+        ],
+        activities: [
+          { id: 1, text: 'Добавлен новый ребенок: Алексей Смирнов', timestamp: new Date() },
+          { id: 2, text: 'Создана новая группа: Группа А', timestamp: new Date() }
+        ]
+      }
+    }
+
+    return {
+      currentSection,
+      currentComponent,
+      appData,
+      showModal,
+      modalMessage,
+      handleNavigation,
+      updateData,
+      showConfirmationModal,
+      handleModalConfirm,
+      handleModalCancel
+    }
   }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
 }
+</script>
+
+<style>
+@import './assets/styles.css';
 </style>

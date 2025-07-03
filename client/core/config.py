@@ -12,7 +12,7 @@ class Configs(BaseSettings):
     PORT: int = 8002
     BOT_TOKEN: str = "7992576604:AAFSKMx88zXFk_Ba4Hhnl_i8BAU7CxscFhc"
     ADMIN_IDS: list[str] = ["1007781768"]
-    PUBLIC_URL: str =  "https://closely-kind-ribbonfish.cloudpub.ru"
+    PUBLIC_URL: str =  "https://reliably-precocious-hartebeest.cloudpub.ru"
 
 
     model_config = SettingsConfigDict(
