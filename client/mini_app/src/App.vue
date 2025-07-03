@@ -2,33 +2,37 @@
   <div id="app">
     <div class="app-container">
       <!-- Sidebar Navigation (Desktop) -->
-      <Sidebar 
-        :current-section="currentSection" 
-        @navigate="handleNavigation" 
+      <Sidebar
+        :current-section="currentSection"
+        @navigate="handleNavigation"
       />
 
       <!-- Main Content Area -->
       <main class="main-content">
-        <MainHeader :current-section="currentSection" />
-        
+        <MainHeader
+          :current-section="currentSection"
+          :telegram-user="telegramUser"
+        />
+
         <!-- Dynamic Component Rendering -->
-        <component 
-          :is="currentComponent" 
+        <component
+          :is="currentComponent"
           :data="appData"
+          :telegram-user="telegramUser"
           @update-data="updateData"
           @navigate="handleNavigation"
         />
       </main>
 
       <!-- Bottom Tab Bar Navigation (Mobile) -->
-      <BottomTabBar 
-        :current-section="currentSection" 
-        @navigate="handleNavigation" 
+      <BottomTabBar
+        :current-section="currentSection"
+        @navigate="handleNavigation"
       />
     </div>
 
     <!-- Confirmation Modal -->
-    <ConfirmationModal 
+    <ConfirmationModal
       v-if="showModal"
       :message="modalMessage"
       @confirm="handleModalConfirm"
@@ -48,7 +52,6 @@ import Groups from './components/Groups.vue'
 import Teachers from './components/Teachers.vue'
 import Children from './components/Children.vue'
 
-
 export default {
   name: 'App',
   components: {
@@ -59,15 +62,23 @@ export default {
     Dashboard,
     Groups,
     Teachers,
-    Children,
-    
+    Children
   },
   setup() {
     const currentSection = ref('dashboard')
     const showModal = ref(false)
     const modalMessage = ref('')
     const modalConfirmCallback = ref(null)
-    
+
+    // Данные пользователя Telegram
+    const telegramUser = ref({
+      id: null,
+      first_name: '',
+      last_name: '',
+      username: '',
+      photo_url: null
+    })
+
     const appData = ref({
       groups: [],
       teachers: [],
@@ -84,6 +95,45 @@ export default {
       }
       return components[currentSection.value] || 'Dashboard'
     })
+
+    const initTelegramWebApp = () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp
+
+        // Инициализация Web App
+        tg.ready()
+
+        // Получение данных пользователя
+        const user = tg.initDataUnsafe?.user
+        if (user) {
+          telegramUser.value = {
+            id: user.id,
+            first_name: user.first_name || '',
+            last_name: user.last_name || '',
+            username: user.username || '',
+            photo_url: user.photo_url || null
+          }
+        }
+
+        // Настройка темы приложения
+        if (tg.colorScheme === 'dark') {
+          document.body.classList.add('dark-theme')
+        }
+
+        tg.MainButton.setText('Сохранить')
+        tg.MainButton.hide()
+
+      } else {
+        // Для разработки вне Telegram
+        telegramUser.value = {
+          id: 123456789,
+          first_name: 'Тестовый',
+          last_name: 'Пользователь',
+          username: 'testuser',
+          photo_url: null
+        }
+      }
+    }
 
     const handleNavigation = (section) => {
       currentSection.value = section
@@ -111,13 +161,11 @@ export default {
     }
 
     onMounted(() => {
-      // Load initial data
+      initTelegramWebApp()
       loadData()
     })
 
     const loadData = async () => {
-      // Simulate data loading
-      // Replace with actual API calls
       appData.value = {
         groups: [
           { id: 1, name: 'Группа А', studentsCount: 15, teacher: 'Иванов И.И.' },
@@ -142,6 +190,7 @@ export default {
       currentSection,
       currentComponent,
       appData,
+      telegramUser,
       showModal,
       modalMessage,
       handleNavigation,
