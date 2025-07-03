@@ -37,7 +37,6 @@ export default {
       groups: 'Группы',
       teachers: 'Учителя',
       children: 'Дети',
-      statistics: 'Статистика'
     }
 
     return {

@@ -2,7 +2,7 @@
     <nav class="bottom-tab-bar">
       <ul>
         <li v-for="item in navigationItems" :key="item.section">
-          <a 
+          <a
             href="#"
             :class="['nav-link', { active: currentSection === item.section }]"
             @click.prevent="$emit('navigate', item.section)"
@@ -14,10 +14,10 @@
       </ul>
     </nav>
   </template>
-  
+
   <script>
   import { onMounted, onUpdated, nextTick } from 'vue'
-  
+
   export default {
     name: 'BottomTabBar',
     props: {
@@ -33,9 +33,8 @@
         { section: 'groups', title: 'Группы', icon: 'users' },
         { section: 'teachers', title: 'Учителя', icon: 'user-check' },
         { section: 'children', title: 'Дети', icon: 'smile' },
-        { section: 'statistics', title: 'Статистика', icon: 'bar-chart-2' }
       ]
-  
+
       const updateFeather = () => {
         nextTick(() => {
           if (window.feather) {
@@ -43,14 +42,13 @@
           }
         })
       }
-  
+
       onMounted(updateFeather)
       onUpdated(updateFeather)
-  
+
       return {
         navigationItems
       }
     }
   }
   </script>
-  

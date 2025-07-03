@@ -187,16 +187,15 @@ body {
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    background: var(--tg-blue-light);
-    border-radius: var(--border-radius-button);
     cursor: pointer;
-    transition: background-color var(--transition-speed);
     min-width: 0;
     max-width: 280px;
+    transition: all ease 0.3s;
 }
 
 .user-profile:hover {
     background-color: rgba(224, 242, 255, 0.8);
+    border-radius: 20px;
 }
 
 .user-avatar {

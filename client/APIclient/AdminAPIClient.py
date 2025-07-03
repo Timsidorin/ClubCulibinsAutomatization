@@ -7,5 +7,5 @@ class AdminAPIClient(BaseAPIClient):
         # response = await self._send_request(
         #     "GET", "/admin/reports/daily"
         # )
-        return False
-    # Пока false чтобы проверить логику
+        return True
+    # Пока чтобы проверить логику

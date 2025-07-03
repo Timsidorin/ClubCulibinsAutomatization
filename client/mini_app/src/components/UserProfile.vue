@@ -72,18 +72,12 @@ export default {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, var(--tg-blue-light) 0%, rgba(224, 242, 255, 0.5) 100%);
-  border-radius: var(--border-radius-button);
-  cursor: pointer;
-  transition: all var(--transition-speed);
-  border: 2px solid transparent;
   min-width: 0;
   max-width: 280px;
 }
 
 .user-profile:hover {
   transform: translateY(-2px);
-  border-color: var(--tg-blue);
 }
 
 .user-avatar {
@@ -134,14 +128,8 @@ export default {
   line-height: 1.3;
 }
 
-.user-id {
-  font-size: 12px;
-  color: var(--tg-text-light);
-  line-height: 1.2;
-  opacity: 0.8;
-}
 
-/* Планшеты */
+
 @media (max-width: 768px) {
   .user-profile {
     padding: 10px 12px;
