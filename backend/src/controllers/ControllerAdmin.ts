@@ -1,10 +1,11 @@
 import {ModelAdmin} from "../model/ModelAdmin";
-import {IAdmin, ICreateAdminResponse, IRegisterAdmin} from "../interfaces/IAdmin";
+import {IAdmin, IAnswerAdminResponse, IRegisterAdmin} from "../interfaces/IAdmin";
 
+//TODO: ПРОМИСЫ НА ОТВЕТЫ, КОГДА ЭТИ АПИХИ ПОНАДОБЯТСЯ
 export class ControllerAdmin {
     Admin: ModelAdmin = new ModelAdmin();
 
-    public async createAdmin(body: IAdmin): Promise<ICreateAdminResponse> {
+    public async createAdmin(body: IAdmin): Promise<IAnswerAdminResponse> {
         try {
             return await this.Admin.createAdmin(body);
         } catch (e: any) {

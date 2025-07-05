@@ -5,7 +5,7 @@ export interface IAdmin {
     lastName: string;
 }
 
-export interface ICreateAdminResponse {
+export interface IAnswerAdminResponse {
     code: number;
     message: string;
 }
@@ -13,9 +13,4 @@ export interface ICreateAdminResponse {
 export interface IRegisterAdmin {
     tgUsername: string;
     tgId: string;
-}
-
-export interface IRegisterAdminResponse {
-    code: number;
-    message: string;
 }

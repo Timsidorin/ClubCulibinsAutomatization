@@ -115,6 +115,127 @@
           }
         }
       }
+    },
+    "/teacher/create": {
+      "post": {
+        "tags": [
+          "Учитель"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Создание юзера",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "tgUsername": {
+                  "type": "string",
+                  "example": "@string"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "lastName": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "secondName": {
+                  "type": "string",
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/teacher/register": {
+      "patch": {
+        "tags": [
+          "Учитель"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Вставка tg Id",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "tgUsername": {
+                  "type": "string",
+                  "example": "@string"
+                },
+                "tgId": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/teacher/{tgId}": {
+      "get": {
+        "tags": [
+          "Учитель"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "tgId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Id telegram"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/teacher/get/all": {
+      "get": {
+        "tags": [
+          "Учитель"
+        ],
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
     }
   }
 }

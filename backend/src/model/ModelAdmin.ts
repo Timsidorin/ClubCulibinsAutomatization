@@ -2,17 +2,13 @@ import {Admin} from "../schemas/Admin";
 import {PersonalData} from "../schemas/PersonalData";
 import {
     IAdmin,
-    ICreateAdminResponse,
+    IAnswerAdminResponse,
     IRegisterAdmin,
-    IRegisterAdminResponse
 } from "../interfaces/IAdmin";
-import {sequelize} from "../config/database/database";
-import {QueryTypes} from "sequelize";
-
 
 export class ModelAdmin {
     //Создаем админа, без tg id
-    public async createAdmin(body: IAdmin): Promise<ICreateAdminResponse> {
+    public async createAdmin(body: IAdmin): Promise<IAnswerAdminResponse> {
         try {
             let newAdmin: Admin = await Admin.create(
                 {
@@ -34,7 +30,7 @@ export class ModelAdmin {
     }
 
     //Записываем в таблицу tg id
-    public async registerAdmin(body: IRegisterAdmin): Promise<IRegisterAdminResponse> {
+    public async registerAdmin(body: IRegisterAdmin): Promise<IAnswerAdminResponse> {
         try {
             await Admin.update(
                 {tgId: body.tgId,},
