@@ -7,7 +7,8 @@
     "dev": "nodemon src/app.ts",
     "build": "tsc",
     "start": "node dist/app.js",
-    "swagger": "ts-node src/config/swagger.ts"
+    "swagger": "ts-node src/config/swagger.ts",
+    "sync-database": "ts-node src/config/database/syncDatabase.ts"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
@@ -17,13 +18,16 @@
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.0",
+    "dotenv": "^17.0.1",
     "express": "^5.1.0",
-    "express-validator": "^7.2.1",
     "morgan": "^1.10.0",
     "nodemon": "^3.1.10",
+    "pg": "^8.16.3",
     "sequelize": "^6.37.7",
     "swagger-autogen": "^2.23.7",
     "swagger-ui-express": "^5.0.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "zod": "^3.25.74"
   }
 }

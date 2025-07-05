@@ -13,3 +13,5 @@
 ``npm run start`` - start build-version
 
 ``npm run swagger`` - generate docs
+
+``npm run sync-database`` - sync database
