@@ -267,7 +267,6 @@ export default {
       isLoading.value = true;
       errorMessage.value = '';
       const teacherData = newTeacher.value.toApiObject();
-      console.log(teacherData)
 
       try {
         if (isEditing.value) {
