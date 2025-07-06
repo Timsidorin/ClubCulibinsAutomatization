@@ -182,6 +182,28 @@
             "description": "Internal Server Error"
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Учитель"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "tgUsername",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
       }
     }
   }

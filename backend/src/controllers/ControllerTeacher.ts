@@ -27,4 +27,8 @@ export class ControllerTeacher {
     public async updateTeacher(data: ITeacher): Promise<IAnswerTeacher> {
         return await this.Teacher.updateTeacher(data);
     }
+
+    public async deleteTeacher(tgId: string): Promise<IAnswerTeacher> {
+        return await this.Teacher.deleteTeacher(tgId);
+    }
 }

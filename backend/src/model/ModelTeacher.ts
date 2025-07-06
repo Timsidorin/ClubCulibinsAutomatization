@@ -6,6 +6,7 @@ import {
     IGetAnswerTeacher,
     IGetAllTeacher
 } from "../interfaces/ITeacher";
+import {sequelize} from "../config/database/database";
 
 export class ModelTeacher {
     public async createTeacher(data: Omit<ITeacher, 'tgId'>): Promise<IAnswerTeacher> {
@@ -92,6 +93,31 @@ export class ModelTeacher {
                 })
             return {code: 200, message: 'Успешное обновление'};
         } catch (e: any) {
+            return {code: 500, message: 'Произошла ошибка'};
+        }
+    }
+
+    public async deleteTeacher(tgUsername: string): Promise<IAnswerTeacher> {
+        const transaction = await sequelize.transaction();
+        try {
+            const teacher = await Teacher.findOne({
+                where: { tgUsername },
+                transaction
+            });
+
+            if (!teacher) {
+                return {code: 500, message: 'Учитель не найден'};
+            }
+
+            let uuid: string = teacher?.dataValues.uuid ?? '';
+            await PersonalData.destroy({
+                where: { uuidUser: uuid },
+                transaction
+            });
+            await teacher.destroy({ transaction });
+            await transaction.commit();
+            return {code: 200, message: 'Учитель удален'};
+        } catch (error) {
             return {code: 500, message: 'Произошла ошибка'};
         }
     }

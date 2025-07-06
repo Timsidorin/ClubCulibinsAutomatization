@@ -109,5 +109,20 @@ router.put('/:tgUsername',  jsonParser, async (req: Request, res: Response) => {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 })
+router.delete('/:tgUsername', async (req: Request, res: Response) => {
+    /*
+    #swagger.tags = ['Учитель']
+    */
+    try {
+        let answer = await controllerTeacher.deleteTeacher(req.params.tgUsername);
+        if (answer.code === 200) {
+            res.status(200).send(answer);
+        } else {
+            res.status(500).send({message: answer});
+        }
+    } catch (e: any) {
+        res.status(500).send({message: JSON.parse(e.message)});
+    }
+})
 
 export default router;
