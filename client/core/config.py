@@ -10,14 +10,13 @@ class Configs(BaseSettings):
     # ------------ Веб-сервер ------------
     HOST: str = "localhost"
     PORT: int = 8002
-    BOT_TOKEN: str = "7992576604:AAFSKMx88zXFk_Ba4Hhnl_i8BAU7CxscFhc"
-    ADMIN_IDS: list[str] = ["1007781769"]
-    PUBLIC_URL: str =  "https://closely-kind-ribbonfish.cloudpub.ru"
-    API_URL:str = ""
+    BOT_TOKEN: Optional[str] = Field(default="TOKEN", env="BOT_TOKEN")
+    PUBLIC_URL: Optional[str] = Field(default="PUBLIC_URL", env="PUBLIC_URL")
+    API_URL: Optional[str] = Field(default="API_URL", env="API_URL")
 
 
     model_config = SettingsConfigDict(
-        env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+        env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "../..", ".env")
     )
 
 
