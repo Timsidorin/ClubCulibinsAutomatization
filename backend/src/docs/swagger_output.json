@@ -11,111 +11,6 @@
     "http"
   ],
   "paths": {
-    "/admin/create": {
-      "post": {
-        "tags": [
-          "Админка"
-        ],
-        "description": "",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "description": "Создание юзера",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "tgUsername": {
-                  "type": "string",
-                  "example": "@string"
-                },
-                "name": {
-                  "type": "string",
-                  "example": "string"
-                },
-                "lastName": {
-                  "type": "string",
-                  "example": "string"
-                },
-                "secondName": {
-                  "type": "string",
-                  "example": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/admin/register": {
-      "patch": {
-        "tags": [
-          "Админка"
-        ],
-        "description": "",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "description": "Вставка tg Id",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "tgUsername": {
-                  "type": "string",
-                  "example": "@string"
-                },
-                "tgId": {
-                  "type": "number",
-                  "example": 0
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/admin/{tgId}": {
-      "get": {
-        "tags": [
-          "Админка"
-        ],
-        "description": "",
-        "parameters": [
-          {
-            "name": "tgId",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "Id telegram"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
     "/teacher/create": {
       "post": {
         "tags": [
@@ -154,6 +49,9 @@
           "201": {
             "description": "Created"
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -187,8 +85,11 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Created"
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
           },
           "500": {
             "description": "Internal Server Error"
@@ -227,6 +128,52 @@
           "Учитель"
         ],
         "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/teacher/{tgUsername}": {
+      "put": {
+        "tags": [
+          "Учитель"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "tgUsername",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Обновление данных",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "lastName": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "secondName": {
+                  "type": "string",
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"

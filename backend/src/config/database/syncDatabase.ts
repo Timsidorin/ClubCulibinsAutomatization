@@ -1,5 +1,4 @@
 import { sequelize } from './database';
-import '../../schemas/Admin';
 import '../../schemas/PersonalData';
 import '../../schemas/Teacher';
 

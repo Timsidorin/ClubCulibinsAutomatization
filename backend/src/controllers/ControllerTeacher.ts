@@ -1,21 +1,19 @@
 import {ModelTeacher} from "../model/ModelTeacher";
 import {
-    ICreateTeacher,
-    IRegisterTeacher,
     IAnswerTeacher,
     IGetAnswerTeacher,
-    IGetAllTeacher
+    IGetAllTeacher, ITeacher
 } from "../interfaces/ITeacher";
 
 export class ControllerTeacher {
     Teacher: ModelTeacher = new ModelTeacher();
 
-    public async createTeacher(body: ICreateTeacher): Promise<IAnswerTeacher> {
-        return await this.Teacher.createTeacher(body)
+    public async createTeacher(body: Omit<ITeacher, 'tgId'>): Promise<IAnswerTeacher> {
+        return await this.Teacher.createTeacher(body);
     }
 
-    public async registerTeacher(body: IRegisterTeacher): Promise<IAnswerTeacher> {
-        return await this.Teacher.registerTeacher(body)
+    public async registerTeacher(body: Pick<ITeacher, 'tgId' | 'tgUsername'>): Promise<IAnswerTeacher> {
+        return await this.Teacher.registerTeacher(body);
     }
 
     public async getDataTeacher(tgId: string): Promise<IGetAnswerTeacher> {
@@ -24,5 +22,9 @@ export class ControllerTeacher {
 
     public async getAllTeacher(): Promise<IGetAllTeacher> {
         return await this.Teacher.getAllTeachers();
+    }
+
+    public async updateTeacher(data: ITeacher): Promise<IAnswerTeacher> {
+        return await this.Teacher.updateTeacher(data);
     }
 }

@@ -4,18 +4,11 @@ import bodyParser from "body-parser";
 import {ControllerTeacher} from "../controllers/ControllerTeacher";
 import {SchemasCreate, SchemasRegister}  from "../middleware/validator/schemas/Schemas";
 
-import cors from 'cors';
-
 const router: Router = Router();
 const controllerTeacher: ControllerTeacher = new ControllerTeacher();
 const jsonParser = bodyParser.json();
 
-let corsOptions = {
-    origin: ['http://localhost:8002', 'https://closely-kind-ribbonfish.cloudpub.ru'],
-    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-}
-
-router.post('/create', cors(corsOptions), jsonParser, async (req: Request, res: Response) => {
+router.post('/create',  jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учитель']
     #swagger.parameters['body'] = {
@@ -31,14 +24,18 @@ router.post('/create', cors(corsOptions), jsonParser, async (req: Request, res: 
     */
     try {
         const validate = SchemasCreate.parse(req.body);
-        await controllerTeacher.createTeacher(req.body);
-        res.status(201).send({message: "Учитель создан"});
+        let answer = await controllerTeacher.createTeacher(req.body);
+        if (answer.code === 201) {
+            res.status(201).send(answer);
+        } else {
+            res.status(400).send(answer);
+        }
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 
-})
-router.patch('/register', cors(corsOptions), jsonParser, async (req: Request, res: Response) => {
+});
+router.patch('/register', jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учитель']
     #swagger.parameters['body'] = {
@@ -52,13 +49,17 @@ router.patch('/register', cors(corsOptions), jsonParser, async (req: Request, re
 */
     try {
         const validate = SchemasRegister.parse(req.body);
-        await controllerTeacher.registerTeacher(req.body);
-        res.status(201).send({message: "Успешная регистрация"});
+        let answer = await controllerTeacher.registerTeacher(req.body);
+        if (answer.code === 200) {
+            res.status(200).send(answer);
+        } else {
+            res.status(400).send(answer);
+        }
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
-router.get('/:tgId', cors(corsOptions), async (req: Request, res: Response) => {
+});
+router.get('/:tgId', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учитель']
     #swagger.parameters['tgId'] = {
@@ -71,8 +72,8 @@ router.get('/:tgId', cors(corsOptions), async (req: Request, res: Response) => {
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
-router.get('/get/all', cors(corsOptions), async (req: Request, res: Response) => {
+});
+router.get('/get/all', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учитель']
     */
@@ -81,6 +82,31 @@ router.get('/get/all', cors(corsOptions), async (req: Request, res: Response) =>
         res.status(200).send({data: allTeachers});
     } catch (e: any) {
         res.status(500).send({data: JSON.parse(e.message)});
+    }
+});
+router.put('/:tgUsername',  jsonParser, async (req: Request, res: Response) => {
+    /*
+    #swagger.tags = ['Учитель']
+    #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Обновление данных',
+        schema: {
+            name: 'string',
+            lastName: 'string',
+            secondName: 'string',
+        }
+    }
+*/
+    try {
+        let data = {...req.body, tgUsername: req.params.tgUsername};
+        let answer = await controllerTeacher.updateTeacher(data);
+        if (answer.code === 200) {
+            res.status(200).send(answer);
+        } else {
+            res.status(500).send(answer);
+        }
+    } catch (e: any) {
+        res.status(500).send({message: JSON.parse(e.message)});
     }
 })
 

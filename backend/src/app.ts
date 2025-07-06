@@ -2,7 +2,7 @@ import express, { Express } from 'express';
 import { useRouter } from "./routes";
 import { sequelize } from "./config/database/database";
 import { setupAssociations } from "./schemas/Associations";
-import cors from 'cors'; // Импортируем cors
+import cors from 'cors';
 
 async function startServer() {
     try {
@@ -14,9 +14,8 @@ async function startServer() {
         const app: Express = express();
         const port = 3000;
 
-        // Применяем CORS глобально для всех маршрутов и типов запросов
         app.use(cors({
-            origin: '*', // Разрешаем все источники (для разработки)
+            origin: '*',
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization']
         }));

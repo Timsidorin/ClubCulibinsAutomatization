@@ -1,15 +1,14 @@
 import {Teacher} from "../schemas/Teacher";
 import {PersonalData} from "../schemas/PersonalData";
 import {
-    ICreateTeacher,
+    ITeacher,
     IAnswerTeacher,
-    IRegisterTeacher,
     IGetAnswerTeacher,
     IGetAllTeacher
 } from "../interfaces/ITeacher";
 
 export class ModelTeacher {
-    public async createTeacher(data: ICreateTeacher): Promise<IAnswerTeacher> {
+    public async createTeacher(data: Omit<ITeacher, 'tgId'>): Promise<IAnswerTeacher> {
         try {
             let newTeacher: Teacher = await Teacher.create({
                 tgUsername: data.tgUsername,
@@ -26,7 +25,7 @@ export class ModelTeacher {
         }
     }
 
-    public async registerTeacher(data: IRegisterTeacher): Promise<IAnswerTeacher> {
+    public async registerTeacher(data: Pick<ITeacher, 'tgId' | 'tgUsername'>): Promise<IAnswerTeacher> {
         try {
             await Teacher.update(
                 {tgId: data.tgId,},
@@ -75,6 +74,25 @@ export class ModelTeacher {
             return { code: 200, data: allTeacher };
         } catch (e: any) {
             return { code: e.parent.code, data: e.errors[0].path };
+        }
+    }
+
+    public async updateTeacher(data: ITeacher): Promise<IAnswerTeacher> {
+        try {
+            let userData = await Teacher.findOne({
+                where: {tgUsername: data.tgUsername}
+            });
+            let uuid: string = userData?.dataValues.uuid ?? '';
+            let test = await PersonalData.update(
+                {...data},
+                {
+                    where: {
+                        uuidUser: uuid
+                    }
+                })
+            return {code: 200, message: 'Успешное обновление'};
+        } catch (e: any) {
+            return {code: 500, message: 'Произошла ошибка'};
         }
     }
 }

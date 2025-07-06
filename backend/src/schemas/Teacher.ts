@@ -5,6 +5,7 @@ export class Teacher extends Model {
     declare uuid: string;
     declare tgId: string;
     declare tgUsername: string;
+    declare isAdmin: boolean;
 }
 
 Teacher.init(
@@ -22,6 +23,10 @@ Teacher.init(
         tgUsername: {
             type: DataTypes.STRING,
             unique: true,
+        },
+        isAdmin: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         }
     },
     {

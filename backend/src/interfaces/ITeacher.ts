@@ -1,6 +1,7 @@
 import {Teacher} from "../schemas/Teacher";
 
-export interface ICreateTeacher {
+export interface ITeacher {
+    tgId: string;
     tgUsername: string;
     name: string;
     secondName: string;
@@ -10,11 +11,6 @@ export interface ICreateTeacher {
 export interface IAnswerTeacher {
     code: number;
     message: string;
-}
-
-export interface IRegisterTeacher {
-    tgId: string;
-    tgUsername: string;
 }
 
 export interface IGetAnswerTeacher {
