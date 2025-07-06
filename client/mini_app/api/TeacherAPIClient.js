@@ -3,12 +3,12 @@ import ApiClient from './BaseAPIClient'
 class TeacherAPIClient extends ApiClient {
     constructor() {
         super();
-        this.endpoint = '/teachers';
+        this.endpoint = '/teacher';
     }
 
-    
+
     async getAllTeachers() {
-        return await this.get(this.endpoint);
+        return await this.get(`${this.endpoint}/get/all`);
     }
 
     // Получить учителя по ID
@@ -18,7 +18,7 @@ class TeacherAPIClient extends ApiClient {
 
     // Создать нового учителя
     async createTeacher(teacherData) {
-        return await this.post(this.endpoint, teacherData);
+        return await this.post(`${this.endpoint}/create`, teacherData);
     }
 
     // Обновить данные учителя
@@ -44,8 +44,8 @@ class TeacherAPIClient extends ApiClient {
 
     // Активировать/деактивировать учителя
     async toggleTeacherStatus(teacherId, isActive) {
-        return await this.put(`${this.endpoint}/${teacherId}/status`, { 
-            is_active: isActive 
+        return await this.put(`${this.endpoint}/${teacherId}/status`, {
+            is_active: isActive
         });
     }
 

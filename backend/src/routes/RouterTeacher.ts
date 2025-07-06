@@ -11,7 +11,7 @@ const controllerTeacher: ControllerTeacher = new ControllerTeacher();
 const jsonParser = bodyParser.json();
 
 let corsOptions = {
-    origin: ['http://localhost:8002', 'https://closely-kind-ribbonfish.cloudpub.ru/'],
+    origin: ['http://localhost:8002', 'https://closely-kind-ribbonfish.cloudpub.ru'],
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
 

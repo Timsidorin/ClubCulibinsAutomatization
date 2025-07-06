@@ -6,14 +6,12 @@ export class Teacher {
     lastName = '',
     middleName = '',
     telegramUsername = '',
-    email = '',
   } = {}) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
     this.middleName = middleName;
     this.telegramUsername = telegramUsername;
-    this.email = email;
   }
 
   // Геттер для полного имени
@@ -23,28 +21,26 @@ export class Teacher {
       .join(' ');
   }
 
-  // Метод для преобразования в объект для API
+  // Метод для преобразования в объект для API (на создание/обновление)
   toApiObject() {
     return {
-      id: this.id,
-      first_name: this.firstName,
-      last_name: this.lastName,
-      middle_name: this.middleName,
-      telegram_username: this.telegramUsername,
-      email: this.email,
+      tgUsername: this.telegramUsername.startsWith('@') ? this.telegramUsername : `@${this.telegramUsername}`,
+      name: this.firstName,
+      lastName: this.lastName,
+      secondName: this.middleName
     };
   }
 
-  // Статический метод для создания из API-ответа
+  // Статический метод для создания из API-ответа (возврат всех учителей)
   static fromApiObject(apiData) {
+    // Учитываем вложенную структуру PersonalDatum
+    const personalData = apiData.PersonalDatum || {};
     return new Teacher({
-      id: apiData.id,
-      firstName: apiData.first_name || '',
-      lastName: apiData.last_name || '',
-      middleName: apiData.middle_name || '',
-      telegramUsername: apiData.telegram_username || '',
-      email: apiData.email || '',
-      groups: apiData.groups || []
+      id: apiData.uuid,
+      firstName: personalData.name || '',
+      lastName: personalData.lastName || '',
+      middleName: personalData.secondName || '',
+      telegramUsername: apiData.tgUsername || ''
     });
   }
 }
