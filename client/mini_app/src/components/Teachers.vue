@@ -149,16 +149,15 @@ import { Teacher } from '../../models/Teacher';
 export default {
   name: 'Teachers',
   setup() {
-    const apiClient = new TeacherAPIClient(); // Создаем экземпляр API-клиента
-    const teachers = ref([]); // Список учителей
-    const isLoading = ref(false); // Индикатор загрузки
-    const showModal = ref(false); // Управление модальным окном
-    const isEditing = ref(false); // Режим редактирования
-    const currentTeacherId = ref(null); // ID редактируемого учителя
-    const usernameError = ref(''); // Ошибка валидации username
-    const errorMessage = ref(''); // Общее сообщение об ошибке
+    const apiClient = new TeacherAPIClient();
+    const isLoading = ref(false);
+    const showModal = ref(false);
+    const isEditing = ref(false);
+    const currentTeacherId = ref(null);
+    const usernameError = ref('');
+    const errorMessage = ref('');
 
-    const newTeacher = ref(new Teacher()); // Инициализируем как новый экземпляр класса Teacher
+    const newTeacher = ref(new Teacher());
 
     const isFormValid = computed(() => {
       return (
@@ -176,15 +175,13 @@ export default {
       try {
         const response = await apiClient.getAllTeachers();
         console.log("Ответ от API:", response);
-
-        // Проверяем структуру ответа
         let teachersData = [];
         if (response && response.data && Array.isArray(response.data)) {
-          teachersData = response.data; // Если { data: [...] }
+          teachersData = response.data;
         } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          teachersData = response.data.data; // Если { data: { data: [...] } }
+          teachersData = response.data.data;
         } else if (Array.isArray(response)) {
-          teachersData = response; // Если массив напрямую
+          teachersData = response;
         } else {
           console.error("Некорректная структура ответа API:", response);
           teachersData = [];
@@ -200,7 +197,7 @@ export default {
       } catch (error) {
         console.error('Ошибка при загрузке учителей:', error);
         errorMessage.value = 'Не удалось загрузить список учителей. Попробуйте позже.';
-        teachers.value = []; // Сбрасываем список в случае ошибки
+        teachers.value = [];
       } finally {
         isLoading.value = false;
       }
@@ -242,13 +239,12 @@ export default {
       resetForm();
     };
 
-    // Сброс формы
+
     const resetForm = () => {
-      newTeacher.value = new Teacher(); // Сбрасываем на новый пустой экземпляр Teacher
+      newTeacher.value = new Teacher();
       usernameError.value = '';
     };
 
-    // Валидация Telegram username
     const validateUsername = async () => {
       const username = newTeacher.value.telegramUsername;
       if (username.startsWith('@')) {
@@ -261,22 +257,7 @@ export default {
         return;
       }
 
-      // Проверка уникальности username (только если не редактируем текущего учителя)
-      if (!isEditing.value || teachers.value.some(t => t.id !== currentTeacherId.value && t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase())) {
-        try {
-          const response = await apiClient.getTeacherByTelegramUsername(newTeacher.value.telegramUsername);
-          if (response.data) {
-            usernameError.value = 'Этот username уже используется другим учителем';
-          } else {
-            usernameError.value = '';
-          }
-        } catch (error) {
-          usernameError.value = '';
-          console.error('Ошибка при проверке username:', error);
-        }
-      } else {
-        usernameError.value = '';
-      }
+
     };
 
     // Отправка данных учителя (создание или обновление)
@@ -285,8 +266,8 @@ export default {
 
       isLoading.value = true;
       errorMessage.value = '';
-      // Преобразуем данные учителя в формат для API
       const teacherData = newTeacher.value.toApiObject();
+      console.log(teacherData)
 
       try {
         if (isEditing.value) {
@@ -333,9 +314,7 @@ export default {
       });
     };
 
-    // Загружаем данные при монтировании компонента
     onMounted(() => {
-      console.log("=== Teachers onMounted ===");
       fetchTeachers();
       updateFeather();
     });
@@ -363,7 +342,6 @@ export default {
 </script>
 
 <style scoped>
-/* Стили остаются без изменений */
 .teachers {
   width: 100%;
 }
