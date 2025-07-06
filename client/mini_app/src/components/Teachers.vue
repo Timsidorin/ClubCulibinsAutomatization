@@ -2,30 +2,35 @@
   <div class="teachers">
     <div class="section-header">
       <h2>Управление учителями</h2>
-      <button class="btn btn-primary" @click="addNewTeacher">
+      <button class="btn btn-primary" @click="addNewTeacher" :disabled="isLoading">
         <i data-feather="plus"></i>
         Добавить учителя
       </button>
     </div>
 
-    <div class="card-grid teacher-grid">
+    <div v-if="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Загрузка данных...</p>
+    </div>
+
+    <div v-else class="card-grid teacher-grid">
       <div
-        v-for="teacher in data.teachers"
+        v-for="teacher in teachers"
         :key="teacher.id"
         class="card teacher-card"
       >
         <div class="teacher-info">
-          <h4>{{ teacher.name }}</h4>
+          <h4>{{ teacher.fullName }}</h4>
           <p>Username: @{{ teacher.telegramUsername }}</p>
           <p v-if="teacher.email">Email: {{ teacher.email }}</p>
-          <p>Группы: {{ teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}</p>
+          <p>Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}</p>
         </div>
         <div class="actions">
-          <button class="btn btn-secondary" @click="editTeacher(teacher)">
+          <button class="btn btn-secondary" @click="editTeacher(teacher)" :disabled="isLoading">
             <i data-feather="edit-2"></i>
             Редактировать
           </button>
-          <button class="btn btn-danger" @click="deleteTeacher(teacher)">
+          <button class="btn btn-danger" @click="deleteTeacher(teacher)" :disabled="isLoading">
             <i data-feather="trash-2"></i>
             Удалить
           </button>
@@ -34,23 +39,23 @@
     </div>
 
     <!-- Пустое состояние -->
-    <div class="empty-state" v-if="data.teachers.length === 0">
+    <div class="empty-state" v-if="!isLoading && teachers.length === 0">
       <div class="empty-icon">
         <i data-feather="user-check"></i>
       </div>
       <h3>Пока нет учителей</h3>
       <p>Добавьте первого учителя для начала работы</p>
-      <button class="btn btn-primary" @click="addNewTeacher">
+      <button class="btn btn-primary" @click="addNewTeacher" :disabled="isLoading">
         <i data-feather="plus"></i>
         Добавить первого учителя
       </button>
     </div>
 
-    <!-- Модальное окно для добавления учителя -->
+    <!-- Модальное окно для добавления/редактирования учителя -->
     <div v-if="showModal" class="modal" @click.self="closeModal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>Добавить нового учителя</h3>
+          <h3>{{ isEditing ? 'Редактировать учителя' : 'Добавить нового учителя' }}</h3>
           <button class="close-btn" @click="closeModal">
             <i data-feather="x"></i>
           </button>
@@ -126,8 +131,8 @@
             <button type="button" class="btn btn-secondary" @click="closeModal">
               Отмена
             </button>
-            <button type="submit" class="btn btn-primary" :disabled="!isFormValid">
-              Добавить учителя
+            <button type="submit" class="btn btn-primary" :disabled="!isFormValid || isLoading">
+              {{ isEditing ? 'Сохранить изменения' : 'Добавить учителя' }}
             </button>
           </div>
         </form>
@@ -137,137 +142,207 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUpdated, nextTick } from 'vue'
+import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
+import TeacherAPIClient from '../../api/TeacherAPIClient';
+import { Teacher } from '../../models/Teacher';
 
 export default {
   name: 'Teachers',
-  props: {
-    data: {
-      type: Object,
-      required: true
-    }
-  },
-  emits: ['update-data'],
-  setup(props, { emit }) {
-    const showModal = ref(false)
-    const usernameError = ref('')
+  setup() {
+    const apiClient = new TeacherAPIClient(); // Создаем экземпляр API-клиента
+    const teachers = ref([]); // Список учителей
+    const isLoading = ref(false); // Индикатор загрузки
+    const showModal = ref(false); // Управление модальным окном
+    const isEditing = ref(false); // Режим редактирования
+    const currentTeacherId = ref(null); // ID редактируемого учителя
+    const usernameError = ref(''); // Ошибка валидации username
+    const errorMessage = ref(''); // Общее сообщение об ошибке
 
-    const newTeacher = ref({
-      lastName: '',
-      firstName: '',
-      middleName: '',
-      telegramUsername: '',
-      email: ''
-    })
+    const newTeacher = ref(new Teacher()); // Инициализируем как новый экземпляр класса Teacher
 
     const isFormValid = computed(() => {
-      return newTeacher.value.lastName.trim() &&
-             newTeacher.value.firstName.trim() &&
-             newTeacher.value.telegramUsername.trim() &&
-             !usernameError.value
-    })
+      return (
+        newTeacher.value.lastName.trim() &&
+        newTeacher.value.firstName.trim() &&
+        newTeacher.value.telegramUsername.trim() &&
+        !usernameError.value
+      );
+    });
 
+    // Загрузка списка учителей
+    const fetchTeachers = async () => {
+      isLoading.value = true;
+      errorMessage.value = '';
+      try {
+        const response = await apiClient.getAllTeachers();
+        // Преобразуем данные из API в экземпляры класса Teacher
+        teachers.value = (response.data || []).map(teacherData => Teacher.fromApiObject(teacherData));
+      } catch (error) {
+        console.error('Ошибка при загрузке учителей:', error);
+        errorMessage.value = 'Не удалось загрузить список учителей. Попробуйте позже.';
+        teachers.value = []; // Сбрасываем список в случае ошибки
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    // Открытие формы для добавления нового учителя
     const addNewTeacher = () => {
-      showModal.value = true
-      resetForm()
-    }
+      showModal.value = true;
+      isEditing.value = false;
+      currentTeacherId.value = null;
+      resetForm();
+    };
 
-    const closeModal = () => {
-      showModal.value = false
-      resetForm()
-    }
-
-    const resetForm = () => {
-      newTeacher.value = {
-        lastName: '',
-        firstName: '',
-        middleName: '',
-        telegramUsername: '',
-        email: ''
-      }
-      usernameError.value = ''
-    }
-
-    const validateUsername = () => {
-      const username = newTeacher.value.telegramUsername
-
-      // Убираем @ если пользователь ввел его
-      if (username.startsWith('@')) {
-        newTeacher.value.telegramUsername = username.slice(1)
-      }
-
-      // Проверяем валидность username
-      const usernameRegex = /^[a-zA-Z0-9_]{5,32}$/
-      if (username && !usernameRegex.test(newTeacher.value.telegramUsername)) {
-        usernameError.value = 'Username должен содержать 5-32 символа (буквы, цифры, _)'
-      } else {
-        usernameError.value = ''
-      }
-    }
-
-    const submitTeacher = () => {
-      if (!isFormValid.value) return
-
-      const fullName = [
-        newTeacher.value.lastName,
-        newTeacher.value.firstName,
-        newTeacher.value.middleName
-      ].filter(Boolean).join(' ')
-
-      const teacher = {
-        id: Date.now(),
-        name: fullName,
-        email: newTeacher.value.email || '',
-        telegramUsername: newTeacher.value.telegramUsername,
-        groups: []
-      }
-
-      const updatedTeachers = [...props.data.teachers, teacher]
-      emit('update-data', { teachers: updatedTeachers })
-
-      closeModal()
-      console.log('Добавлен новый учитель:', teacher)
-    }
-
+    // Открытие формы для редактирования учителя
     const editTeacher = (teacher) => {
-      console.log('Editing teacher:', teacher)
-    }
+      isEditing.value = true;
+      currentTeacherId.value = teacher.id;
+      // Копируем данные учителя в форму
+      newTeacher.value = new Teacher({
+        id: teacher.id,
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
+        middleName: teacher.middleName,
+        telegramUsername: teacher.telegramUsername,
+        email: teacher.email
+      });
+      showModal.value = true;
+    };
 
-    const deleteTeacher = (teacher) => {
-      if (confirm(`Вы уверены, что хотите удалить учителя "${teacher.name}"?`)) {
-        const updatedTeachers = props.data.teachers.filter(t => t.id !== teacher.id)
-        emit('update-data', { teachers: updatedTeachers })
+    // Закрытие модального окна
+    const closeModal = () => {
+      if (
+        (newTeacher.value.lastName || newTeacher.value.firstName || newTeacher.value.telegramUsername) &&
+        !confirm('Вы уверены, что хотите закрыть форму? Все данные будут потеряны.')
+      ) {
+        return;
       }
-    }
+      showModal.value = false;
+      resetForm();
+    };
 
+    // Сброс формы
+    const resetForm = () => {
+      newTeacher.value = new Teacher(); // Сбрасываем на новый пустой экземпляр Teacher
+      usernameError.value = '';
+    };
+
+    // Валидация Telegram username
+    const validateUsername = async () => {
+      const username = newTeacher.value.telegramUsername;
+      if (username.startsWith('@')) {
+        newTeacher.value.telegramUsername = username.slice(1);
+      }
+
+      const usernameRegex = /^[a-zA-Z0-9_]{5,32}$/;
+      if (username && !usernameRegex.test(newTeacher.value.telegramUsername)) {
+        usernameError.value = 'Username должен содержать 5-32 символа (буквы, цифры, _)';
+        return;
+      }
+
+      // Проверка уникальности username (только если не редактируем текущего учителя)
+      if (!isEditing.value || teachers.value.some(t => t.id !== currentTeacherId.value && t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase())) {
+        try {
+          const response = await apiClient.getTeacherByTelegramUsername(newTeacher.value.telegramUsername);
+          if (response.data) {
+            usernameError.value = 'Этот username уже используется другим учителем';
+          } else {
+            usernameError.value = '';
+          }
+        } catch (error) {
+          usernameError.value = '';
+          console.error('Ошибка при проверке username:', error);
+        }
+      } else {
+        usernameError.value = '';
+      }
+    };
+
+    // Отправка данных учителя (создание или обновление)
+    const submitTeacher = async () => {
+      if (!isFormValid.value) return;
+
+      isLoading.value = true;
+      errorMessage.value = '';
+      // Преобразуем данные учителя в формат для API
+      const teacherData = newTeacher.value.toApiObject();
+
+      try {
+        if (isEditing.value) {
+          await apiClient.updateTeacher(currentTeacherId.value, teacherData);
+          console.log('Учитель обновлен:', teacherData);
+        } else {
+          await apiClient.createTeacher(teacherData);
+          console.log('Учитель добавлен:', teacherData);
+        }
+        await fetchTeachers(); // Обновляем список после изменения
+        closeModal();
+      } catch (error) {
+        console.error('Ошибка при сохранении учителя:', error);
+        errorMessage.value = 'Не удалось сохранить данные учителя. Попробуйте снова.';
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    // Удаление учителя
+    const deleteTeacher = async (teacher) => {
+      if (confirm(`Вы уверены, что хотите удалить учителя "${teacher.fullName}"?`)) {
+        isLoading.value = true;
+        errorMessage.value = '';
+        try {
+          await apiClient.deleteTeacher(teacher.id);
+          await fetchTeachers(); // Обновляем список после удаления
+          console.log('Учитель удален:', teacher);
+        } catch (error) {
+          console.error('Ошибка при удалении учителя:', error);
+          errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
+        } finally {
+          isLoading.value = false;
+        }
+      }
+    };
+
+    // Обновление иконок Feather
     const updateFeather = () => {
       nextTick(() => {
         if (window.feather) {
-          window.feather.replace()
+          window.feather.replace();
         }
-      })
-    }
+      });
+    };
 
-    onMounted(updateFeather)
-    onUpdated(updateFeather)
+    // Загружаем данные при монтировании компонента
+    onMounted(() => {
+      fetchTeachers();
+      updateFeather();
+    });
+
+    onUpdated(updateFeather);
 
     return {
+      teachers,
+      isLoading,
       showModal,
+      isEditing,
       newTeacher,
       usernameError,
       isFormValid,
+      errorMessage,
       addNewTeacher,
       closeModal,
       submitTeacher,
       validateUsername,
       editTeacher,
       deleteTeacher
-    }
+    };
   }
-}
+};
 </script>
 
 <style scoped>
+/* Стили остаются без изменений */
 .teachers {
   width: 100%;
 }
@@ -430,6 +505,7 @@ export default {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
+  overflow: hidden;
   justify-content: center;
   align-items: center;
   z-index: 1000;
@@ -441,7 +517,6 @@ export default {
   box-shadow: var(--box-shadow-hover);
   width: 90%;
   max-width: 500px;
-  max-height: 90vh;
   overflow-y: auto;
 }
 
@@ -610,12 +685,44 @@ export default {
   .modal-content {
     width: 100%;
     height: 100%;
-    border-radius: 0;
-    max-height: none;
+    border-radius: 0
   }
 
   .teacher-form {
     padding: 16px;
   }
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: var(--tg-card-bg);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--box-shadow-card);
+  width: 100%;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--tg-border);
+  border-top: 5px solid var(--tg-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: var(--tg-text-light);
+  font-size: 1em;
 }
 </style>
