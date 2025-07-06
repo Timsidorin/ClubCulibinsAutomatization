@@ -21,7 +21,7 @@
       >
         <div class="teacher-info">
           <h4>{{ teacher.fullName }}</h4>
-          <p>Username: @{{ teacher.telegramUsername }}</p>
+          <p>telegram: {{ teacher.telegramUsername }}</p>
           <p v-if="teacher.email">Email: {{ teacher.email }}</p>
           <p>Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}</p>
         </div>
@@ -149,15 +149,16 @@ import { Teacher } from '../../models/Teacher';
 export default {
   name: 'Teachers',
   setup() {
-    const apiClient = new TeacherAPIClient();
-    const isLoading = ref(false);
-    const showModal = ref(false);
-    const isEditing = ref(false);
-    const currentTeacherId = ref(null);
-    const usernameError = ref('');
-    const errorMessage = ref('');
+    const apiClient = new TeacherAPIClient(); // Создаем экземпляр API-клиента
+    const teachers = ref([]); // Список учителей
+    const isLoading = ref(false); // Индикатор загрузки
+    const showModal = ref(false); // Управление модальным окном
+    const isEditing = ref(false); // Режим редактирования
+    const currentTeacherId = ref(null); // ID редактируемого учителя
+    const usernameError = ref(''); // Ошибка валидации username
+    const errorMessage = ref(''); // Общее сообщение об ошибке
 
-    const newTeacher = ref(new Teacher());
+    const newTeacher = ref(new Teacher()); // Инициализируем как новый экземпляр класса Teacher
 
     const isFormValid = computed(() => {
       return (
@@ -173,15 +174,21 @@ export default {
       isLoading.value = true;
       errorMessage.value = '';
       try {
+        console.log("=== Начало загрузки учителей ===");
         const response = await apiClient.getAllTeachers();
         console.log("Ответ от API:", response);
+
+        // Проверяем структуру ответа
         let teachersData = [];
         if (response && response.data && Array.isArray(response.data)) {
-          teachersData = response.data;
+          teachersData = response.data; // Если { data: [...] }
+          console.log("Данные извлечены из response.data:", teachersData);
         } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          teachersData = response.data.data;
+          teachersData = response.data.data; // Если { data: { data: [...] } }
+          console.log("Данные извлечены из response.data.data:", teachersData);
         } else if (Array.isArray(response)) {
-          teachersData = response;
+          teachersData = response; // Если массив напрямую
+          console.log("Данные извлечены напрямую из response:", teachersData);
         } else {
           console.error("Некорректная структура ответа API:", response);
           teachersData = [];
@@ -189,17 +196,25 @@ export default {
         }
 
         if (Array.isArray(teachersData)) {
-          teachers.value = teachersData.map(teacherData => Teacher.fromApiObject(teacherData));
+          teachers.value = teachersData.map(teacherData => {
+            console.log("Преобразование данных учителя:", teacherData);
+            return Teacher.fromApiObject(teacherData);
+          });
+          console.log("Список учителей установлен:", teachers.value);
         } else {
           teachers.value = [];
           errorMessage.value = 'Получены некорректные данные от сервера.';
         }
       } catch (error) {
         console.error('Ошибка при загрузке учителей:', error);
+        if (error.response) {
+          console.error('Ответ сервера (ошибка):', error.response);
+        }
         errorMessage.value = 'Не удалось загрузить список учителей. Попробуйте позже.';
-        teachers.value = [];
+        teachers.value = []; // Сбрасываем список в случае ошибки
       } finally {
         isLoading.value = false;
+        console.log("=== Загрузка учителей завершена ===");
       }
     };
 
@@ -239,12 +254,13 @@ export default {
       resetForm();
     };
 
-
+    // Сброс формы
     const resetForm = () => {
-      newTeacher.value = new Teacher();
+      newTeacher.value = new Teacher(); // Сбрасываем на новый пустой экземпляр Teacher
       usernameError.value = '';
     };
 
+    // Валидация Telegram username
     const validateUsername = async () => {
       const username = newTeacher.value.telegramUsername;
       if (username.startsWith('@')) {
@@ -257,7 +273,27 @@ export default {
         return;
       }
 
-
+      // Проверка уникальности username (только если не редактируем текущего учителя)
+      if (!isEditing.value || teachers.value.some(t => t.id !== currentTeacherId.value && t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase())) {
+        try {
+          console.log("Проверка уникальности username:", newTeacher.value.telegramUsername);
+          const response = await apiClient.getTeacherByTelegramUsername(newTeacher.value.telegramUsername);
+          console.log("Ответ на проверку username:", response);
+          if (response.data) {
+            usernameError.value = 'Этот username уже используется другим учителем';
+          } else {
+            usernameError.value = '';
+          }
+        } catch (error) {
+          usernameError.value = '';
+          console.error('Ошибка при проверке username:', error);
+          if (error.response) {
+            console.error('Ответ сервера (ошибка проверки username):', error.response);
+          }
+        }
+      } else {
+        usernameError.value = '';
+      }
     };
 
     // Отправка данных учителя (создание или обновление)
@@ -266,21 +302,32 @@ export default {
 
       isLoading.value = true;
       errorMessage.value = '';
+      // Преобразуем данные учителя в формат для API
       const teacherData = newTeacher.value.toApiObject();
+      console.log("Данные для отправки на сервер:", teacherData);
 
       try {
         if (isEditing.value) {
-          await apiClient.updateTeacher(currentTeacherId.value, teacherData);
-          console.log('Учитель обновлен:', teacherData);
+          console.log("Обновление учителя с ID:", currentTeacherId.value);
+          const response = await apiClient.updateTeacher(currentTeacherId.value, teacherData);
+          console.log('Учитель обновлен, ответ сервера:', response);
         } else {
-          await apiClient.createTeacher(teacherData);
-          console.log('Учитель добавлен:', teacherData);
+          console.log("Создание нового учителя");
+          const response = await apiClient.createTeacher(teacherData);
+          console.log('Учитель добавлен, ответ сервера:', response);
         }
         await fetchTeachers(); // Обновляем список после изменения
         closeModal();
       } catch (error) {
         console.error('Ошибка при сохранении учителя:', error);
-        errorMessage.value = 'Не удалось сохранить данные учителя. Попробуйте снова.';
+        if (error.response) {
+          console.error('Ответ сервера (ошибка сохранения):', error.response);
+          errorMessage.value = `Ошибка: ${error.response.data?.message || 'Не удалось сохранить данные учителя.'}`;
+        } else if (error.code === 'ERR_NETWORK') {
+          errorMessage.value = 'Ошибка сети: сервер недоступен или блокирует запросы (CORS).';
+        } else {
+          errorMessage.value = 'Не удалось сохранить данные учителя. Попробуйте снова.';
+        }
       } finally {
         isLoading.value = false;
       }
@@ -292,11 +339,15 @@ export default {
         isLoading.value = true;
         errorMessage.value = '';
         try {
-          await apiClient.deleteTeacher(teacher.id);
+          console.log("Удаление учителя с ID:", teacher.id);
+          const response = await apiClient.deleteTeacher(teacher.id);
+          console.log('Учитель удален, ответ сервера:', response);
           await fetchTeachers(); // Обновляем список после удаления
-          console.log('Учитель удален:', teacher);
         } catch (error) {
           console.error('Ошибка при удалении учителя:', error);
+          if (error.response) {
+            console.error('Ответ сервера (ошибка удаления):', error.response);
+          }
           errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
         } finally {
           isLoading.value = false;
@@ -313,7 +364,9 @@ export default {
       });
     };
 
+    // Загружаем данные при монтировании компонента
     onMounted(() => {
+      console.log("=== Teachers onMounted ===");
       fetchTeachers();
       updateFeather();
     });
@@ -339,6 +392,8 @@ export default {
   }
 };
 </script>
+
+
 
 <style scoped>
 .teachers {
