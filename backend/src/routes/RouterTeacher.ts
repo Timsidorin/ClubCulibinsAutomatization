@@ -4,11 +4,18 @@ import bodyParser from "body-parser";
 import {ControllerTeacher} from "../controllers/ControllerTeacher";
 import {SchemasCreate, SchemasRegister}  from "../middleware/validator/schemas/Schemas";
 
+import cors from 'cors';
+
 const router: Router = Router();
 const controllerTeacher: ControllerTeacher = new ControllerTeacher();
 const jsonParser = bodyParser.json();
 
-router.post('/create', jsonParser, async (req: Request, res: Response) => {
+let corsOptions = {
+    origin: 'http://localhost:8002',
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+
+router.post('/create', cors(corsOptions), jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учитель']
     #swagger.parameters['body'] = {
@@ -31,7 +38,7 @@ router.post('/create', jsonParser, async (req: Request, res: Response) => {
     }
 
 })
-router.patch('/register', jsonParser, async (req: Request, res: Response) => {
+router.patch('/register', cors(corsOptions), jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учитель']
     #swagger.parameters['body'] = {
@@ -51,7 +58,7 @@ router.patch('/register', jsonParser, async (req: Request, res: Response) => {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 })
-router.get('/:tgId', async (req: Request, res: Response) => {
+router.get('/:tgId', cors(corsOptions), async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учитель']
     #swagger.parameters['tgId'] = {
@@ -65,7 +72,7 @@ router.get('/:tgId', async (req: Request, res: Response) => {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 })
-router.get('/get/all', async (req: Request, res: Response) => {
+router.get('/get/all', cors(corsOptions), async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учитель']
     */
