@@ -175,8 +175,28 @@ export default {
       errorMessage.value = '';
       try {
         const response = await apiClient.getAllTeachers();
-        // Преобразуем данные из API в экземпляры класса Teacher
-        teachers.value = (response.data || []).map(teacherData => Teacher.fromApiObject(teacherData));
+        console.log("Ответ от API:", response);
+
+        // Проверяем структуру ответа
+        let teachersData = [];
+        if (response && response.data && Array.isArray(response.data)) {
+          teachersData = response.data; // Если { data: [...] }
+        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+          teachersData = response.data.data; // Если { data: { data: [...] } }
+        } else if (Array.isArray(response)) {
+          teachersData = response; // Если массив напрямую
+        } else {
+          console.error("Некорректная структура ответа API:", response);
+          teachersData = [];
+          errorMessage.value = 'Получены некорректные данные от сервера.';
+        }
+
+        if (Array.isArray(teachersData)) {
+          teachers.value = teachersData.map(teacherData => Teacher.fromApiObject(teacherData));
+        } else {
+          teachers.value = [];
+          errorMessage.value = 'Получены некорректные данные от сервера.';
+        }
       } catch (error) {
         console.error('Ошибка при загрузке учителей:', error);
         errorMessage.value = 'Не удалось загрузить список учителей. Попробуйте позже.';
@@ -315,6 +335,7 @@ export default {
 
     // Загружаем данные при монтировании компонента
     onMounted(() => {
+      console.log("=== Teachers onMounted ===");
       fetchTeachers();
       updateFeather();
     });
@@ -685,7 +706,7 @@ export default {
   .modal-content {
     width: 100%;
     height: 100%;
-    border-radius: 0
+    border-radius: 0;
   }
 
   .teacher-form {

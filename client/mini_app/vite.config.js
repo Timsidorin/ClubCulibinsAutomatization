@@ -11,7 +11,7 @@ export default defineConfig({
     vueDevTools(),
   ],
   define: {
-    __BASE__URL__: JSON.stringify('http://localhost:8302'),
+    __BASE__URL__: JSON.stringify('http://localhost:3000'),
   },
   resolve: {
     alias: {
