@@ -5,11 +5,6 @@ export class Teacher extends Model {
     declare uuid: string;
     declare tgId: string;
     declare tgUsername: string;
-    declare PersonalData: {
-        name: string,
-        lastName: string,
-        secondName: string,
-    };
 }
 
 Teacher.init(
