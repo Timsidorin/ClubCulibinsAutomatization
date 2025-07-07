@@ -1,30 +1,35 @@
 import {Router} from "express";
 import {Request, Response} from 'express';
 import bodyParser from "body-parser";
-import {ControllerTeacher} from "../controllers/ControllerTeacher";
+import {ControllerUser} from "../controllers/ControllerUser";
 import {SchemasCreate, SchemasRegister}  from "../middleware/validator/schemas/Schemas";
 
 const router: Router = Router();
-const controllerTeacher: ControllerTeacher = new ControllerTeacher();
+const controllerUser: ControllerUser = new ControllerUser();
 const jsonParser = bodyParser.json();
 
 router.post('/create',  jsonParser, async (req: Request, res: Response) => {
     /*
-    #swagger.tags = ['Учитель']
+    #swagger.tags = ['Пользователь']
     #swagger.parameters['body'] = {
         in: 'body',
-        description: 'Создание юзера',
+        description: '
+        typeUser: 1 - Учитель
+                  2 - Админ
+                  3 - Ребенок
+        ',
         schema: {
             tgUsername: '@string',
             name: 'string',
             lastName: 'string',
             secondName: 'string',
+            typeUser: 1,
         }
     }
     */
     try {
         const validate = SchemasCreate.parse(req.body);
-        let answer = await controllerTeacher.createTeacher(req.body);
+        let answer = await controllerUser.createUser(req.body);
         if (answer.code === 201) {
             res.status(201).send(answer);
         } else {
@@ -37,7 +42,7 @@ router.post('/create',  jsonParser, async (req: Request, res: Response) => {
 });
 router.patch('/register', jsonParser, async (req: Request, res: Response) => {
     /*
-    #swagger.tags = ['Учитель']
+    #swagger.tags = ['Пользователь']
     #swagger.parameters['body'] = {
         in: 'body',
         description: 'Вставка tg Id',
@@ -49,7 +54,7 @@ router.patch('/register', jsonParser, async (req: Request, res: Response) => {
 */
     try {
         const validate = SchemasRegister.parse(req.body);
-        let answer = await controllerTeacher.registerTeacher(req.body);
+        let answer = await controllerUser.registerUser(req.body);
         if (answer.code === 200) {
             res.status(200).send(answer);
         } else {
@@ -59,34 +64,34 @@ router.patch('/register', jsonParser, async (req: Request, res: Response) => {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 });
-router.get('/:tgId', async (req: Request, res: Response) => {
+router.get('/:tgUsername', async (req: Request, res: Response) => {
     /*
-    #swagger.tags = ['Учитель']
-    #swagger.parameters['tgId'] = {
-        description: 'Id telegram'
+    #swagger.tags = ['Пользователь']
+    #swagger.parameters['tgUsername'] = {
+        description: 'tg Username'
         }
     */
     try {
-        let teacherData = await controllerTeacher.getDataTeacher(req.params.tgId);
-        res.status(200).send({data: teacherData});
+        let userData = await controllerUser.getDataUser(req.params.tgUsername);
+        res.status(200).send({data: userData});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 });
 router.get('/get/all', async (req: Request, res: Response) => {
     /*
-    #swagger.tags = ['Учитель']
+    #swagger.tags = ['Пользователь']
     */
     try {
-        let allTeachers = await controllerTeacher.getAllTeacher();
-        res.status(200).send({data: allTeachers});
+        let allUsers = await controllerUser.getAllUsers();
+        res.status(200).send({data: allUsers});
     } catch (e: any) {
         res.status(500).send({data: JSON.parse(e.message)});
     }
 });
 router.put('/:tgUsername',  jsonParser, async (req: Request, res: Response) => {
     /*
-    #swagger.tags = ['Учитель']
+    #swagger.tags = ['Пользователь']
     #swagger.parameters['body'] = {
         in: 'body',
         description: 'Обновление данных',
@@ -99,7 +104,7 @@ router.put('/:tgUsername',  jsonParser, async (req: Request, res: Response) => {
 */
     try {
         let data = {...req.body, tgUsername: req.params.tgUsername};
-        let answer = await controllerTeacher.updateTeacher(data);
+        let answer = await controllerUser.updateUser(data);
         if (answer.code === 200) {
             res.status(200).send(answer);
         } else {
@@ -111,10 +116,10 @@ router.put('/:tgUsername',  jsonParser, async (req: Request, res: Response) => {
 })
 router.delete('/:tgUsername', async (req: Request, res: Response) => {
     /*
-    #swagger.tags = ['Учитель']
+    #swagger.tags = ['Пользователь']
     */
     try {
-        let answer = await controllerTeacher.deleteTeacher(req.params.tgUsername);
+        let answer = await controllerUser.deleteUser(req.params.tgUsername);
         if (answer.code === 200) {
             res.status(200).send(answer);
         } else {

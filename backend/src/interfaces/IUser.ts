@@ -1,19 +1,20 @@
-import {Teacher} from "../schemas/Teacher";
+import {User} from "../schemas/User";
 
-export interface ITeacher {
+export interface IUser {
     tgId: string;
     tgUsername: string;
     name: string;
     secondName: string;
     lastName: string;
+    typeUser: number
 }
 
-export interface IAnswerTeacher {
+export interface IAnswerUser {
     code: number;
     message: string;
 }
 
-export interface IGetAnswerTeacher {
+export interface IGetAnswerUser {
     data: {
         tgUsername: string;
         personalData: {
@@ -25,7 +26,7 @@ export interface IGetAnswerTeacher {
     code: number
 }
 
-export interface IGetAllTeacher {
-    data: Teacher[];
+export interface IGetAllUsers {
+    data: User[];
     code: number
 }

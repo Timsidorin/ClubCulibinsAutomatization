@@ -11,17 +11,17 @@
     "http"
   ],
   "paths": {
-    "/teacher/create": {
+    "/user/create": {
       "post": {
         "tags": [
-          "Учитель"
+          "Пользователь"
         ],
         "description": "",
         "parameters": [
           {
             "name": "body",
             "in": "body",
-            "description": "Создание юзера",
+            "description": "   typeUser: 1 - Учитель   2 - Админ   3 - Ребенок   ",
             "schema": {
               "type": "object",
               "properties": {
@@ -40,6 +40,10 @@
                 "secondName": {
                   "type": "string",
                   "example": "string"
+                },
+                "typeUser": {
+                  "type": "number",
+                  "example": 1
                 }
               }
             }
@@ -58,10 +62,10 @@
         }
       }
     },
-    "/teacher/register": {
+    "/user/register": {
       "patch": {
         "tags": [
-          "Учитель"
+          "Пользователь"
         ],
         "description": "",
         "parameters": [
@@ -97,19 +101,19 @@
         }
       }
     },
-    "/teacher/{tgId}": {
+    "/user/{tgUsername}": {
       "get": {
         "tags": [
-          "Учитель"
+          "Пользователь"
         ],
         "description": "",
         "parameters": [
           {
-            "name": "tgId",
+            "name": "tgUsername",
             "in": "path",
             "required": true,
             "type": "string",
-            "description": "Id telegram"
+            "description": "tg Username"
           }
         ],
         "responses": {
@@ -120,28 +124,10 @@
             "description": "Internal Server Error"
           }
         }
-      }
-    },
-    "/teacher/get/all": {
-      "get": {
-        "tags": [
-          "Учитель"
-        ],
-        "description": "",
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/teacher/{tgUsername}": {
+      },
       "put": {
         "tags": [
-          "Учитель"
+          "Пользователь"
         ],
         "description": "",
         "parameters": [
@@ -185,7 +171,7 @@
       },
       "delete": {
         "tags": [
-          "Учитель"
+          "Пользователь"
         ],
         "description": "",
         "parameters": [
@@ -196,6 +182,22 @@
             "type": "string"
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/user/get/all": {
+      "get": {
+        "tags": [
+          "Пользователь"
+        ],
+        "description": "",
         "responses": {
           "200": {
             "description": "OK"

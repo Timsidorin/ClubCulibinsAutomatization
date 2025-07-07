@@ -1,6 +1,8 @@
 import { sequelize } from './database';
 import '../../schemas/PersonalData';
-import '../../schemas/Teacher';
+import '../../schemas/User';
+import '../../schemas/TypeUser';
+import {createTypesUser} from "./create/createTypesUser";
 
 async function syncDatabase() {
     try {
@@ -9,6 +11,7 @@ async function syncDatabase() {
 
         await sequelize.sync({ force: true });
         console.log('Все модели синхронизированы.');
+        await createTypesUser();
     } catch (error) {
         console.error('Ошибка синхронизации:', error);
     } finally {

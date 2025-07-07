@@ -1,60 +1,61 @@
-import {Teacher} from "../schemas/Teacher";
+import {User} from "../schemas/User";
 import {PersonalData} from "../schemas/PersonalData";
 import {
-    ITeacher,
-    IAnswerTeacher,
-    IGetAnswerTeacher,
-    IGetAllTeacher
-} from "../interfaces/ITeacher";
+    IUser,
+    IAnswerUser,
+    IGetAnswerUser,
+    IGetAllUsers
+} from "../interfaces/IUser";
 import {sequelize} from "../config/database/database";
 
-export class ModelTeacher {
-    public async createTeacher(data: Omit<ITeacher, 'tgId'>): Promise<IAnswerTeacher> {
+export class ModelUser {
+    public async createUser(data: Omit<IUser, 'tgId'>): Promise<IAnswerUser> {
         try {
-            let newTeacher: Teacher = await Teacher.create({
+            let newUser: User = await User.create({
                 tgUsername: data.tgUsername,
+                typeUser: data.typeUser
             });
             await PersonalData.create({
-                uuidUser: newTeacher.uuid,
+                uuidUser: newUser.uuid,
                 name: data.name,
                 secondName: data.secondName,
                 lastName: data.lastName,
             })
-            return {code: 201, message: 'Новый учитель создан'};
+            return {code: 201, message: 'Новый пользователь создан'};
         } catch (e: any) {
             return {code: e.parent.code, message: e.errors[0].path};
         }
     }
 
-    public async registerTeacher(data: Pick<ITeacher, 'tgId' | 'tgUsername'>): Promise<IAnswerTeacher> {
+    public async registerUser(data: Pick<IUser, 'tgId' | 'tgUsername'>): Promise<IAnswerUser> {
         try {
-            await Teacher.update(
+            await User.update(
                 {tgId: data.tgId,},
                 {
                     where: {
                         tgUsername: data.tgUsername
                     }
                 });
-            return {code: 200, message: "Успешное создание"};
+            return {code: 200, message: "Успешная регистрация"};
         } catch (e: any) {
             return {code: e.parent.code, message: e.errors[0].path};
         }
     }
 
-    public async getDataTeacher(tgId: string): Promise<IGetAnswerTeacher> {
+    public async getDataUser(tgUsername: string): Promise<IGetAnswerUser> {
         try {
-            const teacher = await Teacher.findOne({
-                where: { tgId },
+            const user = await User.findOne({
+                where: { tgUsername },
                 include: [{
                     model: PersonalData,
                     required: false,
                 }]
             });
-            return { code: 200, data: { tgUsername: teacher?.dataValues.tgUsername ?? '',
+            return { code: 200, data: { tgUsername: user?.dataValues.tgUsername ?? '',
                     personalData: {
-                        name: teacher?.dataValues.PersonalDatum.dataValues.name ?? '',
-                        secondName: teacher?.dataValues.PersonalDatum.dataValues.secondName ?? '',
-                        lastName: teacher?.dataValues.PersonalDatum.dataValues.lastName ?? '',
+                        name: user?.dataValues.PersonalDatum.dataValues.name ?? '',
+                        secondName: user?.dataValues.PersonalDatum.dataValues.secondName ?? '',
+                        lastName: user?.dataValues.PersonalDatum.dataValues.lastName ?? '',
                     }
             }};
         } catch (e: any) {
@@ -62,9 +63,9 @@ export class ModelTeacher {
         }
     }
 
-    public async getAllTeachers(): Promise<IGetAllTeacher> {
+    public async getAllUsers(): Promise<IGetAllUsers> {
         try {
-            let allTeacher: Teacher[] = await Teacher.findAll(
+            let allUsers: User[] = await User.findAll(
                 {
                     include: [{
                         model: PersonalData,
@@ -72,19 +73,19 @@ export class ModelTeacher {
                     }]
                 }
             );
-            return { code: 200, data: allTeacher };
+            return { code: 200, data: allUsers };
         } catch (e: any) {
             return { code: e.parent.code, data: e.errors[0].path };
         }
     }
 
-    public async updateTeacher(data: ITeacher): Promise<IAnswerTeacher> {
+    public async updateUser(data: IUser): Promise<IAnswerUser> {
         try {
-            let userData = await Teacher.findOne({
+            let userData = await User.findOne({
                 where: {tgUsername: data.tgUsername}
             });
             let uuid: string = userData?.dataValues.uuid ?? '';
-            let test = await PersonalData.update(
+            await PersonalData.update(
                 {...data},
                 {
                     where: {
@@ -97,26 +98,26 @@ export class ModelTeacher {
         }
     }
 
-    public async deleteTeacher(tgUsername: string): Promise<IAnswerTeacher> {
+    public async deleteUser(tgUsername: string): Promise<IAnswerUser> {
         const transaction = await sequelize.transaction();
         try {
-            const teacher = await Teacher.findOne({
+            const user = await User.findOne({
                 where: { tgUsername },
                 transaction
             });
 
-            if (!teacher) {
-                return {code: 500, message: 'Учитель не найден'};
+            if (!user) {
+                return {code: 500, message: 'Пользователь не найден'};
             }
 
-            let uuid: string = teacher?.dataValues.uuid ?? '';
+            let uuid: string = user?.dataValues.uuid ?? '';
             await PersonalData.destroy({
                 where: { uuidUser: uuid },
                 transaction
             });
-            await teacher.destroy({ transaction });
+            await user.destroy({ transaction });
             await transaction.commit();
-            return {code: 200, message: 'Учитель удален'};
+            return {code: 200, message: 'Пользователь удален'};
         } catch (error) {
             return {code: 500, message: 'Произошла ошибка'};
         }

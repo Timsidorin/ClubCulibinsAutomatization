@@ -21,5 +21,4 @@ PersonalData.init({
     },
     {
         sequelize,
-        timestamps: false,
     })

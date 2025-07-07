@@ -1,13 +1,13 @@
 import { PersonalData } from "./PersonalData";
-import { Teacher } from "./Teacher";
+import { User } from "./User";
 
 export function setupAssociations() {
-    Teacher.hasOne(PersonalData, {
+    User.hasOne(PersonalData, {
         foreignKey: "uuidUser",
         sourceKey: "uuid",
     });
 
-    PersonalData.belongsTo(Teacher, {
+    PersonalData.belongsTo(User, {
         foreignKey: "uuidUser",
         targetKey: "uuid",
     });

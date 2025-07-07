@@ -1,14 +1,17 @@
 import {sequelize} from "../config/database/database";
 import {Model, DataTypes} from "sequelize";
 
-export class Teacher extends Model {
+export class User extends Model {
     declare uuid: string;
     declare tgId: string;
     declare tgUsername: string;
-    declare isAdmin: boolean;
+    declare typeUser: {
+        name: string,
+        code: number
+    };
 }
 
-Teacher.init(
+User.init(
     {
         uuid: {
             type: DataTypes.UUID,
@@ -24,12 +27,13 @@ Teacher.init(
             type: DataTypes.STRING,
             unique: true,
         },
-        isAdmin: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false
+        typeUser: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1,
         }
     },
     {
         sequelize,
+        timestamps: false,
     }
 );
