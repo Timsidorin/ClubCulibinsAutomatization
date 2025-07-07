@@ -20,8 +20,8 @@ export class ControllerUser {
         return await this.User.getDataUser(tgUsername);
     }
 
-    public async getAllUsers(): Promise<IGetAllUsers> {
-        return await this.User.getAllUsers();
+    public async getAllUsers(typeUser: any): Promise<IGetAllUsers> {
+        return await this.User.getAllUsers(typeUser);
     }
 
     public async updateUser(data: IUser): Promise<IAnswerUser> {

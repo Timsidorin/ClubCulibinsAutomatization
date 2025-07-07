@@ -38,7 +38,6 @@ router.post('/create',  jsonParser, async (req: Request, res: Response) => {
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-
 });
 router.patch('/register', jsonParser, async (req: Request, res: Response) => {
     /*
@@ -81,9 +80,13 @@ router.get('/:tgUsername', async (req: Request, res: Response) => {
 router.get('/get/all', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Пользователь']
+       #swagger.parameters['type'] = {
+        description: 'Какую группу пользователей нужно получить'
+        }
     */
     try {
-        let allUsers = await controllerUser.getAllUsers();
+        let paramsType = req.query.type;
+        let allUsers = await controllerUser.getAllUsers(paramsType);
         res.status(200).send({data: allUsers});
     } catch (e: any) {
         res.status(500).send({data: JSON.parse(e.message)});

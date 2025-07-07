@@ -63,16 +63,17 @@ export class ModelUser {
         }
     }
 
-    public async getAllUsers(): Promise<IGetAllUsers> {
+    public async getAllUsers(typeUser: any): Promise<IGetAllUsers> {
+        const filters: Record<string, any> = {};
+        if (typeUser) filters.typeUser = typeUser;
         try {
-            let allUsers: User[] = await User.findAll(
-                {
+            let allUsers: User[] = await User.findAll({
                     include: [{
                         model: PersonalData,
                         required: false,
-                    }]
-                }
-            );
+                    }],
+                    where: Object.keys(filters).length ? filters : {}
+                });
             return { code: 200, data: allUsers };
         } catch (e: any) {
             return { code: e.parent.code, data: e.errors[0].path };

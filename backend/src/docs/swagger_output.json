@@ -198,6 +198,74 @@
           "Пользователь"
         ],
         "description": "",
+        "parameters": [
+          {
+            "name": "type",
+            "description": "Какую группу пользователей нужно получить",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/education-group/create": {
+      "post": {
+        "tags": [
+          "Учебная группа"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Создание учебной группы",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "tgUsername": {
+                  "type": "string",
+                  "example": "@string"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/education-group/get-all": {
+      "get": {
+        "tags": [
+          "Учебная группа"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "tgUsername",
+            "description": "По кому делать фильтрацию",
+            "in": "query",
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"

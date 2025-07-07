@@ -21,4 +21,4 @@ PersonalData.init({
     },
     {
         sequelize,
-    })
+    });

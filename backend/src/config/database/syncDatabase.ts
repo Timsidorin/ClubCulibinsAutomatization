@@ -2,6 +2,7 @@ import { sequelize } from './database';
 import '../../schemas/PersonalData';
 import '../../schemas/User';
 import '../../schemas/TypeUser';
+import '../../schemas/EducationGroup'
 import {createTypesUser} from "./create/createTypesUser";
 
 async function syncDatabase() {

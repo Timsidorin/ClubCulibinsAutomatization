@@ -16,4 +16,4 @@ TypeUser.init(
     {
         sequelize,
         timestamps: false,
-    })
+    });
