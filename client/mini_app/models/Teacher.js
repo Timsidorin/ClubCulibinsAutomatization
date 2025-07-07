@@ -6,12 +6,14 @@ export class Teacher {
     lastName = '',
     middleName = '',
     telegramUsername = '',
+    typeUser =  0
   } = {}) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
     this.middleName = middleName;
     this.telegramUsername = telegramUsername;
+    this.typeUser = typeUser;
   }
 
   // Геттер для полного имени
@@ -27,7 +29,8 @@ export class Teacher {
       tgUsername: this.telegramUsername.startsWith('@') ? this.telegramUsername : `@${this.telegramUsername}`,
       name: this.firstName,
       lastName: this.lastName,
-      secondName: this.middleName
+      secondName: this.middleName,
+      typeUser:this.typeUser
     };
   }
 
@@ -40,7 +43,9 @@ export class Teacher {
       firstName: personalData.name || '',
       lastName: personalData.lastName || '',
       middleName: personalData.secondName || '',
-      telegramUsername: apiData.tgUsername || ''
+      telegramUsername: apiData.tgUsername || '',
+      typeUser: apiData.typeUser || '',
+
     });
   }
 }

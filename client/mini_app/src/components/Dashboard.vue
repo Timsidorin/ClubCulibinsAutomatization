@@ -16,7 +16,7 @@
         </div>
         <div class="stat-content">
           <h3>Всего учителей</h3>
-          <p class="stat-number">{{ data.teachers.length }}</p>
+          <p class="stat-number">{{ teachers.length }}</p>
         </div>
       </div>
       <div class="card stat-card">
@@ -72,7 +72,9 @@
 </template>
 
 <script>
-import { onMounted, onUpdated, nextTick } from 'vue'
+import { ref, onMounted, onUpdated, nextTick } from 'vue';
+import TeachersAPIClient from '../../api/TeachersAPIClient.js';
+import { Teacher } from '../../models/Teacher';
 
 export default {
   name: 'Dashboard',
@@ -82,8 +84,11 @@ export default {
       required: true
     }
   },
-  emits: ['navigate'],
-  setup() {
+  emits: ['navigate', 'teachers-loaded'],
+  setup(props, { emit }) {
+    const teachers = ref([]); // Локальное состояние для учителей
+    const apiClient = new TeachersAPIClient(); // Создаем экземпляр API-клиента
+
     const formatDate = (date) => {
       return new Date(date).toLocaleString('ru-RU', {
         day: '2-digit',
@@ -91,25 +96,74 @@ export default {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
-      })
-    }
+      });
+    };
 
     const updateFeather = () => {
       nextTick(() => {
         if (window.feather) {
-          window.feather.replace()
+          window.feather.replace();
         }
-      })
-    }
+      });
+    };
 
-    onMounted(updateFeather)
-    onUpdated(updateFeather)
+    // Загрузка списка учителей из API
+    const fetchTeachers = async () => {
+      try {
+        console.log("=== Начало загрузки учителей в Dashboard ===");
+        const response = await apiClient.getAllTeachers();
+        console.log("Ответ от API:", response);
+
+        // Проверяем структуру ответа
+        let teachersData = [];
+        if (response && response.data && Array.isArray(response.data)) {
+          teachersData = response.data; // Если { data: [...] }
+          console.log("Данные извлечены из response.data:", teachersData);
+        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+          teachersData = response.data.data; // Если { data: { data: [...] } }
+          console.log("Данные извлечены из response.data.data:", teachersData);
+        } else if (Array.isArray(response)) {
+          teachersData = response; // Если массив напрямую
+          console.log("Данные извлечены напрямую из response:", teachersData);
+        } else {
+          console.error("Некорректная структура ответа API:", response);
+          teachersData = [];
+        }
+
+        if (Array.isArray(teachersData)) {
+          teachers.value = teachersData.map(teacherData => {
+            console.log("Преобразование данных учителя:", teacherData);
+            return Teacher.fromApiObject(teacherData);
+          });
+          console.log("Список учителей установлен:", teachers.value);
+          // Передаем загруженные данные учителей родительскому компоненту
+          emit('teachers-loaded', teachers.value);
+        } else {
+          teachers.value = [];
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке учителей:', error);
+        if (error.response) {
+          console.error('Ответ сервера (ошибка):', error.response);
+        }
+        teachers.value = []; // Сбрасываем список в случае ошибки
+      }
+    };
+
+    onMounted(() => {
+      updateFeather();
+      // Загружаем данные учителей из API при монтировании компонента
+      fetchTeachers();
+    });
+
+    onUpdated(updateFeather);
 
     return {
+      teachers, // Возвращаем локальное состояние учителей для отображения количества
       formatDate
-    }
+    };
   }
-}
+};
 </script>
 
 <style scoped>
