@@ -74,7 +74,7 @@
 <script>
 import { ref, onMounted, onUpdated, nextTick } from 'vue';
 import TeachersAPIClient from '../../api/TeachersAPIClient.js';
-import { Teacher } from '../../models/Teacher';
+import { Teachers } from '../../models/Teachers.js';
 
 export default {
   name: 'Dashboard',
@@ -133,7 +133,7 @@ export default {
         if (Array.isArray(teachersData)) {
           teachers.value = teachersData.map(teacherData => {
             console.log("Преобразование данных учителя:", teacherData);
-            return Teacher.fromApiObject(teacherData);
+            return Teachers.fromApiObject(teacherData);
           });
           console.log("Список учителей установлен:", teachers.value);
           // Передаем загруженные данные учителей родительскому компоненту

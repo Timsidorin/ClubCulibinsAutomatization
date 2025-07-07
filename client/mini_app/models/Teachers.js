@@ -1,5 +1,5 @@
-// models/Teacher.js
-export class Teacher {
+// models/Teachers.js
+export class Teachers {
   constructor({
     id = null,
     firstName = '',
@@ -38,7 +38,7 @@ export class Teacher {
   static fromApiObject(apiData) {
     // Учитываем вложенную структуру PersonalDatum
     const personalData = apiData.PersonalDatum || {};
-    return new Teacher({
+    return new Teachers({
       id: apiData.uuid,
       firstName: personalData.name || '',
       lastName: personalData.lastName || '',

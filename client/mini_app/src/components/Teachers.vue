@@ -144,7 +144,7 @@
 <script>
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import TeachersAPIClient from '../../api/TeachersAPIClient.js';
-import { Teacher } from '../../models/Teacher';
+import { Teachers } from '../../models/Teachers.js';
 
 export default {
   name: 'Teachers',
@@ -158,7 +158,7 @@ export default {
     const usernameError = ref(''); // Ошибка валидации username
     const errorMessage = ref(''); // Общее сообщение об ошибке
 
-    const newTeacher = ref(new Teacher()); // Инициализируем как новый экземпляр класса Teacher
+    const newTeacher = ref(new Teachers()); // Инициализируем как новый экземпляр класса Teachers
 
     const isFormValid = computed(() => {
       return (
@@ -191,7 +191,7 @@ export default {
 
         if (Array.isArray(teachersData)) {
           teachers.value = teachersData.map(teacherData => {
-            return Teacher.fromApiObject(teacherData);
+            return Teachers.fromApiObject(teacherData);
           });
         } else {
           teachers.value = [];
@@ -220,7 +220,7 @@ export default {
       isEditing.value = true;
       currentTeacherId.value = teacher.id;
       // Копируем данные учителя в форму
-      newTeacher.value = new Teacher({
+      newTeacher.value = new Teachers({
         id: teacher.id,
         firstName: teacher.firstName,
         lastName: teacher.lastName,
@@ -245,7 +245,7 @@ export default {
 
     // Сброс формы
     const resetForm = () => {
-      newTeacher.value = new Teacher(); // Сбрасываем на новый пустой экземпляр Teacher
+      newTeacher.value = new Teachers(); // Сбрасываем на новый пустой экземпляр Teachers
       usernameError.value = '';
     };
 
