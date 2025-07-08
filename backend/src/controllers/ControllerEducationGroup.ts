@@ -1,6 +1,8 @@
 import {ModelEducationGroup} from "../model/ModelEducationGroup";
-import {IEducationGroupCreate} from "../interfaces/IEducationGroup";
+import {IEducationGroupCreate, IAddChildren} from "../interfaces/IEducationGroup";
 import {EducationGroup} from "../schemas/EducationGroup";
+import {IUser} from "../interfaces/IUser";
+import {IAnswerGroup} from "../interfaces/IAnswer";
 
 export class ControllerEducationGroup {
     EducationGroup: ModelEducationGroup = new ModelEducationGroup();
@@ -13,4 +15,7 @@ export class ControllerEducationGroup {
         return await this.EducationGroup.getAllGroups(tgUsername);
     }
 
+    public async addChildrens(data: IAddChildren<Pick<IUser, 'tgUsername'>>): Promise<IAnswerGroup<string>> {
+        return await this.EducationGroup.addChildrens(data);
+    }
 }

@@ -1,8 +1,12 @@
+//Экземпляр БД
 import { sequelize } from './database';
+//Схемы таблиц
 import '../../schemas/PersonalData';
 import '../../schemas/User';
 import '../../schemas/TypeUser';
 import '../../schemas/EducationGroup'
+import '../../schemas/EducationGroupMember'
+//Утилиты для работы с БД
 import {createTypesUser} from "./create/createTypesUser";
 
 async function syncDatabase() {

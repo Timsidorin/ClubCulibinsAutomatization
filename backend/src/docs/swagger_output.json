@@ -249,6 +249,10 @@
                 "name": {
                   "type": "string",
                   "example": "string"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "string"
                 }
               }
             }
@@ -276,6 +280,47 @@
             "description": "По кому делать фильтрацию",
             "in": "query",
             "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/education-group/add-childrens": {
+      "post": {
+        "tags": [
+          "Учебная группа"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Создание учебной группы",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "uuidGroup": {
+                  "type": "string",
+                  "example": "uuid"
+                },
+                "childrens": {
+                  "type": "array",
+                  "example": [
+                    "tgUsername"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         ],
         "responses": {

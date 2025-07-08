@@ -1,26 +1,33 @@
 import {EducationGroup} from "../schemas/EducationGroup";
-import {IEducationGroupCreate} from "../interfaces/IEducationGroup";
+import {IAddChildren, IEducationGroupCreate} from "../interfaces/IEducationGroup";
 import {User} from "../schemas/User";
+import {EducationGroupMember} from "../schemas/EducationGroupMember";
+import {IUser} from "../interfaces/IUser";
 import {sequelize} from "../config/database/database";
+import {IAnswerGroup} from "../interfaces/IAnswer";
 
 export class ModelEducationGroup {
-    public async createGroup(data: IEducationGroupCreate): Promise<void> {
+    public async createGroup(data: Omit<IEducationGroupCreate, 'uuidUser'>): Promise<void> {
         const transaction = await sequelize.transaction();
         try {
-            const teacher = await User.findOne({
-                where: {
-                    tgUsername: data.tgUsername,
-                    typeUser: 1
-                },
-                attributes: ['uuid'],
-                transaction
-            });
-            if (!teacher) {
-                throw new Error(`Учитель с tgUsername "${data.tgUsername}" (type=1) не найден`);
+            let insertData = {};
+            if (data.tgUsername) {
+                const teacher = await User.findOne({
+                    where: {
+                        tgUsername: data.tgUsername,
+                        typeUser: 1
+                    },
+                    attributes: ['uuid'],
+                    transaction
+                });
+                if (!teacher) {
+                    throw new Error(`Учитель с tgUsername "${data.tgUsername}" (type=1) не найден`);
+                }
+                insertData = {uuidUser: teacher?.uuid, ...data};
             }
+            insertData = {...data};
             await EducationGroup.create({
-                name: data.name,
-                uuidUser: teacher?.uuid
+                ...insertData
             }, { transaction });
 
             await transaction.commit();
@@ -55,6 +62,20 @@ export class ModelEducationGroup {
         } catch (error) {
             console.error(error);
             throw new Error('Ошибка получения групп');
+        }
+    }
+
+    public async addChildrens(data: IAddChildren<Pick<IUser, 'tgUsername'>>): Promise<IAnswerGroup<string>> {
+        try {
+            let dataInsert: any = [];
+            data.childrens.forEach((children) => {
+                dataInsert.push({uuidGroup: data.uuidGroup, tgUsername: children});
+            });
+            console.log(dataInsert);
+            await EducationGroupMember.bulkCreate(dataInsert);
+            return {code: 200, message: 'Успешное заполнение группы'};
+        } catch (error) {
+            throw new Error(`Произошла ошибка при создании`);
         }
     }
 }
