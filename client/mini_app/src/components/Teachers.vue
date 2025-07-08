@@ -25,7 +25,7 @@
           <p v-if="teacher.email">Email: {{ teacher.email }}</p>
           <p>Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}</p>
         </div>
-        <div class="actions">
+        <div class="actions-overlay">
           <button class="btn btn-secondary" @click="editTeacher(teacher)" :disabled="isLoading">
             <i data-feather="edit-2"></i>
             Редактировать
@@ -38,7 +38,6 @@
       </div>
     </div>
 
-    <!-- Пустое состояние -->
     <div class="empty-state" v-if="!isLoading && teachers.length === 0">
       <div class="empty-icon">
         <i data-feather="user-check"></i>
@@ -51,7 +50,6 @@
       </button>
     </div>
 
-    <!-- Модальное окно для добавления/редактирования учителя -->
     <div v-if="showModal" class="modal" @click.self="closeModal">
       <div class="modal-content">
         <div class="modal-header">
@@ -143,22 +141,22 @@
 
 <script>
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
-import TeacherAPIClient from '../../api/TeacherAPIClient';
-import { Teacher } from '../../models/Teacher';
+import TeachersAPIClient from '../../api/TeachersAPIClient.js';
+import { Teachers } from '../../models/Teachers.js';
 
 export default {
   name: 'Teachers',
   setup() {
-    const apiClient = new TeacherAPIClient(); // Создаем экземпляр API-клиента
-    const teachers = ref([]); // Список учителей
-    const isLoading = ref(false); // Индикатор загрузки
-    const showModal = ref(false); // Управление модальным окном
-    const isEditing = ref(false); // Режим редактирования
-    const currentTeacherId = ref(null); // ID редактируемого учителя
-    const usernameError = ref(''); // Ошибка валидации username
-    const errorMessage = ref(''); // Общее сообщение об ошибке
+    const apiClient = new TeachersAPIClient();
+    const teachers = ref([]);
+    const isLoading = ref(false);
+    const showModal = ref(false);
+    const isEditing = ref(false);
+    const currentTeacherId = ref(null);
+    const usernameError = ref('');
+    const errorMessage = ref('');
 
-    const newTeacher = ref(new Teacher()); // Инициализируем как новый экземпляр класса Teacher
+    const newTeacher = ref(new Teachers());
 
     const isFormValid = computed(() => {
       return (
@@ -169,56 +167,39 @@ export default {
       );
     });
 
-    // Загрузка списка учителей
     const fetchTeachers = async () => {
       isLoading.value = true;
       errorMessage.value = '';
       try {
-        console.log("=== Начало загрузки учителей ===");
         const response = await apiClient.getAllTeachers();
-        console.log("Ответ от API:", response);
-
-        // Проверяем структуру ответа
         let teachersData = [];
         if (response && response.data && Array.isArray(response.data)) {
-          teachersData = response.data; // Если { data: [...] }
-          console.log("Данные извлечены из response.data:", teachersData);
+          teachersData = response.data;
         } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          teachersData = response.data.data; // Если { data: { data: [...] } }
-          console.log("Данные извлечены из response.data.data:", teachersData);
+          teachersData = response.data.data;
         } else if (Array.isArray(response)) {
-          teachersData = response; // Если массив напрямую
-          console.log("Данные извлечены напрямую из response:", teachersData);
+          teachersData = response;
         } else {
-          console.error("Некорректная структура ответа API:", response);
           teachersData = [];
           errorMessage.value = 'Получены некорректные данные от сервера.';
         }
 
         if (Array.isArray(teachersData)) {
           teachers.value = teachersData.map(teacherData => {
-            console.log("Преобразование данных учителя:", teacherData);
-            return Teacher.fromApiObject(teacherData);
+            return Teachers.fromApiObject(teacherData);
           });
-          console.log("Список учителей установлен:", teachers.value);
         } else {
           teachers.value = [];
           errorMessage.value = 'Получены некорректные данные от сервера.';
         }
       } catch (error) {
-        console.error('Ошибка при загрузке учителей:', error);
-        if (error.response) {
-          console.error('Ответ сервера (ошибка):', error.response);
-        }
         errorMessage.value = 'Не удалось загрузить список учителей. Попробуйте позже.';
-        teachers.value = []; // Сбрасываем список в случае ошибки
+        teachers.value = [];
       } finally {
         isLoading.value = false;
-        console.log("=== Загрузка учителей завершена ===");
       }
     };
 
-    // Открытие формы для добавления нового учителя
     const addNewTeacher = () => {
       showModal.value = true;
       isEditing.value = false;
@@ -226,12 +207,10 @@ export default {
       resetForm();
     };
 
-    // Открытие формы для редактирования учителя
     const editTeacher = (teacher) => {
       isEditing.value = true;
       currentTeacherId.value = teacher.id;
-      // Копируем данные учителя в форму
-      newTeacher.value = new Teacher({
+      newTeacher.value = new Teachers({
         id: teacher.id,
         firstName: teacher.firstName,
         lastName: teacher.lastName,
@@ -242,7 +221,6 @@ export default {
       showModal.value = true;
     };
 
-    // Закрытие модального окна
     const closeModal = () => {
       if (
         (newTeacher.value.lastName || newTeacher.value.firstName || newTeacher.value.telegramUsername) &&
@@ -254,13 +232,11 @@ export default {
       resetForm();
     };
 
-    // Сброс формы
     const resetForm = () => {
-      newTeacher.value = new Teacher(); // Сбрасываем на новый пустой экземпляр Teacher
+      newTeacher.value = new Teachers();
       usernameError.value = '';
     };
 
-    // Валидация Telegram username
     const validateUsername = async () => {
       const username = newTeacher.value.telegramUsername;
       if (username.startsWith('@')) {
@@ -273,12 +249,9 @@ export default {
         return;
       }
 
-      // Проверка уникальности username (только если не редактируем текущего учителя)
       if (!isEditing.value || teachers.value.some(t => t.id !== currentTeacherId.value && t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase())) {
         try {
-          console.log("Проверка уникальности username:", newTeacher.value.telegramUsername);
           const response = await apiClient.getTeacherByTelegramUsername(newTeacher.value.telegramUsername);
-          console.log("Ответ на проверку username:", response);
           if (response.data) {
             usernameError.value = 'Этот username уже используется другим учителем';
           } else {
@@ -286,42 +259,30 @@ export default {
           }
         } catch (error) {
           usernameError.value = '';
-          console.error('Ошибка при проверке username:', error);
-          if (error.response) {
-            console.error('Ответ сервера (ошибка проверки username):', error.response);
-          }
         }
       } else {
         usernameError.value = '';
       }
     };
 
-    // Отправка данных учителя (создание или обновление)
     const submitTeacher = async () => {
       if (!isFormValid.value) return;
 
       isLoading.value = true;
       errorMessage.value = '';
-      // Преобразуем данные учителя в формат для API
       const teacherData = newTeacher.value.toApiObject();
-      console.log("Данные для отправки на сервер:", teacherData);
+      teacherData.typeUser = 1;
 
       try {
         if (isEditing.value) {
-          console.log("Обновление учителя с ID:", currentTeacherId.value);
-          const response = await apiClient.updateTeacher(currentTeacherId.value, teacherData);
-          console.log('Учитель обновлен, ответ сервера:', response);
+          await apiClient.updateTeacher(currentTeacherId.value, teacherData);
         } else {
-          console.log("Создание нового учителя");
-          const response = await apiClient.createTeacher(teacherData);
-          console.log('Учитель добавлен, ответ сервера:', response);
+          await apiClient.createTeacher(teacherData);
         }
-        await fetchTeachers(); // Обновляем список после изменения
+        await fetchTeachers();
         closeModal();
       } catch (error) {
-        console.error('Ошибка при сохранении учителя:', error);
         if (error.response) {
-          console.error('Ответ сервера (ошибка сохранения):', error.response);
           errorMessage.value = `Ошибка: ${error.response.data?.message || 'Не удалось сохранить данные учителя.'}`;
         } else if (error.code === 'ERR_NETWORK') {
           errorMessage.value = 'Ошибка сети: сервер недоступен или блокирует запросы (CORS).';
@@ -333,21 +294,14 @@ export default {
       }
     };
 
-    // Удаление учителя
     const deleteTeacher = async (teacher) => {
       if (confirm(`Вы уверены, что хотите удалить учителя "${teacher.fullName}"?`)) {
         isLoading.value = true;
         errorMessage.value = '';
         try {
-          console.log("Удаление учителя с ID:", teacher.id);
-          const response = await apiClient.deleteTeacher(teacher.id);
-          console.log('Учитель удален, ответ сервера:', response);
-          await fetchTeachers(); // Обновляем список после удаления
+          await apiClient.deleteTeacher(teacher.id);
+          await fetchTeachers();
         } catch (error) {
-          console.error('Ошибка при удалении учителя:', error);
-          if (error.response) {
-            console.error('Ответ сервера (ошибка удаления):', error.response);
-          }
           errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
         } finally {
           isLoading.value = false;
@@ -355,7 +309,6 @@ export default {
       }
     };
 
-    // Обновление иконок Feather
     const updateFeather = () => {
       nextTick(() => {
         if (window.feather) {
@@ -364,9 +317,7 @@ export default {
       });
     };
 
-    // Загружаем данные при монтировании компонента
     onMounted(() => {
-      console.log("=== Teachers onMounted ===");
       fetchTeachers();
       updateFeather();
     });
@@ -392,8 +343,6 @@ export default {
   }
 };
 </script>
-
-
 
 <style scoped>
 .teachers {
@@ -422,8 +371,8 @@ export default {
 
 .teacher-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
   width: 100%;
 }
 
@@ -431,54 +380,88 @@ export default {
   background: var(--tg-card-bg);
   border-radius: var(--border-radius-card);
   box-shadow: var(--box-shadow-card);
-  padding: 24px;
-  border-left: 4px solid var(--tg-blue);
+  padding: 16px;
+  border-left: 3px solid var(--tg-blue);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 120px;
+  overflow: hidden;
+}
+
+.teacher-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .teacher-info {
   flex: 1;
+  z-index: 1;
 }
 
 .teacher-info h4 {
-  font-size: 1.2em;
+  font-size: 1em;
   font-weight: 600;
   color: var(--tg-text);
-  margin: 0 0 12px 0;
+  margin: 0 0 6px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-info p {
-  margin: 0 0 8px 0;
-  font-size: 0.9em;
+  margin: 0 0 4px 0;
+  font-size: 0.8em;
   color: var(--tg-text-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-info p:last-child {
   margin-bottom: 0;
 }
 
-.actions {
+.actions-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  gap: 10px;
-  margin-top: 16px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  padding: 10px;
+  z-index: 2;
+  border-radius: var(--border-radius-card);
+}
+
+.teacher-card:hover .actions-overlay {
+  opacity: 1;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 6px;
+  padding: 8px 12px;
   border: none;
   border-radius: var(--border-radius-button);
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 0.85em;
   font-weight: 600;
   transition: background-color var(--transition-speed);
-  flex: 1;
+  width: 90%;
   justify-content: center;
   white-space: nowrap;
+  z-index: 3;
 }
 
 .btn-primary {
@@ -508,7 +491,6 @@ export default {
   background: #c82333;
 }
 
-/* Пустое состояние */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -549,7 +531,6 @@ export default {
   margin: 0 0 24px 0;
 }
 
-/* Модальное окно */
 .modal {
   position: fixed;
   top: 0;
@@ -607,7 +588,6 @@ export default {
   color: var(--tg-text-light);
 }
 
-/* Форма */
 .teacher-form {
   padding: 24px;
 }
@@ -644,7 +624,6 @@ export default {
   color: var(--tg-text-light);
 }
 
-/* Поле с префиксом @ */
 .input-with-prefix {
   position: relative;
   display: flex;
@@ -664,14 +643,12 @@ export default {
   padding-left: 32px;
 }
 
-/* Сообщение об ошибке */
 .error-message {
   color: var(--tg-red);
   font-size: 0.8em;
   margin-top: 4px;
 }
 
-/* Действия модального окна */
 .modal-actions {
   display: flex;
   gap: 12px;
@@ -690,7 +667,6 @@ export default {
   background: var(--tg-blue);
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .section-header {
     flex-direction: column;
@@ -705,77 +681,16 @@ export default {
   }
 
   .teacher-card {
-    padding: 20px;
+    padding: 16px;
   }
 
-  .actions {
+  .actions-overlay {
     flex-direction: column;
+    opacity: 0;
   }
 
-  .btn {
-    width: 100%;
+  .teacher-card:hover .actions-overlay {
+    opacity: 0;
   }
-
-  .modal-content {
-    width: 95%;
-    margin: 20px;
-  }
-
-  .modal-actions {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 480px) {
-  .section-header {
-    padding: 16px;
-  }
-
-  .teacher-card {
-    padding: 16px;
-  }
-
-  .modal-content {
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-  }
-
-  .teacher-form {
-    padding: 16px;
-  }
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-  background: var(--tg-card-bg);
-  border-radius: var(--border-radius-card);
-  box-shadow: var(--box-shadow-card);
-  width: 100%;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid var(--tg-border);
-  border-top: 5px solid var(--tg-blue);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-state p {
-  color: var(--tg-text-light);
-  font-size: 1em;
 }
 </style>

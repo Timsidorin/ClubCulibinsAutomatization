@@ -1,9 +1,9 @@
 import ApiClient from './BaseAPIClient'
 
-class TeacherAPIClient extends ApiClient {
+class TeachersAPIClient extends ApiClient {
     constructor() {
         super();
-        this.endpoint = '/teacher';
+        this.endpoint = '/user';
     }
 
 
@@ -51,4 +51,4 @@ class TeacherAPIClient extends ApiClient {
 
 }
 
-export default TeacherAPIClient;
+export default TeachersAPIClient;

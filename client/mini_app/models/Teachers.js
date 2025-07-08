@@ -1,17 +1,19 @@
-// models/Teacher.js
-export class Teacher {
+// models/Teachers.js
+export class Teachers {
   constructor({
     id = null,
     firstName = '',
     lastName = '',
     middleName = '',
     telegramUsername = '',
+    typeUser =  0
   } = {}) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
     this.middleName = middleName;
     this.telegramUsername = telegramUsername;
+    this.typeUser = typeUser;
   }
 
   // Геттер для полного имени
@@ -27,7 +29,8 @@ export class Teacher {
       tgUsername: this.telegramUsername.startsWith('@') ? this.telegramUsername : `@${this.telegramUsername}`,
       name: this.firstName,
       lastName: this.lastName,
-      secondName: this.middleName
+      secondName: this.middleName,
+      typeUser:this.typeUser
     };
   }
 
@@ -35,12 +38,14 @@ export class Teacher {
   static fromApiObject(apiData) {
     // Учитываем вложенную структуру PersonalDatum
     const personalData = apiData.PersonalDatum || {};
-    return new Teacher({
+    return new Teachers({
       id: apiData.uuid,
       firstName: personalData.name || '',
       lastName: personalData.lastName || '',
       middleName: personalData.secondName || '',
-      telegramUsername: apiData.tgUsername || ''
+      telegramUsername: apiData.tgUsername || '',
+      typeUser: apiData.typeUser || '',
+
     });
   }
 }
