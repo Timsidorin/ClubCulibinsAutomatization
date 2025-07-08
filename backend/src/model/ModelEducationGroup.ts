@@ -35,20 +35,25 @@ export class ModelEducationGroup {
 
     public async getAllGroups(tgUsername: unknown): Promise<EducationGroup[] | null> {
         try {
-            const teacher = await User.findOne({
-                where: {
-                    tgUsername: tgUsername,
-                    typeUser: 1
-                },
-                attributes: ['uuid'],
-            });
-            if (!teacher) {
-                throw new Error(`Учитель с tgUsername "${tgUsername}" (type=1) не найден`);
+            let uuidUser = {};
+            if (tgUsername) {
+                const teacher = await User.findOne({
+                    where: {
+                        tgUsername: tgUsername,
+                        typeUser: 1
+                    },
+                    attributes: ['uuid'],
+                });
+                if (!teacher) {
+                    throw new Error(`Учитель с tgUsername "${tgUsername}" (type=1) не найден`);
+                }
+                uuidUser = {uuidUser: teacher?.uuid};
             }
             return await EducationGroup.findAll({
-                where: {uuidUser: teacher?.uuid},
+                where: {...uuidUser},
             })
         } catch (error) {
+            console.error(error);
             throw new Error('Ошибка получения групп');
         }
     }
