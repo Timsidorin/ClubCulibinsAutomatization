@@ -44,6 +44,18 @@
                 "typeUser": {
                   "type": "number",
                   "example": 1
+                },
+                "phoneNumber": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "dateOfBirth": {
+                  "type": "string",
+                  "example": "2000-01-01"
+                },
+                "note": {
+                  "type": "string",
+                  "example": "string"
                 }
               }
             }

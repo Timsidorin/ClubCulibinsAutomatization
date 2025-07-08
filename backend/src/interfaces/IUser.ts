@@ -6,7 +6,10 @@ export interface IUser {
     name: string;
     secondName: string;
     lastName: string;
-    typeUser: number
+    typeUser: number;
+    phoneNumber: string;
+    dateOfBirth: Date;
+    note: string;
 }
 
 export interface IAnswerUser {

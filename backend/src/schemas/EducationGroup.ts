@@ -16,6 +16,7 @@ EducationGroup.init(
         name: {
             type: DataTypes.STRING,
         },
+
     },
     {
         sequelize,

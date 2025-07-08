@@ -15,11 +15,10 @@ export class ModelUser {
                 tgUsername: data.tgUsername,
                 typeUser: data.typeUser
             });
+            const userData: Omit<IUser, 'tgId'> = { ...data };
             await PersonalData.create({
                 uuidUser: newUser.uuid,
-                name: data.name,
-                secondName: data.secondName,
-                lastName: data.lastName,
+                ...userData
             })
             return {code: 201, message: 'Новый пользователь создан'};
         } catch (e: any) {

@@ -24,6 +24,9 @@ router.post('/create',  jsonParser, async (req: Request, res: Response) => {
             lastName: 'string',
             secondName: 'string',
             typeUser: 1,
+            phoneNumber: 'string',
+            dateOfBirth: '2000-01-01',
+            note: 'string'
         }
     }
     */

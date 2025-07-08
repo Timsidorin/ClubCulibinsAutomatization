@@ -18,6 +18,15 @@ PersonalData.init({
         lastName: {
             type: DataTypes.STRING,
         },
+        phoneNumber: {
+            type: DataTypes.STRING,
+        },
+        dateOfBirth: {
+            type: DataTypes.DATE,
+        },
+        note: {
+            type: DataTypes.STRING,
+        }
     },
     {
         sequelize,
