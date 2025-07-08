@@ -38,7 +38,6 @@
       </div>
     </div>
 
-    <!-- Пустое состояние -->
     <div class="empty-state" v-if="!isLoading && teachers.length === 0">
       <div class="empty-icon">
         <i data-feather="user-check"></i>
@@ -51,7 +50,6 @@
       </button>
     </div>
 
-    <!-- Модальное окно для добавления/редактирования учителя -->
     <div v-if="showModal" class="modal" @click.self="closeModal">
       <div class="modal-content">
         <div class="modal-header">
@@ -149,16 +147,16 @@ import { Teachers } from '../../models/Teachers.js';
 export default {
   name: 'Teachers',
   setup() {
-    const apiClient = new TeachersAPIClient(); // Создаем экземпляр API-клиента
-    const teachers = ref([]); // Список учителей
-    const isLoading = ref(false); // Индикатор загрузки
-    const showModal = ref(false); // Управление модальным окном
-    const isEditing = ref(false); // Режим редактирования
-    const currentTeacherId = ref(null); // ID редактируемого учителя
-    const usernameError = ref(''); // Ошибка валидации username
-    const errorMessage = ref(''); // Общее сообщение об ошибке
+    const apiClient = new TeachersAPIClient();
+    const teachers = ref([]);
+    const isLoading = ref(false);
+    const showModal = ref(false);
+    const isEditing = ref(false);
+    const currentTeacherId = ref(null);
+    const usernameError = ref('');
+    const errorMessage = ref('');
 
-    const newTeacher = ref(new Teachers()); // Инициализируем как новый экземпляр класса Teachers
+    const newTeacher = ref(new Teachers());
 
     const isFormValid = computed(() => {
       return (
@@ -169,21 +167,18 @@ export default {
       );
     });
 
-    // Загрузка списка учителей
     const fetchTeachers = async () => {
       isLoading.value = true;
       errorMessage.value = '';
       try {
         const response = await apiClient.getAllTeachers();
-
-        // Проверяем структуру ответа
         let teachersData = [];
         if (response && response.data && Array.isArray(response.data)) {
-          teachersData = response.data; // Если { data: [...] }
+          teachersData = response.data;
         } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          teachersData = response.data.data; // Если { data: { data: [...] } }
+          teachersData = response.data.data;
         } else if (Array.isArray(response)) {
-          teachersData = response; // Если массив напрямую
+          teachersData = response;
         } else {
           teachersData = [];
           errorMessage.value = 'Получены некорректные данные от сервера.';
@@ -198,16 +193,13 @@ export default {
           errorMessage.value = 'Получены некорректные данные от сервера.';
         }
       } catch (error) {
-        if (error.response) {
-        }
         errorMessage.value = 'Не удалось загрузить список учителей. Попробуйте позже.';
-        teachers.value = []; // Сбрасываем список в случае ошибки
+        teachers.value = [];
       } finally {
         isLoading.value = false;
       }
     };
 
-    // Открытие формы для добавления нового учителя
     const addNewTeacher = () => {
       showModal.value = true;
       isEditing.value = false;
@@ -215,11 +207,9 @@ export default {
       resetForm();
     };
 
-    // Открытие формы для редактирования учителя
     const editTeacher = (teacher) => {
       isEditing.value = true;
       currentTeacherId.value = teacher.id;
-      // Копируем данные учителя в форму
       newTeacher.value = new Teachers({
         id: teacher.id,
         firstName: teacher.firstName,
@@ -231,7 +221,6 @@ export default {
       showModal.value = true;
     };
 
-    // Закрытие модального окна
     const closeModal = () => {
       if (
         (newTeacher.value.lastName || newTeacher.value.firstName || newTeacher.value.telegramUsername) &&
@@ -243,13 +232,11 @@ export default {
       resetForm();
     };
 
-    // Сброс формы
     const resetForm = () => {
-      newTeacher.value = new Teachers(); // Сбрасываем на новый пустой экземпляр Teachers
+      newTeacher.value = new Teachers();
       usernameError.value = '';
     };
 
-    // Валидация Telegram username
     const validateUsername = async () => {
       const username = newTeacher.value.telegramUsername;
       if (username.startsWith('@')) {
@@ -262,7 +249,6 @@ export default {
         return;
       }
 
-      // Проверка уникальности username (только если не редактируем текущего учителя)
       if (!isEditing.value || teachers.value.some(t => t.id !== currentTeacherId.value && t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase())) {
         try {
           const response = await apiClient.getTeacherByTelegramUsername(newTeacher.value.telegramUsername);
@@ -273,33 +259,27 @@ export default {
           }
         } catch (error) {
           usernameError.value = '';
-          console.error('Ошибка при проверке username:', error);
-          if (error.response) {
-            console.error('Ответ сервера (ошибка проверки username):', error.response);
-          }
         }
       } else {
         usernameError.value = '';
       }
     };
 
-    // Отправка данных учителя (создание или обновление)
     const submitTeacher = async () => {
       if (!isFormValid.value) return;
 
       isLoading.value = true;
       errorMessage.value = '';
-      // Преобразуем данные учителя в формат для API
       const teacherData = newTeacher.value.toApiObject();
       teacherData.typeUser = 1;
 
       try {
         if (isEditing.value) {
-          const response = await apiClient.updateTeacher(currentTeacherId.value, teacherData);
+          await apiClient.updateTeacher(currentTeacherId.value, teacherData);
         } else {
-          const response = await apiClient.createTeacher(teacherData);
+          await apiClient.createTeacher(teacherData);
         }
-        await fetchTeachers(); // Обновляем список после изменения
+        await fetchTeachers();
         closeModal();
       } catch (error) {
         if (error.response) {
@@ -314,17 +294,14 @@ export default {
       }
     };
 
-    // Удаление учителя
     const deleteTeacher = async (teacher) => {
       if (confirm(`Вы уверены, что хотите удалить учителя "${teacher.fullName}"?`)) {
         isLoading.value = true;
         errorMessage.value = '';
         try {
-          const response = await apiClient.deleteTeacher(teacher.id);
-          await fetchTeachers(); // Обновляем список после удаления
+          await apiClient.deleteTeacher(teacher.id);
+          await fetchTeachers();
         } catch (error) {
-          if (error.response) {
-          }
           errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
         } finally {
           isLoading.value = false;
@@ -332,7 +309,6 @@ export default {
       }
     };
 
-    // Обновление иконок Feather
     const updateFeather = () => {
       nextTick(() => {
         if (window.feather) {
@@ -341,7 +317,6 @@ export default {
       });
     };
 
-    // Загружаем данные при монтировании компонента
     onMounted(() => {
       fetchTeachers();
       updateFeather();
@@ -396,8 +371,8 @@ export default {
 
 .teacher-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Ширина карточки остается компактной */
-  gap: 16px; /* Уменьшили отступы между карточками */
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
   width: 100%;
 }
 
@@ -405,14 +380,14 @@ export default {
   background: var(--tg-card-bg);
   border-radius: var(--border-radius-card);
   box-shadow: var(--box-shadow-card);
-  padding: 16px; /* Уменьшили внутренние отступы */
-  border-left: 3px solid var(--tg-blue); /* Уменьшили толщину полоски */
+  padding: 16px;
+  border-left: 3px solid var(--tg-blue);
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Уменьшили отступы между элементами внутри карточки для компактности */
+  gap: 8px;
   position: relative;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  min-height: 120px; /* Уменьшили минимальную высоту карточки */
+  min-height: 120px;
   overflow: hidden;
 }
 
@@ -423,26 +398,26 @@ export default {
 
 .teacher-info {
   flex: 1;
-  z-index: 1; /* Текст остается поверх затемнения */
+  z-index: 1;
 }
 
 .teacher-info h4 {
-  font-size: 1em; /* Уменьшили размер шрифта для ФИО */
+  font-size: 1em;
   font-weight: 600;
   color: var(--tg-text);
-  margin: 0 0 6px 0; /* Уменьшили отступы */
+  margin: 0 0 6px 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap; /* Запрещаем перенос на новую строку */
+  white-space: nowrap;
 }
 
 .teacher-info p {
-  margin: 0 0 4px 0; /* Уменьшили отступы для компактности */
-  font-size: 0.8em; /* Уменьшили размер шрифта */
+  margin: 0 0 4px 0;
+  font-size: 0.8em;
   color: var(--tg-text-light);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap; /* Запрещаем перенос на новую строку */
+  white-space: nowrap;
 }
 
 .teacher-info p:last-child {
@@ -455,38 +430,38 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Затемнение фона карточки */
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 8px; /* Уменьшили отступы между кнопками */
-  opacity: 0; /* Скрываем по умолчанию */
+  gap: 8px;
+  opacity: 0;
   transition: opacity 0.2s ease;
   padding: 10px;
-  z-index: 2; /* Кнопки поверх контента */
+  z-index: 2;
   border-radius: var(--border-radius-card);
 }
 
 .teacher-card:hover .actions-overlay {
-  opacity: 1; /* Показываем затемнение и кнопки при наведении */
+  opacity: 1;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px; /* Уменьшили отступ между иконкой и текстом */
-  padding: 8px 12px; /* Уменьшили размеры кнопок */
+  gap: 6px;
+  padding: 8px 12px;
   border: none;
   border-radius: var(--border-radius-button);
   cursor: pointer;
-  font-size: 0.85em; /* Уменьшили размер шрифта */
+  font-size: 0.85em;
   font-weight: 600;
   transition: background-color var(--transition-speed);
-  width: 90%; /* Кнопки занимают почти всю ширину карточки */
+  width: 90%;
   justify-content: center;
   white-space: nowrap;
-  z-index: 3; /* Убедимся, что кнопки кликабельны */
+  z-index: 3;
 }
 
 .btn-primary {
@@ -516,7 +491,6 @@ export default {
   background: #c82333;
 }
 
-/* Пустое состояние */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -557,7 +531,6 @@ export default {
   margin: 0 0 24px 0;
 }
 
-/* Модальное окно */
 .modal {
   position: fixed;
   top: 0;
@@ -615,7 +588,6 @@ export default {
   color: var(--tg-text-light);
 }
 
-/* Форма */
 .teacher-form {
   padding: 24px;
 }
@@ -652,7 +624,6 @@ export default {
   color: var(--tg-text-light);
 }
 
-/* Поле с префиксом @ */
 .input-with-prefix {
   position: relative;
   display: flex;
@@ -672,14 +643,12 @@ export default {
   padding-left: 32px;
 }
 
-/* Сообщение об ошибке */
 .error-message {
   color: var(--tg-red);
   font-size: 0.8em;
   margin-top: 4px;
 }
 
-/* Действия модального окна */
 .modal-actions {
   display: flex;
   gap: 12px;
@@ -698,7 +667,6 @@ export default {
   background: var(--tg-blue);
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .section-header {
     flex-direction: column;
@@ -723,7 +691,6 @@ export default {
 
   .teacher-card:hover .actions-overlay {
     opacity: 0;
-
   }
 }
 </style>
