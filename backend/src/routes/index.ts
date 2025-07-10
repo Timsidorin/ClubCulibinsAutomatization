@@ -1,7 +1,7 @@
 //Роуты
 import RouterUser from "./RouterUser";
 import RouterEducationGroup from "./RouterEducationGroup";
-//Тиры
+//Типы
 import {Express} from "express";
 //Сваггер
 import swaggerUi from "swagger-ui-express";

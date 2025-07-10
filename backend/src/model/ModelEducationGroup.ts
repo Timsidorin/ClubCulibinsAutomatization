@@ -10,9 +10,10 @@ export class ModelEducationGroup {
     public async createGroup(data: Omit<IEducationGroupCreate, 'uuidUser'>): Promise<void> {
         const transaction = await sequelize.transaction();
         try {
+            let teacher: User | null;
             let insertData = {};
             if (data.tgUsername) {
-                const teacher = await User.findOne({
+                teacher = await User.findOne({
                     where: {
                         tgUsername: data.tgUsername,
                         typeUser: 1
@@ -25,7 +26,6 @@ export class ModelEducationGroup {
                 }
                 insertData = {uuidUser: teacher?.uuid, ...data};
             }
-            insertData = {...data};
             await EducationGroup.create({
                 ...insertData
             }, { transaction });
