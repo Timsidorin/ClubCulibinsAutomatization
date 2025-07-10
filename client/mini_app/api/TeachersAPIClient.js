@@ -7,9 +7,9 @@ class TeachersAPIClient extends ApiClient {
     }
 
 
-    async getAllTeachers() {
-        return await this.get(`${this.endpoint}/get/all`);
-    }
+    async getAllTeachers(type) {
+    return await this.get(`${this.endpoint}/get/all?type=${type}`);
+}
 
     // Получить учителя по ID
     async getTeacherById(id) {
@@ -27,8 +27,8 @@ class TeachersAPIClient extends ApiClient {
     }
 
     // Удалить учителя
-    async deleteTeacher(id) {
-        return await this.delete(`${this.endpoint}/${id}`);
+    async deleteTeacher(tgUsername) {
+        return await this.delete(`${this.endpoint}/${tgUsername}`);
     }
 
     // Получить учителей по группе

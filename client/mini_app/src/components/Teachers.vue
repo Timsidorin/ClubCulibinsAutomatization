@@ -8,29 +8,41 @@
       </button>
     </div>
 
+    <div class="search-bar">
+      <input type="text" v-model="searchQuery" placeholder="Поиск по имени учителя...">
+      <button class="btn btn-primary" @click="filterTeachers">
+        <i data-feather="search"></i>
+        Поиск
+      </button>
+    </div>
+
     <div v-if="isLoading" class="loading-state">
       <div class="spinner"></div>
       <p>Загрузка данных...</p>
     </div>
 
-    <div v-else class="card-grid teacher-grid">
+    <div v-else class="teachers-list">
       <div
-        v-for="teacher in teachers"
+        v-for="teacher in filteredTeachers"
         :key="teacher.id"
-        class="card teacher-card"
+        class="teacher-item"
+        :class="{ active: activeCardId === teacher.id }"
+        @click="toggleActions(teacher.id)"
       >
-        <div class="teacher-info">
+        <div class="teacher-details">
           <h4>{{ teacher.fullName }}</h4>
-          <p>telegram: {{ teacher.telegramUsername }}</p>
-          <p v-if="teacher.email">Email: {{ teacher.email }}</p>
-          <p>Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}</p>
+          <p>
+            Telegram: <span v-if="teacher.telegramUsername">{{ teacher.telegramUsername }}</span><span v-else>—</span><br>
+            Email: <span v-if="teacher.email">{{ teacher.email }}</span><span v-else>—</span><br>
+            Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}
+          </p>
         </div>
         <div class="actions-overlay">
-          <button class="btn btn-secondary" @click="editTeacher(teacher)" :disabled="isLoading">
+          <button class="btn btn-secondary" @click.stop="editTeacher(teacher)" :disabled="isLoading">
             <i data-feather="edit-2"></i>
             Редактировать
           </button>
-          <button class="btn btn-danger" @click="deleteTeacher(teacher)" :disabled="isLoading">
+          <button class="btn btn-danger" @click.stop="deleteTeacher(teacher)" :disabled="isLoading">
             <i data-feather="trash-2"></i>
             Удалить
           </button>
@@ -38,7 +50,7 @@
       </div>
     </div>
 
-    <div class="empty-state" v-if="!isLoading && teachers.length === 0">
+    <div class="empty-state" v-if="!isLoading && filteredTeachers.length === 0">
       <div class="empty-icon">
         <i data-feather="user-check"></i>
       </div>
@@ -139,6 +151,7 @@
   </div>
 </template>
 
+
 <script>
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import TeachersAPIClient from '../../api/TeachersAPIClient.js';
@@ -155,6 +168,8 @@ export default {
     const currentTeacherId = ref(null);
     const usernameError = ref('');
     const errorMessage = ref('');
+    const searchQuery = ref('');
+    const activeCardId = ref(null); // Для отслеживания активной карточки на мобильных устройствах
 
     const newTeacher = ref(new Teachers());
 
@@ -167,11 +182,18 @@ export default {
       );
     });
 
+    const filteredTeachers = computed(() => {
+      if (!searchQuery.value) return teachers.value;
+      return teachers.value.filter(teacher =>
+        teacher.fullName.toLowerCase().includes(searchQuery.value.toLowerCase())
+      );
+    });
+
     const fetchTeachers = async () => {
       isLoading.value = true;
       errorMessage.value = '';
       try {
-        const response = await apiClient.getAllTeachers();
+        const response = await apiClient.getAllTeachers(1);
         let teachersData = [];
         if (response && response.data && Array.isArray(response.data)) {
           teachersData = response.data;
@@ -222,12 +244,6 @@ export default {
     };
 
     const closeModal = () => {
-      if (
-        (newTeacher.value.lastName || newTeacher.value.firstName || newTeacher.value.telegramUsername) &&
-        !confirm('Вы уверены, что хотите закрыть форму? Все данные будут потеряны.')
-      ) {
-        return;
-      }
       showModal.value = false;
       resetForm();
     };
@@ -279,8 +295,8 @@ export default {
         } else {
           await apiClient.createTeacher(teacherData);
         }
-        await fetchTeachers();
         closeModal();
+        fetchTeachers();
       } catch (error) {
         if (error.response) {
           errorMessage.value = `Ошибка: ${error.response.data?.message || 'Не удалось сохранить данные учителя.'}`;
@@ -299,7 +315,7 @@ export default {
         isLoading.value = true;
         errorMessage.value = '';
         try {
-          await apiClient.deleteTeacher(teacher.id);
+          await apiClient.deleteTeacher(teacher.telegramUsername);
           await fetchTeachers();
         } catch (error) {
           errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
@@ -307,6 +323,13 @@ export default {
           isLoading.value = false;
         }
       }
+    };
+
+    const filterTeachers = () => {
+    };
+
+    const toggleActions = (teacherId) => {
+      activeCardId.value = activeCardId.value === teacherId ? null : teacherId;
     };
 
     const updateFeather = () => {
@@ -333,12 +356,17 @@ export default {
       usernameError,
       isFormValid,
       errorMessage,
+      searchQuery,
+      filteredTeachers,
+      activeCardId,
       addNewTeacher,
       closeModal,
       submitTeacher,
       validateUsername,
       editTeacher,
-      deleteTeacher
+      deleteTeacher,
+      filterTeachers,
+      toggleActions
     };
   }
 };
@@ -359,7 +387,6 @@ export default {
   border-radius: var(--border-radius-card);
   box-shadow: var(--box-shadow-card);
   margin-bottom: 24px;
-  width: 100%;
 }
 
 .section-header h2 {
@@ -369,59 +396,56 @@ export default {
   margin: 0;
 }
 
-.teacher-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
-  width: 100%;
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.teacher-card {
+.search-bar input {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: var(--border-radius-button);
+  border: 2px solid var(--tg-border);
+  font-size: 1em;
+}
+
+.teachers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.teacher-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
   background: var(--tg-card-bg);
   border-radius: var(--border-radius-card);
   box-shadow: var(--box-shadow-card);
-  padding: 16px;
-  border-left: 3px solid var(--tg-blue);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  padding: 18px 24px;
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  min-height: 120px;
-  overflow: hidden;
+  cursor: pointer;
 }
 
-.teacher-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--box-shadow-hover);
-}
-
-.teacher-info {
+.teacher-details {
   flex: 1;
-  z-index: 1;
+  min-width: 0;
 }
 
-.teacher-info h4 {
-  font-size: 1em;
+.teacher-details h4 {
+  font-size: 1.1em;
   font-weight: 600;
-  color: var(--tg-text);
   margin: 0 0 6px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--tg-text);
+  display: inline;
 }
 
-.teacher-info p {
-  margin: 0 0 4px 0;
-  font-size: 0.8em;
+.teacher-details p {
+  margin: 0;
   color: var(--tg-text-light);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.teacher-info p:last-child {
-  margin-bottom: 0;
+  font-size: 0.95em;
+  line-height: 1.6;
 }
 
 .actions-overlay {
@@ -443,52 +467,12 @@ export default {
   border-radius: var(--border-radius-card);
 }
 
-.teacher-card:hover .actions-overlay {
+.teacher-item:hover .actions-overlay {
   opacity: 1;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: var(--border-radius-button);
-  cursor: pointer;
-  font-size: 0.85em;
-  font-weight: 600;
-  transition: background-color var(--transition-speed);
-  width: 90%;
-  justify-content: center;
-  white-space: nowrap;
-  z-index: 3;
-}
-
-.btn-primary {
-  background: var(--tg-blue);
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #007bbd;
-}
-
-.btn-secondary {
-  background: var(--tg-secondary);
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #5a6268;
-}
-
-.btn-danger {
-  background: var(--tg-red);
-  color: white;
-}
-
-.btn-danger:hover {
-  background: #c82333;
+.teacher-item.active .actions-overlay {
+  opacity: 1;
 }
 
 .empty-state {
@@ -539,7 +523,6 @@ export default {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  overflow: hidden;
   justify-content: center;
   align-items: center;
   z-index: 1000;
@@ -551,6 +534,7 @@ export default {
   box-shadow: var(--box-shadow-hover);
   width: 90%;
   max-width: 500px;
+  max-height: 90vh;
   overflow-y: auto;
 }
 
@@ -658,13 +642,51 @@ export default {
   border-top: 1px solid var(--tg-border);
 }
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--border-radius-button);
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 600;
+  transition: background-color var(--transition-speed);
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--tg-blue);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #007bbd;
+}
+
+.btn-secondary {
+  background: var(--tg-secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.btn-danger {
+  background: var(--tg-red);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.btn:disabled:hover {
-  background: var(--tg-blue);
 }
 
 @media (max-width: 768px) {
@@ -675,22 +697,15 @@ export default {
     padding: 20px;
   }
 
-  .teacher-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .teacher-card {
-    padding: 16px;
-  }
-
-  .actions-overlay {
-    flex-direction: column;
+  .teacher-item:hover .actions-overlay {
     opacity: 0;
   }
 
-  .teacher-card:hover .actions-overlay {
-    opacity: 0;
+  .btn {
+    padding: 6px 10px;
+    font-size: 0.8em;
+    width: 95%;
   }
 }
 </style>
+
