@@ -10,11 +10,15 @@ class GroupsAPIClient extends ApiClient {
     async getAllGroups() {
         return await this.get(`${this.endpoint}/get-all`);
     }
-
-   // Создать новую группу
-    async createTeacher(groupData) {
+     // Создать новую группу
+    async createGroup(groupData) {
         return await this.post(`${this.endpoint}/create`, groupData);
     }
+
+    // Обновить данные группы
+  async updateGroup(groupData) {
+    return await this.put(`${this.endpoint}`, groupData);
+  }
 
 }
 

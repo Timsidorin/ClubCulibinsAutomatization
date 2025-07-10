@@ -7,7 +7,7 @@
         </div>
         <div class="stat-content">
           <h3>Всего групп</h3>
-          <p class="stat-number">{{ data.groups.length }}</p>
+          <p class="stat-number">{{ groups.length }}</p>
         </div>
       </div>
       <div class="card stat-card">
@@ -75,6 +75,7 @@
 import { ref, onMounted, onUpdated, nextTick } from 'vue';
 import TeachersAPIClient from '../../api/TeachersAPIClient.js';
 import ChildrenAPIClient from '../../api/ChildrenAPIClient.js';
+import GroupsAPIClient from '../../api/GroupsAPIClient.js';
 import { Teachers } from '../../models/Teachers.js';
 
 export default {
@@ -89,8 +90,10 @@ export default {
   setup(props, { emit }) {
     const teachers = ref([]);
     const children = ref([]);
+    const groups = ref([]);
     const teachersApiClient = new TeachersAPIClient();
     const childrenApiClient = new ChildrenAPIClient();
+    const groupsApiClient = new GroupsAPIClient();
 
     const formatDate = (date) => {
       return new Date(date).toLocaleString('ru-RU', {
@@ -154,10 +157,44 @@ export default {
       }
     };
 
+
+    // Загрузка списка Групп из API
+
+    const fetchGroups = async () => {
+      try {
+        const response = await groupsApiClient.getAllGroups();
+        let groupsData = [];
+        if (response && response.data && Array.isArray(response.data)) {
+          groupsData = response.data;
+        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+          groupsData = response.data.data;
+        } else if (Array.isArray(response)) {
+          groupsData = response;
+        } else {
+          groupsData = [];
+          console.error('Получены некорректные данные от сервера для групп.');
+        }
+
+        if (Array.isArray(groupsData)) {
+          groups.value = groupsData;
+          emit('groups-loaded', groups.value);
+        } else {
+          groups.value = [];
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке групп:', error);
+        if (error.response) {
+          console.error('Ответ сервера (ошибка):', error.response);
+        }
+        groups.value = [];
+      }
+    };
+
     onMounted(() => {
       updateFeather();
       fetchTeachers();
       fetchChildren();
+      fetchGroups();
     });
 
     onUpdated(updateFeather);
@@ -165,6 +202,7 @@ export default {
     return {
       teachers,
       children,
+      groups,
       formatDate
     };
   }
