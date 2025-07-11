@@ -32,8 +32,7 @@
         <div class="teacher-details">
           <h4> <i data-feather="user"></i>  {{ teacher.fullName }}</h4>
           <p>
-            Telegram: <span v-if="teacher.telegramUsername">{{ teacher.telegramUsername }}</span><span v-else>—</span><br>
-            Email: <span v-if="teacher.email">{{ teacher.email }}</span><span v-else>—</span><br>
+            Telegram: <a v-if="teacher.telegramUsername">{{ teacher.telegramUsername }}</a><a v-else>—</a><br>
             Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}
           </p>
         </div>

@@ -10,4 +10,4 @@ class UserAPIClient(BaseAPIClient):
         {
             "tgUsername" : "@"+tg_username
         })
-        return role['message']
+        return "admin" if role['message'] == '2' else "teacher"

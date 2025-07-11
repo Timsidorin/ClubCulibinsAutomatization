@@ -17,9 +17,9 @@ async def cmd_start(message: Message):
     client = UserAPIClient()
     username = message.from_user.username
     role = await client.check_user_role(username)
-    if role == "2":
+    if role == "admin":
         await message.answer("Привет, Админ!", reply_markup=create_admin_keyboard())
-    elif role == "1":
+    elif role == "teacher":
         await message.answer("Привет, Преподаватель!", reply_markup=create_teacher_keyboard())
 
 
