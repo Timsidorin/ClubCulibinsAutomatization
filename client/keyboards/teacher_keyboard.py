@@ -1,6 +1,7 @@
 
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton,  WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from client.APIclient.TeacherAPIClient import TeacherAPIClient
 
 from client.core.config import configs
 
@@ -16,8 +17,8 @@ def create_teacher_keyboard():
 
 def get_my_groups(username:str):
     keyboard = InlineKeyboardBuilder()
-    groups = ["Юные Инженеры", "Строители"] # берем группы из апишки
-
+    client = TeacherAPIClient()
+    groups = client.get_my_groups(teacher_tg_username=username)
     for group in groups:
         keyboard.button(text=group, callback_data=group)
     keyboard.adjust(2)

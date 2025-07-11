@@ -4,15 +4,20 @@
       <div class="header-content">
         <h2>Управление группами</h2>
       </div>
-      <button class="btn btn-primary" @click="addNewGroup">
+      <button class="btn btn-primary" @click="addNewGroup" :disabled="isLoading">
         <i data-feather="plus"></i>
         Добавить группу
       </button>
     </div>
 
-    <div class="groups-grid" v-if="data.groups && data.groups.length > 0">
+    <div v-if="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Загрузка данных...</p>
+    </div>
+
+    <div class="groups-grid" v-else-if="groups.length > 0">
       <div
-        v-for="group in data.groups"
+        v-for="group in groups"
         :key="group.id"
         class="group-card"
       >
@@ -35,16 +40,24 @@
           <div class="stat-item">
             <i data-feather="user-check"></i>
             <span class="stat-label">Учитель:</span>
-            <span class="stat-value">{{ group.teacher }}</span>
+            <span class="stat-value">{{ group.teacher || 'Не назначен' }}</span>
           </div>
         </div>
 
         <div class="group-actions">
-          <button class="btn btn-secondary" @click="editGroup(group)">
+          <button class="btn btn-secondary" @click="editGroup(group)" :disabled="isLoading">
             <i data-feather="edit-2"></i>
             Редактировать
           </button>
-          <button class="btn btn-danger" @click="deleteGroup(group)">
+          <button class="btn btn-primary" @click="addStudentsToGroup(group)" :disabled="isLoading">
+            <i data-feather="user-plus"></i>
+            Участники
+          </button>
+          <button class="btn btn-primary" @click="assignTeacherToGroup(group)" :disabled="isLoading">
+            <i data-feather="user-check"></i>
+            Учитель
+          </button>
+          <button class="btn btn-danger" @click="deleteGroup(group)" :disabled="isLoading">
             <i data-feather="trash-2"></i>
             Удалить
           </button>
@@ -52,76 +65,485 @@
       </div>
     </div>
 
-    <!-- Пустое состояние -->
     <div class="empty-state" v-else>
       <div class="empty-icon">
         <i data-feather="users"></i>
       </div>
       <h3>Пока нет групп</h3>
       <p>Создайте первую группу для начала работы</p>
-      <button class="btn btn-primary" @click="addNewGroup">
+      <button class="btn btn-primary" @click="addNewGroup" :disabled="isLoading">
         <i data-feather="plus"></i>
         Создать первую группу
       </button>
     </div>
+
+    <!-- Модальное окно для создания/редактирования группы -->
+    <div v-if="showGroupModal" class="modal" @click.self="closeGroupModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>{{ isEditingGroup ? 'Редактировать группу' : 'Добавить новую группу' }}</h3>
+          <button class="close-btn" @click="closeGroupModal">
+            <i data-feather="x"></i>
+          </button>
+        </div>
+        <form @submit.prevent="submitGroup" class="group-form">
+          <div class="form-group">
+            <label for="groupName">Название группы *</label>
+            <input
+              id="groupName"
+              v-model="newGroup.name"
+              type="text"
+              class="form-input"
+              placeholder="Введите название группы"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="groupDescription">Описание</label>
+            <textarea
+              id="groupDescription"
+              v-model="newGroup.description"
+              class="form-input"
+              placeholder="Введите описание группы (необязательно)"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @click="closeGroupModal">
+              Отмена
+            </button>
+            <button type="submit" class="btn btn-primary" :disabled="!isGroupFormValid || isLoading">
+              {{ isEditingGroup ? 'Сохранить изменения' : 'Добавить группу' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Модальное окно для добавления участников в группу -->
+    <div v-if="showStudentsModal" class="modal" @click.self="closeStudentsModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Добавить участников в группу "{{ currentGroup.name }}"</h3>
+          <button class="close-btn" @click="closeStudentsModal">
+            <i data-feather="x"></i>
+          </button>
+        </div>
+        <div class="search-bar">
+          <input
+            type="text"
+            v-model="studentSearchQuery"
+            placeholder="Поиск по имени ребенка..."
+          />
+        </div>
+        <div class="students-list" v-if="filteredStudents.length > 0">
+          <div
+            v-for="student in filteredStudents"
+            :key="student.id"
+            class="student-item"
+          >
+            <input
+              type="checkbox"
+              :value="student.id"
+              v-model="selectedStudents"
+            />
+            <div class="student-details">
+              <h4>{{ student.lastName }} {{ student.name }} {{ student.secondName }}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state-small" v-else>
+          <p>Нет доступных учеников для добавления</p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" @click="closeStudentsModal">
+            Отмена
+          </button>
+          <button class="btn btn-primary" @click="saveStudentsToGroup" :disabled="selectedStudents.length === 0 || isLoading">
+            Добавить выбранных ({{ selectedStudents.length }})
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модальное окно для привязки учителя к группе -->
+    <div v-if="showTeacherModal" class="modal" @click.self="closeTeacherModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Привязать учителя к группе "{{ currentGroup.name }}"</h3>
+          <button class="close-btn" @click="closeTeacherModal">
+            <i data-feather="x"></i>
+          </button>
+        </div>
+        <div class="search-bar">
+          <input
+            type="text"
+            v-model="teacherSearchQuery"
+            placeholder="Поиск по имени учителя..."
+          />
+        </div>
+        <div class="teachers-list" v-if="filteredTeachers.length > 0">
+          <div
+            v-for="teacher in filteredTeachers"
+            :key="teacher.id"
+            class="teacher-item"
+            @click="selectTeacher(teacher)"
+            :class="{ selected: selectedTeacherId === teacher.id }"
+          >
+            <h4>{{ teacher.lastName }} {{ teacher.name }} {{ teacher.secondName }}</h4>
+          </div>
+        </div>
+        <div class="empty-state-small" v-else>
+          <p>Нет доступных учителей для привязки</p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" @click="closeTeacherModal">
+            Отмена
+          </button>
+          <button class="btn btn-primary" @click="saveTeacherToGroup" :disabled="!selectedTeacherId || isLoading">
+            Привязать учителя
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
+
 <script>
-import { onMounted, onUpdated, nextTick } from 'vue'
+import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
+import GroupsAPIClient from '../../api/GroupsAPIClient.js';
+import ChildrenAPIClient from '../../api/ChildrenAPIClient.js';
+import TeachersAPIClient from '../../api/TeachersAPIClient.js';
 
 export default {
   name: 'Groups',
-  props: {
-    data: {
-      type: Object,
-      required: true
-    }
-  },
-  emits: ['update-data'],
-  setup(props, { emit }) {
-    const addNewGroup = () => {
-      const newGroup = {
-        id: Date.now(),
-        name: `Группа ${props.data.groups.length + 1}`,
-        studentsCount: 0,
-        teacher: 'Не назначен'
-      }
+  setup() {
+    const groupsApiClient = new GroupsAPIClient();
+    const childrenApiClient = new ChildrenAPIClient();
+    const teachersApiClient = new TeachersAPIClient();
 
-      const updatedGroups = [...props.data.groups, newGroup]
-      emit('update-data', { groups: updatedGroups })
-    }
+    const groups = ref([]);
+    const isLoading = ref(false);
+    const errorMessage = ref('');
+
+    // Для модального окна группы
+    const showGroupModal = ref(false);
+    const isEditingGroup = ref(false);
+    const currentGroupId = ref(null);
+    const newGroup = ref({
+      name: '',
+      description: ''
+    });
+
+    // Для модального окна добавления участников
+    const showStudentsModal = ref(false);
+    const currentGroup = ref({});
+    const students = ref([]);
+    const studentSearchQuery = ref('');
+    const selectedStudents = ref([]);
+
+    // Для модального окна привязки учителя
+    const showTeacherModal = ref(false);
+    const teachers = ref([]);
+    const teacherSearchQuery = ref('');
+    const selectedTeacherId = ref(null);
+
+    const isGroupFormValid = computed(() => newGroup.value.name.trim());
+
+    const filteredStudents = computed(() => {
+      if (!studentSearchQuery.value) return students.value;
+      return students.value.filter(student =>
+        `${student.name} ${student.lastName || ''} ${student.secondName || ''}`
+          .toLowerCase()
+          .includes(studentSearchQuery.value.toLowerCase())
+      );
+    });
+
+    const filteredTeachers = computed(() => {
+      if (!teacherSearchQuery.value) return teachers.value;
+      return teachers.value.filter(teacher =>
+        `${teacher.lastName} ${teacher.name} ${teacher.secondName}`
+          .toLowerCase()
+          .includes(teacherSearchQuery.value.toLowerCase())
+      );
+    });
+
+    const fetchGroups = async () => {
+      isLoading.value = true;
+      errorMessage.value = '';
+      try {
+        const response = await groupsApiClient.getAllGroups();
+        let groupsData = [];
+        if (response && response.data && Array.isArray(response.data)) {
+          groupsData = response.data;
+        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+          groupsData = response.data.data;
+        } else if (Array.isArray(response)) {
+          groupsData = response;
+        } else {
+          groupsData = [];
+          errorMessage.value = 'Получены некорректные данные от сервера.';
+        }
+
+        if (Array.isArray(groupsData)) {
+          groups.value = groupsData.map(groupData => ({
+            id: groupData.id || groupData.uuid || Date.now().toString(),
+            name: groupData.name || 'Без названия',
+            description: groupData.description || '',
+            studentsCount: groupData.studentsCount || 0,
+            teacher: groupData.teacherData?.PersonalDatum
+              ? `${groupData.teacherData.PersonalDatum.lastName || ''} ${groupData.teacherData.PersonalDatum.name || ''} ${groupData.teacherData.PersonalDatum.secondName || ''}`.trim()
+              : 'Не назначен',
+            teacherId: groupData.teacherId || null,
+            studentIds: groupData.studentIds || []
+          }));
+        } else {
+          groups.value = [];
+          errorMessage.value = 'Получены некорректные данные от сервера.';
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке групп:', error);
+        errorMessage.value = 'Не удалось загрузить список групп. Попробуйте позже.';
+        groups.value = [];
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    const fetchStudents = async () => {
+      try {
+        const response = await childrenApiClient.getAllChildren(3);
+        let studentsData = [];
+        if (response && response.data && Array.isArray(response.data)) {
+          studentsData = response.data;
+        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+          studentsData = response.data.data;
+        } else if (Array.isArray(response)) {
+          studentsData = response;
+        } else {
+          studentsData = [];
+        }
+
+        if (Array.isArray(studentsData)) {
+          students.value = studentsData.map(studentData => ({
+            id: studentData.uuid || Date.now().toString(),
+            name: studentData.PersonalDatum?.name || '',
+            lastName: studentData.PersonalDatum?.lastName || '',
+            secondName: studentData.PersonalDatum?.secondName || ''
+          }));
+        } else {
+          students.value = [];
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке учеников:', error);
+        students.value = [];
+      }
+    };
+
+    const fetchTeachers = async () => {
+      try {
+        const response = await teachersApiClient.getAllTeachers(1);
+        let teachersData = [];
+        if (response && response.data && Array.isArray(response.data)) {
+          teachersData = response.data;
+        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+          teachersData = response.data.data;
+        } else if (Array.isArray(response)) {
+          teachersData = response;
+        } else {
+          teachersData = [];
+        }
+
+        if (Array.isArray(teachersData)) {
+          teachers.value = teachersData.map(teacherData => ({
+            id: teacherData.id || teacherData.uuid || Date.now().toString(),
+            name: teacherData.PersonalDatum?.name || '',
+            lastName: teacherData.PersonalDatum?.lastName || '',
+            secondName: teacherData.PersonalDatum?.secondName || ''
+          }));
+        } else {
+          teachers.value = [];
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке учителей:', error);
+        teachers.value = [];
+      }
+    };
+
+    const addNewGroup = () => {
+      showGroupModal.value = true;
+      isEditingGroup.value = false;
+      currentGroupId.value = null;
+      newGroup.value = { name: '', description: '' };
+    };
 
     const editGroup = (group) => {
-      console.log('Editing group:', group)
-    }
+      showGroupModal.value = true;
+      isEditingGroup.value = true;
+      currentGroupId.value = group.id;
+      newGroup.value = { name: group.name, description: group.description };
+    };
 
-    const deleteGroup = (group) => {
-      if (confirm(`Вы уверены, что хотите удалить группу "${group.name}"?`)) {
-        const updatedGroups = props.data.groups.filter(g => g.id !== group.id)
-        emit('update-data', { groups: updatedGroups })
+    const closeGroupModal = () => {
+      showGroupModal.value = false;
+    };
+
+    const submitGroup = async () => {
+      if (!isGroupFormValid.value) return;
+      isLoading.value = true;
+      errorMessage.value = '';
+      try {
+        const groupData = {
+          name: newGroup.value.name,
+          description: newGroup.value.description || ''
+        };
+        if (isEditingGroup.value && currentGroupId.value) {
+          await groupsApiClient.updateGroup(currentGroupId.value, groupData);
+        } else {
+          await groupsApiClient.createGroup(groupData);
+        }
+        closeGroupModal();
+        await fetchGroups();
+      } catch (error) {
+        console.error('Ошибка при сохранении группы:', error);
+        if (error.response) {
+          errorMessage.value = `Ошибка: ${error.response.data?.message || 'Не удалось сохранить данные группы.'}`;
+        } else if (error.code === 'ERR_NETWORK') {
+          errorMessage.value = 'Ошибка сети: сервер недоступен или блокирует запросы (CORS).';
+        } else {
+          errorMessage.value = 'Не удалось сохранить данные группы. Попробуйте снова.';
+        }
+      } finally {
+        isLoading.value = false;
       }
-    }
+    };
+
+    const deleteGroup = async (group) => {
+      if (confirm(`Вы уверены, что хотите удалить группу "${group.name}"?`)) {
+        isLoading.value = true;
+        errorMessage.value = '';
+        try {
+          await groupsApiClient.deleteGroup(group.id);
+          await fetchGroups();
+        } catch (error) {
+          console.error('Ошибка при удалении группы:', error);
+          errorMessage.value = 'Не удалось удалить группу. Попробуйте снова.';
+        } finally {
+          isLoading.value = false;
+        }
+      }
+    };
+
+    const addStudentsToGroup = async (group) => {
+      currentGroup.value = group;
+      selectedStudents.value = group.studentIds || [];
+      await fetchStudents();
+      showStudentsModal.value = true;
+    };
+
+    const closeStudentsModal = () => {
+      showStudentsModal.value = false;
+      selectedStudents.value = [];
+    };
+
+    const saveStudentsToGroup = async () => {
+      isLoading.value = true;
+      errorMessage.value = '';
+      try {
+        await groupsApiClient.updateGroupStudents(currentGroup.value.id, { studentIds: selectedStudents.value });
+        closeStudentsModal();
+        await fetchGroups();
+      } catch (error) {
+        console.error('Ошибка при добавлении учеников в группу:', error);
+        errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    const assignTeacherToGroup = async (group) => {
+      currentGroup.value = group;
+      selectedTeacherId.value = group.teacherId || null;
+      await fetchTeachers();
+      showTeacherModal.value = true;
+    };
+
+    const closeTeacherModal = () => {
+      showTeacherModal.value = false;
+      selectedTeacherId.value = null;
+    };
+
+    const selectTeacher = (teacher) => {
+      selectedTeacherId.value = teacher.id;
+    };
+
+    const saveTeacherToGroup = async () => {
+      isLoading.value = true;
+      errorMessage.value = '';
+      try {
+        await groupsApiClient.updateGroupTeacher(currentGroup.value.id, { teacherId: selectedTeacherId.value });
+        closeTeacherModal();
+        await fetchGroups();
+      } catch (error) {
+        console.error('Ошибка при привязке учителя к группе:', error);
+        errorMessage.value = 'Не удалось привязать учителя к группе. Попробуйте снова.';
+      } finally {
+        isLoading.value = false;
+      }
+    };
 
     const updateFeather = () => {
       nextTick(() => {
         if (window.feather) {
-          window.feather.replace()
+          window.feather.replace();
         }
-      })
-    }
+      });
+    };
 
-    onMounted(updateFeather)
-    onUpdated(updateFeather)
+    onMounted(() => {
+      fetchGroups();
+      updateFeather();
+    });
+
+    onUpdated(updateFeather);
 
     return {
+      groups,
+      isLoading,
+      errorMessage,
+      showGroupModal,
+      isEditingGroup,
+      newGroup,
+      isGroupFormValid,
+      showStudentsModal,
+      currentGroup,
+      students,
+      studentSearchQuery,
+      filteredStudents,
+      selectedStudents,
+      showTeacherModal,
+      teachers,
+      teacherSearchQuery,
+      filteredTeachers,
+      selectedTeacherId,
       addNewGroup,
       editGroup,
-      deleteGroup
-    }
+      deleteGroup,
+      closeGroupModal,
+      submitGroup,
+      addStudentsToGroup,
+      closeStudentsModal,
+      saveStudentsToGroup,
+      assignTeacherToGroup,
+      closeTeacherModal,
+      selectTeacher,
+      saveTeacherToGroup
+    };
   }
-}
+};
 </script>
+
 
 <style scoped>
 .groups {
@@ -139,7 +561,6 @@ export default {
   border-radius: var(--border-radius-card);
   box-shadow: var(--box-shadow-card);
   margin-bottom: 24px;
-  width: 100%;
 }
 
 .header-content {
@@ -256,20 +677,20 @@ export default {
 .group-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 6px;
+  padding: 8px 12px;
   border: none;
   border-radius: var(--border-radius-button);
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 0.85em;
   font-weight: 600;
-  transition: all var(--transition-speed);
-  flex: 1;
+  transition: background-color var(--transition-speed);
   justify-content: center;
   white-space: nowrap;
 }
@@ -302,6 +723,18 @@ export default {
 .btn-danger:hover {
   background: #c82333;
   transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.group-actions .btn {
+  flex: 1 1 auto;
+  min-width: fit-content;
+  padding: 8px 12px;
+  font-size: 0.85em;
 }
 
 .empty-state {
@@ -344,6 +777,196 @@ export default {
   margin: 0 0 24px 0;
 }
 
+.empty-state-small {
+  text-align: center;
+  padding: 20px;
+  color: var(--tg-text-light);
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--tg-card-bg);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--box-shadow-hover);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--tg-border);
+}
+
+.modal-header h3 {
+  color: var(--tg-blue);
+  font-size: 1.3em;
+  font-weight: 600;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color var(--transition-speed);
+}
+
+.close-btn:hover {
+  background-color: var(--tg-blue-light);
+}
+
+.close-btn i {
+  width: 20px;
+  height: 20px;
+  color: var(--tg-text-light);
+}
+
+.group-form {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--tg-text);
+  margin-bottom: 6px;
+  font-size: 0.9em;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--tg-border);
+  border-radius: var(--border-radius-button);
+  font-size: 1em;
+  outline: none;
+  transition: border-color var(--transition-speed);
+  background: var(--tg-card-bg);
+  color: var(--tg-text);
+}
+
+.form-input:focus {
+  border-color: var(--tg-blue);
+}
+
+.form-input::placeholder {
+  color: var(--tg-text-light);
+}
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--tg-border);
+}
+
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin: 16px 24px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: var(--border-radius-button);
+  border: 2px solid var(--tg-border);
+  font-size: 1em;
+  transition: border-color var(--transition-speed);
+  background: var(--tg-card-bg);
+  color: var(--tg-text);
+}
+
+.search-bar input:focus {
+  border-color: var(--tg-blue);
+  outline: none;
+}
+
+.search-bar input::placeholder {
+  color: var(--tg-text-light);
+}
+
+.students-list, .teachers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0 24px 24px 24px;
+  margin-bottom: 10px;
+}
+
+.student-item, .teacher-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--tg-card-bg);
+  border-radius: var(--border-radius-card);
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+  border: 1px solid var(--tg-border);
+}
+
+.student-item:hover, .teacher-item:hover {
+  background: var(--tg-blue-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.teacher-item.selected {
+  background: var(--tg-blue-light);
+  border-left: 3px solid var(--tg-blue);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.student-item input[type="checkbox"] {
+  margin-right: 8px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.student-details, .teacher-details {
+  flex: 1;
+}
+
+.student-details h4, .teacher-item h4 {
+  font-size: 1em;
+  font-weight: 500;
+  margin: 0;
+  color: var(--tg-text);
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .section-header {
@@ -364,10 +987,13 @@ export default {
 
   .group-actions {
     flex-direction: column;
+    gap: 8px;
   }
 
-  .btn {
+  .group-actions .btn {
     width: 100%;
+    padding: 8px 12px;
+    font-size: 0.85em;
   }
 }
 
@@ -415,5 +1041,19 @@ export default {
     width: 30px;
     height: 30px;
   }
+
+  .modal-content {
+    width: 95%;
+    max-width: 350px;
+  }
+
+  .search-bar {
+    margin: 12px 16px;
+  }
+
+  .students-list, .teachers-list {
+    padding: 0 16px 16px 16px;
+  }
 }
 </style>
+

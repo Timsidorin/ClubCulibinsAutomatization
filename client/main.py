@@ -1,6 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-
+import logging
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from fastapi import FastAPI, Request
@@ -12,6 +12,7 @@ from handlers.main import router as rt
 from client.core.create_base_app import create_base_app
 from core.config import configs
 
+logging.basicConfig(level=logging.INFO)
 bot = Bot(token=configs.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
@@ -24,6 +25,7 @@ async def lifespan(app: FastAPI):
         allowed_updates=dp.resolve_used_update_types(),
         drop_pending_updates=True
     )
+    logging.info("Бот запущен")
     yield
     await bot.delete_webhook()
     await bot.session.close()
@@ -42,3 +44,4 @@ app.mount("/", StaticFiles(directory="mini_app/dist", html=True), name="static")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host=configs.HOST, port=configs.PORT, reload=True)
+    logging.info(f"Запуск сервера на {configs.HOST}:{configs.PORT}")

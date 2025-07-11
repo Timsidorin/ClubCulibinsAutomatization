@@ -30,7 +30,7 @@
         @click="toggleActions(teacher.id)"
       >
         <div class="teacher-details">
-          <h4>{{ teacher.fullName }}</h4>
+          <h4> <i data-feather="user"></i>  {{ teacher.fullName }}</h4>
           <p>
             Telegram: <span v-if="teacher.telegramUsername">{{ teacher.telegramUsername }}</span><span v-else>—</span><br>
             Email: <span v-if="teacher.email">{{ teacher.email }}</span><span v-else>—</span><br>
