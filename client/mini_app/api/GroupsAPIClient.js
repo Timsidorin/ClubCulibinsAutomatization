@@ -20,6 +20,13 @@ class GroupsAPIClient extends ApiClient {
     return await this.put(`${this.endpoint}`, groupData);
   }
 
+
+   // Привязать учителя к группе
+  async SnapTeacher(SnapData) {
+    return await this.put(`${this.endpoint}/add-teacher`, SnapData);
+  }
+
+
 }
 
 export default GroupsAPIClient;
