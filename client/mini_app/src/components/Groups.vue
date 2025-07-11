@@ -302,7 +302,7 @@ export default {
                     teacherId: groupData.uuidUser || null,
                 };
             });
-            // >>>>> КОНЕЦ ИСПРАВЛЕНИЯ <<<<<
+
         } else {
             groups.value = [];
             if (!errorMessage.value) {
