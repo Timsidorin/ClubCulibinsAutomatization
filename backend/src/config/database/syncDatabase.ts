@@ -6,6 +6,7 @@ import '../../schemas/User';
 import '../../schemas/TypeUser';
 import '../../schemas/EducationGroup'
 import '../../schemas/EducationGroupMember'
+import '../../schemas/Balance';
 //Утилиты для работы с БД
 import {createTypesUser} from "./create/createTypesUser";
 

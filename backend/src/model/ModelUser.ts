@@ -20,7 +20,7 @@ export class ModelUser {
                 uuidUser: newUser.uuid,
                 ...userData
             })
-            return {code: 201, message: 'Новый пользователь создан'};
+            return {code: 201, message: newUser.uuid};
         } catch (e: any) {
             return {code: e.parent.code, message: e.errors[0].path};
         }

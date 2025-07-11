@@ -4,7 +4,7 @@ import {User} from "../schemas/User";
 import {EducationGroupMember} from "../schemas/EducationGroupMember";
 import {IUser} from "../interfaces/IUser";
 import {sequelize} from "../config/database/database";
-import {IAnswerGroup} from "../interfaces/IAnswer";
+import {IAnswer} from "../interfaces/IAnswer";
 import {PersonalData} from "../schemas/PersonalData";
 
 export class ModelEducationGroup {
@@ -42,7 +42,7 @@ export class ModelEducationGroup {
         }
     }
 
-    public async getAllGroups(tgUsername: unknown): Promise<IAnswerGroup<object> | null> {
+    public async getAllGroups(tgUsername: unknown): Promise<IAnswer<object> | null> {
         try {
             let uuidUser = {};
             let answer = {groups: {}};
@@ -82,7 +82,7 @@ export class ModelEducationGroup {
         }
     }
 
-    public async addChildrens(data: IAddChildren<Pick<IUser, 'tgUsername'>>): Promise<IAnswerGroup<string>> {
+    public async addChildrens(data: IAddChildren<Pick<IUser, 'tgUsername'>>): Promise<IAnswer<string>> {
         try {
             let dataInsert: any = [];
             data.childrens.forEach((children) => {
@@ -96,7 +96,7 @@ export class ModelEducationGroup {
         }
     }
 
-    public async deleteEducationGroup(uuid: string): Promise<IAnswerGroup<string>> {
+    public async deleteEducationGroup(uuid: string): Promise<IAnswer<string>> {
         try {
             await EducationGroup.destroy({
                 where: {uuid}
@@ -107,7 +107,7 @@ export class ModelEducationGroup {
         }
     }
 
-    public async deleteChildren(tgUsername: string): Promise<IAnswerGroup<string>> {
+    public async deleteChildren(tgUsername: string): Promise<IAnswer<string>> {
         try {
             await EducationGroupMember.destroy({
                 where: {tgUsername}
@@ -118,7 +118,7 @@ export class ModelEducationGroup {
         }
     }
 
-    public async connectWithGroup(tgUsername: string, uuid: string): Promise<IAnswerGroup<string>> {
+    public async connectWithGroup(tgUsername: string, uuid: string): Promise<IAnswer<string>> {
         try {
             let teacher: User | null = null;
 
@@ -142,7 +142,7 @@ export class ModelEducationGroup {
         }
     }
 
-    public async updateInfoGroup(body: IEducationGroupCreate): Promise<IAnswerGroup<string>> {
+    public async updateInfoGroup(body: IEducationGroupCreate): Promise<IAnswer<string>> {
         try {
             await EducationGroup.update(
                 {

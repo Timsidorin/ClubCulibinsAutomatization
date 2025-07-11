@@ -480,6 +480,70 @@
           }
         }
       }
+    },
+    "/balance/update": {
+      "patch": {
+        "tags": [
+          "Баланс"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Обновление баланса",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "tgUsername": {
+                  "type": "string",
+                  "example": "@string"
+                },
+                "operation": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "summ": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/balance/get": {
+      "get": {
+        "tags": [
+          "Баланс"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "tgUsername",
+            "description": "По кому делать фильтрацию",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
     }
   }
 }

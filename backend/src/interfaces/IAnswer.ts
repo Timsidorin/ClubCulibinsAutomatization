@@ -1,4 +1,4 @@
-export interface IAnswerGroup<T> {
+export interface IAnswer<T> {
     code: number;
     message: T;
 }

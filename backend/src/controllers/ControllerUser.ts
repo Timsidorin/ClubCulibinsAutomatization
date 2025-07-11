@@ -4,12 +4,25 @@ import {
     IGetAnswerUser,
     IGetAllUsers, IUser
 } from "../interfaces/IUser";
+import {ModelBalance} from "../model/ModelBalance";
 
 export class ControllerUser {
     User: ModelUser = new ModelUser();
+    Balance: ModelBalance = new ModelBalance();
 
     public async createUser(body: Omit<IUser, 'tgId'>): Promise<IAnswerUser<string>> {
-        return await this.User.createUser(body);
+        try {
+            let answerUser = await this.User.createUser(body);
+            if (answerUser.code === 201) {
+                if (body.typeUser === 3) {
+                    await this.Balance.createBalance(answerUser.message)
+                }
+                return {code: answerUser.code, message: 'Успешное создание'};
+            }
+            return {code: answerUser.code, message: answerUser.message};
+        } catch (error: any) {
+            return error;
+        }
     }
 
     public async registerUser(body: Pick<IUser, 'tgId' | 'tgUsername'>): Promise<IAnswerUser<string>> {
