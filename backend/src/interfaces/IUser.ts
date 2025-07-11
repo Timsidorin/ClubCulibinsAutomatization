@@ -12,9 +12,9 @@ export interface IUser {
     note: string;
 }
 
-export interface IAnswerUser {
+export interface IAnswerUser<T> {
     code: number;
-    message: string;
+    message: T;
 }
 
 export interface IGetAnswerUser {

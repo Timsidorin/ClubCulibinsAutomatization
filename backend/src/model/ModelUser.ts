@@ -9,7 +9,7 @@ import {
 import {sequelize} from "../config/database/database";
 
 export class ModelUser {
-    public async createUser(data: Omit<IUser, 'tgId'>): Promise<IAnswerUser> {
+    public async createUser(data: Omit<IUser, 'tgId'>): Promise<IAnswerUser<string>> {
         try {
             let newUser: User = await User.create({
                 tgUsername: data.tgUsername,
@@ -26,7 +26,7 @@ export class ModelUser {
         }
     }
 
-    public async registerUser(data: Pick<IUser, 'tgId' | 'tgUsername'>): Promise<IAnswerUser> {
+    public async registerUser(data: Pick<IUser, 'tgId' | 'tgUsername'>): Promise<IAnswerUser<string>> {
         try {
             await User.update(
                 {tgId: data.tgId,},
@@ -79,7 +79,7 @@ export class ModelUser {
         }
     }
 
-    public async updateUser(data: IUser): Promise<IAnswerUser> {
+    public async updateUser(data: IUser): Promise<IAnswerUser<string>> {
         try {
             let userData = await User.findOne({
                 where: {tgUsername: data.tgUsername}
@@ -98,7 +98,7 @@ export class ModelUser {
         }
     }
 
-    public async deleteUser(tgUsername: string): Promise<IAnswerUser> {
+    public async deleteUser(tgUsername: string): Promise<IAnswerUser<string>> {
         const transaction = await sequelize.transaction();
         try {
             const user = await User.findOne({
@@ -119,6 +119,20 @@ export class ModelUser {
             await transaction.commit();
             return {code: 200, message: 'Пользователь удален'};
         } catch (error) {
+            return {code: 500, message: 'Произошла ошибка'};
+        }
+    }
+
+    public async getUserRole(tgUsername: unknown): Promise<IAnswerUser<string>>  {
+        try {
+            let user = await User.findOne({
+                where: {tgUsername: tgUsername}
+            });
+            if (!user) {
+                return {code: 500, message: 'Такого юзера нет'};
+            }
+            return {code: 200, message: `${user?.typeUser}`};
+        } catch {
             return {code: 500, message: 'Произошла ошибка'};
         }
     }

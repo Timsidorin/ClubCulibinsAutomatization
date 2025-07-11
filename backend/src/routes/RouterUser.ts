@@ -135,5 +135,23 @@ router.delete('/:tgUsername', async (req: Request, res: Response) => {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 })
+router.get('/get/role', async (req: Request, res: Response) => {
+    /*
+    #swagger.tags = ['Пользователь']
+       #swagger.parameters['tgUsername'] = {
+        description: 'Получить роль пользователя'
+        }
+    */
+    try {
+        let paramsType = req.query.tgUsername;
+        let answer =  await controllerUser.getUserRole(paramsType);
+        if (answer.code === 500) {
+            res.status(500).send(answer)
+        }
+        res.status(200).send(answer);
+    } catch (e: any) {
+        res.status(500).send({message: JSON.parse(e.message)});
+    }
+})
 
 export default router;

@@ -228,6 +228,30 @@
         }
       }
     },
+    "/user/get/role": {
+      "get": {
+        "tags": [
+          "Пользователь"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "tgUsername",
+            "description": "Получить роль пользователя",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/education-group/create": {
       "post": {
         "tags": [
