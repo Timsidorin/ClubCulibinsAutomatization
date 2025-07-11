@@ -40,7 +40,7 @@
           <div class="stat-item">
             <i data-feather="user-check"></i>
             <span class="stat-label">Учитель:</span>
-            <span class="stat-value">{{ group.teacherId || 'Не назначен' }}</span>
+            <span class="stat-value">{{ group.teacherName || 'Не назначен' }}</span>
           </div>
         </div>
 
@@ -275,11 +275,8 @@ export default {
     try {
         const response = await groupsApiClient.getAllGroups();
         let groupsData = [];
-        if (response && response.data && Array.isArray(response.data)) {
-            groupsData = response.data;
-        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-            groupsData = response.data.data;
-        } else if (response && response.message && response.message.groups && Array.isArray(response.message.groups)) {
+
+        if (response?.message?.groups && Array.isArray(response.message.groups)) {
             groupsData = response.message.groups;
         } else if (Array.isArray(response)) {
             groupsData = response;
@@ -289,21 +286,28 @@ export default {
         }
 
         if (Array.isArray(groupsData)) {
-            groups.value = groupsData.map(groupData => ({
-                id: groupData.id || groupData.uuid || Date.now().toString(),
-                name: groupData.name || 'Без названия',
-                description: groupData.description || '',
-                studentsCount: groupData.studentsCount || 0,
-                teacher: groupData.teacherData?.PersonalDatum
-                    ? `${groupData.teacherData.PersonalDatum.lastName || ''} ${groupData.teacherData.PersonalDatum.name || ''} ${groupData.teacherData.PersonalDatum.secondName || ''}`.trim()
-                    : 'Не назначен',
-                teacherId: groupData.uuidUser || null,
-                studentIds: groupData.studentIds || [],
-
-            }));
+            groups.value = groupsData.map(groupData => {
+                const personalData = groupData.User?.PersonalDatum;
+                let teacherNameFormatted = 'Не назначен';
+                if (personalData && personalData.lastName && personalData.name && personalData.secondName) {
+                    teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.${personalData.secondName[0]}.`;
+                }
+                return {
+                    id: groupData.uuid || Date.now().toString(),
+                    name: groupData.name || 'Без названия',
+                    description: groupData.description || '',
+                    studentsCount: groupData.studentsCount || 0,
+                    teacherName: teacherNameFormatted,
+                    studentIds: groupData.studentIds || [],
+                    teacherId: groupData.uuidUser || null,
+                };
+            });
+            // >>>>> КОНЕЦ ИСПРАВЛЕНИЯ <<<<<
         } else {
             groups.value = [];
-            errorMessage.value = 'Получены некорректные данные от сервера.';
+            if (!errorMessage.value) {
+                errorMessage.value = 'Получены некорректные данные от сервера.';
+            }
         }
     } catch (error) {
         console.error('Ошибка при загрузке групп:', error);
@@ -313,6 +317,7 @@ export default {
         isLoading.value = false;
     }
 };
+
 
 
     const fetchStudents = async () => {
