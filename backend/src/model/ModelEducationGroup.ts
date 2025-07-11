@@ -45,7 +45,7 @@ export class ModelEducationGroup {
     public async getAllGroups(tgUsername: unknown): Promise<IAnswerGroup<object> | null> {
         try {
             let uuidUser = {};
-            let answer = {groups: {}, personalData: {}};
+            let answer = {groups: {}};
             if (tgUsername) {
                 const teacher = await User.findOne({
                     where: {
@@ -60,16 +60,24 @@ export class ModelEducationGroup {
                 if (!teacher) {
                     throw new Error(`Учитель с tgUsername "${tgUsername}" (type=1) не найден`);
                 }
-                answer.personalData = teacher?.dataValues.PersonalDatum.dataValues;
                 uuidUser = {uuidUser: teacher?.uuid};
             }
             let groups = await EducationGroup.findAll({
                 where: {...uuidUser},
+                include: [{
+                    model: User,
+                    required: false,
+                    include: [{
+                        model: PersonalData,
+                        required: false,
+                    }]
+                }]
             })
             answer.groups = groups;
+            console.log(groups);
             return {code: 200, message: answer};
         } catch (error) {
-            console.error(error);
+            console.log(error);
             throw new Error('Ошибка получения групп');
         }
     }
