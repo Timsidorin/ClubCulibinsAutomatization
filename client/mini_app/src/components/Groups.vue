@@ -40,7 +40,7 @@
           <div class="stat-item">
             <i data-feather="user-check"></i>
             <span class="stat-label">Учитель:</span>
-            <span class="stat-value">{{ group.teacher || 'Не назначен' }}</span>
+            <span class="stat-value">{{ group.teacherId || 'Не назначен' }}</span>
           </div>
         </div>
 
@@ -270,46 +270,50 @@ export default {
     });
 
     const fetchGroups = async () => {
-      isLoading.value = true;
-      errorMessage.value = '';
-      try {
+    isLoading.value = true;
+    errorMessage.value = '';
+    try {
         const response = await groupsApiClient.getAllGroups();
         let groupsData = [];
         if (response && response.data && Array.isArray(response.data)) {
-          groupsData = response.data;
+            groupsData = response.data;
         } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          groupsData = response.data.data;
+            groupsData = response.data.data;
+        } else if (response && response.message && response.message.groups && Array.isArray(response.message.groups)) {
+            groupsData = response.message.groups;
         } else if (Array.isArray(response)) {
-          groupsData = response;
+            groupsData = response;
         } else {
-          groupsData = [];
-          errorMessage.value = 'Получены некорректные данные от сервера.';
+            groupsData = [];
+            errorMessage.value = 'Получены некорректные данные от сервера.';
         }
 
         if (Array.isArray(groupsData)) {
-          groups.value = groupsData.map(groupData => ({
-            id: groupData.id || groupData.uuid || Date.now().toString(),
-            name: groupData.name || 'Без названия',
-            description: groupData.description || '',
-            studentsCount: groupData.studentsCount || 0,
-            teacher: groupData.teacherData?.PersonalDatum
-              ? `${groupData.teacherData.PersonalDatum.lastName || ''} ${groupData.teacherData.PersonalDatum.name || ''} ${groupData.teacherData.PersonalDatum.secondName || ''}`.trim()
-              : 'Не назначен',
-            teacherId: groupData.teacherId || null,
-            studentIds: groupData.studentIds || []
-          }));
+            groups.value = groupsData.map(groupData => ({
+                id: groupData.id || groupData.uuid || Date.now().toString(),
+                name: groupData.name || 'Без названия',
+                description: groupData.description || '',
+                studentsCount: groupData.studentsCount || 0,
+                teacher: groupData.teacherData?.PersonalDatum
+                    ? `${groupData.teacherData.PersonalDatum.lastName || ''} ${groupData.teacherData.PersonalDatum.name || ''} ${groupData.teacherData.PersonalDatum.secondName || ''}`.trim()
+                    : 'Не назначен',
+                teacherId: groupData.uuidUser || null,
+                studentIds: groupData.studentIds || [],
+
+            }));
         } else {
-          groups.value = [];
-          errorMessage.value = 'Получены некорректные данные от сервера.';
+            groups.value = [];
+            errorMessage.value = 'Получены некорректные данные от сервера.';
         }
-      } catch (error) {
+    } catch (error) {
         console.error('Ошибка при загрузке групп:', error);
         errorMessage.value = 'Не удалось загрузить список групп. Попробуйте позже.';
         groups.value = [];
-      } finally {
+    } finally {
         isLoading.value = false;
-      }
-    };
+    }
+};
+
 
     const fetchStudents = async () => {
       try {

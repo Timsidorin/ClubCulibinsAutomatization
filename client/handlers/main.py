@@ -12,8 +12,6 @@ router = Router()
 
 
 
-
-
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     client = UserAPIClient()
@@ -21,7 +19,7 @@ async def cmd_start(message: Message):
     role = await client.check_user_role(username)
     if role == "2":
         await message.answer("Привет, Админ!", reply_markup=create_admin_keyboard())
-    else:
+    elif role == "1":
         await message.answer("Привет, Преподаватель!", reply_markup=create_teacher_keyboard())
 
 

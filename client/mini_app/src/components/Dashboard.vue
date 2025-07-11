@@ -161,34 +161,37 @@ export default {
     // Загрузка списка Групп из API
 
     const fetchGroups = async () => {
-      try {
-        const response = await groupsApiClient.getAllGroups();
-        let groupsData = [];
-        if (response && response.data && Array.isArray(response.data)) {
-          groupsData = response.data;
-        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          groupsData = response.data.data;
-        } else if (Array.isArray(response)) {
-          groupsData = response;
-        } else {
-          groupsData = [];
-          console.error('Получены некорректные данные от сервера для групп.');
-        }
+  try {
+    const response = await groupsApiClient.getAllGroups();
+    let groupsData = [];
+    if (response && response.data && Array.isArray(response.data)) {
+      groupsData = response.data;
+    } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+      groupsData = response.data.data;
+    } else if (response && response.message && response.message.groups && Array.isArray(response.message.groups)) {
+      groupsData = response.message.groups;
+    } else if (Array.isArray(response)) {
+      groupsData = response;
+    } else {
+      groupsData = [];
+      console.error('Получены некорректные данные от сервера для групп.');
+    }
 
-        if (Array.isArray(groupsData)) {
-          groups.value = groupsData;
-          emit('groups-loaded', groups.value);
-        } else {
-          groups.value = [];
-        }
-      } catch (error) {
-        console.error('Ошибка при загрузке групп:', error);
-        if (error.response) {
-          console.error('Ответ сервера (ошибка):', error.response);
-        }
-        groups.value = [];
-      }
-    };
+    if (Array.isArray(groupsData)) {
+      groups.value = groupsData;
+      emit('groups-loaded', groups.value);
+    } else {
+      groups.value = [];
+    }
+  } catch (error) {
+    console.error('Ошибка при загрузке групп:', error);
+    if (error.response) {
+      console.error('Ответ сервера (ошибка):', error.response);
+    }
+    groups.value = [];
+  }
+};
+
 
     onMounted(() => {
       updateFeather();
