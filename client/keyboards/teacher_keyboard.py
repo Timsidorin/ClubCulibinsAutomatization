@@ -18,7 +18,7 @@ def create_teacher_keyboard():
 def get_my_groups(username:str):
     keyboard = InlineKeyboardBuilder()
     client = TeacherAPIClient()
-    groups = client.get_my_groups(teacher_tg_username=username)  # берем группы из апишки
+    groups = client.get_my_groups(teacher_tg_username=username)
     for group in groups:
         keyboard.button(text=group, callback_data=group)
     keyboard.adjust(2)
