@@ -1,5 +1,3 @@
-import {IUser} from "./IUser";
-
 export interface IEducationGroupCreate {
     name: string,
     description: string,

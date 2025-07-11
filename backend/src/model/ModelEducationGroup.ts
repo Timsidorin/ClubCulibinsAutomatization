@@ -7,11 +7,11 @@ import {sequelize} from "../config/database/database";
 import {IAnswerGroup} from "../interfaces/IAnswer";
 
 export class ModelEducationGroup {
-    public async createGroup(data: Omit<IEducationGroupCreate, 'uuidUser'>): Promise<void> {
+    public async createGroup(data: IEducationGroupCreate): Promise<void> {
         const transaction = await sequelize.transaction();
         try {
             let teacher: User | null;
-            let insertData = {};
+            let insertData = {...data};
             if (data.tgUsername) {
                 teacher = await User.findOne({
                     where: {
@@ -24,7 +24,8 @@ export class ModelEducationGroup {
                 if (!teacher) {
                     throw new Error(`Учитель с tgUsername "${data.tgUsername}" (type=1) не найден`);
                 }
-                insertData = {uuidUser: teacher?.uuid, ...data};
+
+                insertData['uuidUser'] = teacher?.uuid;
             }
             await EducationGroup.create({
                 ...insertData
