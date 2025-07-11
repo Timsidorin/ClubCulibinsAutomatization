@@ -8,7 +8,7 @@ class TeacherAPIClient(BaseAPIClient):
 
     async def get_my_groups(self, teacher_tg_username: str):
         """Получение всех групп учителя"""
-        groups = await self._send_request("get", "teacher/get_groups", data= {"teacher_tg_username": teacher_tg_username})
+        groups = await self._send_request("get", "education-group/get_all", data= {"tgUsername": teacher_tg_username})
         return  groups
 
     async  def add_kk(self, child_tg_username:str, coins: int):
