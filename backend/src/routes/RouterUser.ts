@@ -107,7 +107,7 @@ router.put('/:tgUsername',  jsonParser, async (req: Request, res: Response) => {
             secondName: 'string',
         }
     }
-*/
+    */
     try {
         let data = {...req.body, tgUsername: req.params.tgUsername};
         let answer = await controllerUser.updateUser(data);

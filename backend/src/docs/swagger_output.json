@@ -356,6 +356,130 @@
           }
         }
       }
+    },
+    "/education-group/{uuid}": {
+      "delete": {
+        "tags": [
+          "Учебная группа"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/education-group/children/{tgUsername}": {
+      "delete": {
+        "tags": [
+          "Учебная группа"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "tgUsername",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/education-group/add-teacher": {
+      "post": {
+        "tags": [
+          "Учебная группа"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Назначение препода к группе",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "tgUsername": {
+                  "type": "string",
+                  "example": "@string"
+                },
+                "uuid": {
+                  "type": "string",
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/education-group/update-group": {
+      "put": {
+        "tags": [
+          "Учебная группа"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Назначение препода к группе",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "uuid": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
     }
   }
 }

@@ -9,6 +9,9 @@ export class User extends Model {
         name: string,
         code: number
     };
+    declare name: string;
+    declare surname: string;
+    declare lastName: string;
 }
 
 User.init(

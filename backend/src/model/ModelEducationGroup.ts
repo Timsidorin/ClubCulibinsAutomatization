@@ -5,6 +5,7 @@ import {EducationGroupMember} from "../schemas/EducationGroupMember";
 import {IUser} from "../interfaces/IUser";
 import {sequelize} from "../config/database/database";
 import {IAnswerGroup} from "../interfaces/IAnswer";
+import {PersonalData} from "../schemas/PersonalData";
 
 export class ModelEducationGroup {
     public async createGroup(data: IEducationGroupCreate): Promise<void> {
@@ -41,25 +42,32 @@ export class ModelEducationGroup {
         }
     }
 
-    public async getAllGroups(tgUsername: unknown): Promise<EducationGroup[] | null> {
+    public async getAllGroups(tgUsername: unknown): Promise<IAnswerGroup<object> | null> {
         try {
             let uuidUser = {};
+            let answer = {groups: {}, personalData: {}};
             if (tgUsername) {
                 const teacher = await User.findOne({
                     where: {
                         tgUsername: tgUsername,
-                        typeUser: 1
+                        typeUser: 1,
                     },
-                    attributes: ['uuid'],
+                    include: [{
+                        model: PersonalData,
+                        required: false,
+                    }],
                 });
                 if (!teacher) {
                     throw new Error(`Учитель с tgUsername "${tgUsername}" (type=1) не найден`);
                 }
+                answer.personalData = teacher?.dataValues.PersonalDatum.dataValues;
                 uuidUser = {uuidUser: teacher?.uuid};
             }
-            return await EducationGroup.findAll({
+            let groups = await EducationGroup.findAll({
                 where: {...uuidUser},
             })
+            answer.groups = groups;
+            return {code: 200, message: answer};
         } catch (error) {
             console.error(error);
             throw new Error('Ошибка получения групп');
@@ -77,6 +85,67 @@ export class ModelEducationGroup {
             return {code: 200, message: 'Успешное заполнение группы'};
         } catch (error) {
             throw new Error(`Произошла ошибка при создании`);
+        }
+    }
+
+    public async deleteEducationGroup(uuid: string): Promise<IAnswerGroup<string>> {
+        try {
+            await EducationGroup.destroy({
+                where: {uuid}
+            })
+            return {code: 200, message: 'Успешное удаление'};
+        } catch {
+            throw new Error(`Произошла ошибка, обратитесь к админу!`);
+        }
+    }
+
+    public async deleteChildren(tgUsername: string): Promise<IAnswerGroup<string>> {
+        try {
+            await EducationGroupMember.destroy({
+                where: {tgUsername}
+            })
+            return {code: 200, message: 'Успешное удаление'};
+        } catch {
+            throw new Error(`Обратитесь к админу`);
+        }
+    }
+
+    public async connectWithGroup(tgUsername: string, uuid: string): Promise<IAnswerGroup<string>> {
+        try {
+            let teacher: User | null = null;
+
+            if (tgUsername) {
+                teacher = await User.findOne({
+                    where: {tgUsername},
+                    attributes: ['uuid'],
+                })
+            }
+
+            await EducationGroup.update(
+                {
+                    uuidUser: teacher?.uuid ?? null,
+                },
+                {
+                    where: {uuid}
+                });
+            return {code: 200, message: 'Успешное назначение'}
+        } catch {
+            throw new Error(`Произошла ошибка`);
+        }
+    }
+
+    public async updateInfoGroup(body: IEducationGroupCreate): Promise<IAnswerGroup<string>> {
+        try {
+            await EducationGroup.update(
+                {
+                    ...body,
+                },
+                {
+                    where: {uuid: body.uuid},
+                });
+            return {code: 200, message: 'Успешное обновление данных'};
+        } catch {
+            throw new Error('Произошла ошибка');
         }
     }
 }
