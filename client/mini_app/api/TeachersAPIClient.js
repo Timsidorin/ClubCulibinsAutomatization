@@ -42,12 +42,7 @@ class TeachersAPIClient extends ApiClient {
         return await this.get(`${this.endpoint}/telegram/${username}`);
     }
 
-    // Активировать/деактивировать учителя
-    async toggleTeacherStatus(teacherId, isActive) {
-        return await this.put(`${this.endpoint}/${teacherId}/status`, {
-            is_active: isActive
-        });
-    }
+
 
 }
 
