@@ -183,4 +183,27 @@ export class ModelEducationGroup {
             throw new Error('Произошла ошибка');
         }
     }
+
+    public async getGroupComposition(uuid: string): Promise<IAnswer<EducationGroup | null>> {
+        try {
+            let composition = await EducationGroup.findOne({
+                where: {uuid},
+                include: [{
+                    model: EducationGroupMember,
+                    required: false,
+                    include: [{
+                        model: User,
+                        required: false,
+                        include: [{
+                            model: PersonalData,
+                            required: false,
+                        }]
+                    }]
+                }]
+            });
+            return {code: 200, message: composition};
+        } catch {
+            throw new Error(`Не удалось найти состав группы`);
+        }
+    }
 }

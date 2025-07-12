@@ -139,5 +139,13 @@ router.put('/update-group', jsonParser, async (req: Request, res: Response) => {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 })
+router.get('/get/composition/:uuid', async (req: Request, res: Response) => {
+    try {
+        let answer = await controllerEducationGroup.getGroupComposition(req.params.uuid);
+        res.status(200).send(answer);
+    } catch (e) {
+        res.status(500).send(e);
+    }
+})
 
 export default router;
