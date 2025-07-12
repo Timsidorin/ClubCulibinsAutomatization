@@ -45,11 +45,21 @@ export class ModelEducationGroup {
     public async getAllGroups(tgUsername: unknown): Promise<IAnswer<object> | null> {
         try {
             let uuidUser = {};
-            let answer = {groups: {}};
+            let answer = { groups: {} };
+            let usernames: string[] = [];
             if (tgUsername) {
-                const teacher = await User.findOne({
+                if (Array.isArray(tgUsername)) {
+                    usernames = tgUsername as string[];
+                } else if (typeof tgUsername === 'string') {
+                    usernames = tgUsername.split(',');
+                } else {
+                    usernames = [tgUsername as string];
+                }
+            }
+            if (usernames.length > 0) {
+                const teachers = await User.findAll({
                     where: {
-                        tgUsername: tgUsername,
+                        tgUsername: usernames,
                         typeUser: 1,
                     },
                     include: [{
@@ -57,11 +67,14 @@ export class ModelEducationGroup {
                         required: false,
                     }],
                 });
-                if (!teacher) {
-                    throw new Error(`Учитель с tgUsername "${tgUsername}" (type=1) не найден`);
+
+                if (!teachers || teachers.length === 0) {
+                    throw new Error(`Учителя с tgUsername ${usernames.join(', ')} (type=1) не найдены`);
                 }
-                uuidUser = {uuidUser: teacher?.uuid};
+
+                uuidUser = { uuidUser: teachers.map(teacher => teacher.uuid) };
             }
+
             let groups = await EducationGroup.findAll({
                 where: { ...uuidUser },
                 include: [
@@ -87,12 +100,12 @@ export class ModelEducationGroup {
                     }
                 ],
             });
+
             answer.groups = groups;
-            console.log(groups);
-            return {code: 200, message: answer};
+            return { code: 200, message: answer };
         } catch (error) {
-            console.log(error);
-            throw new Error('Ошибка получения групп');
+            console.error(error);
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения групп');
         }
     }
 

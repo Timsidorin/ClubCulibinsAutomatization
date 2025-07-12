@@ -301,9 +301,14 @@
         "parameters": [
           {
             "name": "tgUsername",
-            "description": "По кому делать фильтрацию",
             "in": "query",
-            "type": "string"
+            "description": "Фильтрация по Telegram username (можно передать несколько значений)",
+            "type": "array",
+            "collectionFormat": "multi",
+            "items": {
+              "type": "string"
+            },
+            "required": false
           }
         ],
         "responses": {

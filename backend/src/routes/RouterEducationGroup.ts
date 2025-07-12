@@ -29,17 +29,34 @@ router.post("/create", jsonParser, async (req: Request, res: Response) => {
 router.get("/get-all", async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учебная группа']
-       #swagger.parameters['tgUsername'] = {
-        description: 'По кому делать фильтрацию'
-        }
+    #swagger.parameters['tgUsername'] = {
+        in: 'query',
+        description: 'Фильтрация по Telegram username (можно передать несколько значений)',
+        type: 'array',
+        collectionFormat: 'multi',
+        items: { type: 'string' },
+        required: false
+    }
     */
     try {
-        let response = await controllerEducationGroup.getAllEducationGroups(req.query.tgUsername);
+        let tgUsernames = req.query.tgUsername;
+
+        // Если передано одно значение — преобразуем в массив
+        if (tgUsernames && !Array.isArray(tgUsernames)) {
+            tgUsernames = [tgUsernames];
+        }
+
+        // Если передана строка с разделителями (например, "user1,user2")
+        if (typeof tgUsernames === 'string') {
+            tgUsernames = tgUsernames.split(',');
+        }
+
+        let response = await controllerEducationGroup.getAllEducationGroups(tgUsernames);
         res.status(200).send(response);
     } catch (e: any) {
-        res.status(500).send({message: JSON.parse(e.message)});
+        res.status(500).send({ message: e.message }); // Убрал JSON.parse, если ошибка уже в формате объекта
     }
-})
+});
 router.post("/add-childrens", jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учебная группа']
