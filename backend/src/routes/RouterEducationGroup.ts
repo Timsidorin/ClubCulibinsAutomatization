@@ -140,6 +140,9 @@ router.put('/update-group', jsonParser, async (req: Request, res: Response) => {
     }
 })
 router.get('/get/composition/:uuid', async (req: Request, res: Response) => {
+    /*
+    #swagger.tags = ['Учебная группа']
+    */
     try {
         let answer = await controllerEducationGroup.getGroupComposition(req.params.uuid);
         res.status(200).send(answer);

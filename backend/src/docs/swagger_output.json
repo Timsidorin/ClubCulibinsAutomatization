@@ -488,6 +488,9 @@
     },
     "/education-group/get/composition/{uuid}": {
       "get": {
+        "tags": [
+          "Учебная группа"
+        ],
         "description": "",
         "parameters": [
           {
