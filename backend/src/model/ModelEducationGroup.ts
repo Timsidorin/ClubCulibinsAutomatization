@@ -63,16 +63,30 @@ export class ModelEducationGroup {
                 uuidUser = {uuidUser: teacher?.uuid};
             }
             let groups = await EducationGroup.findAll({
-                where: {...uuidUser},
-                include: [{
-                    model: User,
-                    required: false,
-                    include: [{
-                        model: PersonalData,
+                where: { ...uuidUser },
+                include: [
+                    {
+                        model: User,
                         required: false,
-                    }]
-                }]
-            })
+                        include: [{
+                            model: PersonalData,
+                            required: false,
+                        }]
+                    },
+                    {
+                        model: EducationGroupMember,
+                        required: false,
+                        include: [{
+                            model: User,
+                            required: false,
+                            include: [{
+                                model: PersonalData,
+                                required: false,
+                            }]
+                        }]
+                    }
+                ],
+            });
             answer.groups = groups;
             console.log(groups);
             return {code: 200, message: answer};
