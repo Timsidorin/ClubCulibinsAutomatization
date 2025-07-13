@@ -44,4 +44,4 @@ app.mount("/", StaticFiles(directory="mini_app/dist", html=True), name="static")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host=configs.HOST, port=configs.PORT, reload=True)
-    logging.info(f"Запуск сервера на {configs.HOST}:{configs.PORT}")
+
