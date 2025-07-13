@@ -6,6 +6,7 @@ import {IUser} from "../interfaces/IUser";
 import {sequelize} from "../config/database/database";
 import {IAnswer} from "../interfaces/IAnswer";
 import {PersonalData} from "../schemas/PersonalData";
+import {Balance} from "../schemas/Balance";
 
 export class ModelEducationGroup {
     public async createGroup(data: IEducationGroupCreate): Promise<void> {
@@ -194,10 +195,16 @@ export class ModelEducationGroup {
                     include: [{
                         model: User,
                         required: false,
-                        include: [{
-                            model: PersonalData,
-                            required: false,
-                        }]
+                        include: [
+                            {
+                                model: PersonalData,
+                                required: false,
+                            },
+                            {
+                                model: Balance,
+                                required: false,
+                            }
+                        ],
                     }]
                 }]
             });
