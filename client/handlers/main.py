@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
@@ -77,13 +77,28 @@ async def get_children_list(callback: CallbackQuery, state: FSMContext):
     try:
         client = TeacherAPIClient()
         members_response = await client.get_group_members(uuid_group=group_uuid)
-        members = (members_response.get("message", [])["EducationGroupMembers"])
+        members = members_response.get("message", [])["EducationGroupMembers"]
+
         if members:
-            children_list = "\n".join(
-                f"{x}) {format_child(m)}" for x,m in enumerate(members, start=1)
-            )
-            children_text = f"<b>Список детей в группе:</b>\n{children_list}"
-        elif not members:
+            header = f'{"№":<4}{"Ученик":<25}{"Баланс":>12}'
+            separator = "-" * (4 + 25 + 12)
+            table_rows = [header, separator]
+
+            for i, member_data in enumerate(members, start=1):
+                full_string = format_child(member_data)
+
+                try:
+                    name_part, balance_part = full_string.rsplit(' <b>', 1)
+                    balance = balance_part.replace('</b>', '').replace('[', '').replace(']', '')
+                    row_text = f'{str(i) + ".":<4}{name_part:<25}{balance:>12}'
+                    table_rows.append(row_text)
+
+                except ValueError:
+                    table_rows.append(full_string)
+            final_text = "\n".join(table_rows)
+            children_text = f"<b>Список детей в группе:</b>\n<pre>{final_text}</pre>"
+
+        else:
             children_text = "В этой группе пока нет детей!"
 
         await callback.message.edit_text(
@@ -93,18 +108,24 @@ async def get_children_list(callback: CallbackQuery, state: FSMContext):
         )
     except Exception as e:
         await callback.message.answer(f"Произошла ошибка при загрузке данных: {e}")
+    finally:
+        await callback.answer()
 
 
-
-@router.callback_query(F.data == 'a:b_to_gr_act', TeacherStates.in_group_menu)
-async def back_to_group_actions_menu(callback: CallbackQuery):
+@router.callback_query(
+    F.data == 'a:b_to_gr_act', StateFilter(TeacherStates.in_group_menu, TeacherStates.choosing_child_for_balance)
+)
+async def back_to_group_actions_menu(callback: CallbackQuery, state: FSMContext):
     try:
         await callback.message.edit_text(
             "Выбрана группа. Выберите действие:",
             reply_markup=create_group_keyboard()
         )
+        await state.set_state(TeacherStates.in_group_menu)
     finally:
         await callback.answer()
+
+
 
 
 @router.callback_query(F.data == 'a:back_t_g', TeacherStates.in_group_menu)
@@ -118,10 +139,6 @@ async def back_to_group_selection(callback: CallbackQuery, state: FSMContext):
         await state.set_state(TeacherStates.choosing_group)
     finally:
         await callback.answer()
-
-
-
-
 
 
 @router.callback_query(F.data == 'ga:ma_balance', TeacherStates.in_group_menu)
@@ -151,6 +168,7 @@ async def children_balance_menu(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer(f"Произошла ошибка: {e}")
     finally:
         await callback.answer()
+
 
 
     @router.callback_query(F.data.startswith("child_"), TeacherStates.choosing_child_for_balance)
@@ -239,7 +257,6 @@ async def process_subtracting_amount(message: Message, state: FSMContext):
 @router.callback_query(F.data == 'back_to_child_list', TeacherStates.choosing_balance_action)
 async def back_to_child_list_from_balance_menu(callback: CallbackQuery, state: FSMContext):
     await children_balance_menu(callback, state)
-
 
 
 
