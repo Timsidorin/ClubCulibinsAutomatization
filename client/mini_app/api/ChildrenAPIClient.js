@@ -31,6 +31,15 @@ class ChildrenAPIClient extends ApiClient {
   async deleteChild(tgUsername) {
     return await this.delete(`${this.endpoint}/${tgUsername}`);
   }
+
+  // Получить баланс ребенка
+  async ChildBalanceGet(tgUsername) {
+    return await this.delete(`${this.endpoint}/${tgUsername}`);
+  }
+
+
+
+
 }
 
 export default ChildrenAPIClient;

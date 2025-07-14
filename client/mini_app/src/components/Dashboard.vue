@@ -120,6 +120,7 @@ export default {
 
         let teachersData = [];
         teachersData = response.data.data;
+        console.log(teachersData);
 
 
         if (Array.isArray(teachersData)) {
@@ -227,10 +228,9 @@ export default {
   margin-bottom: 24px;
 }
 
+
 .stat-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  text-align: center;
   padding: 24px;
   background: var(--tg-card-bg);
   border-radius: var(--border-radius-card);
@@ -258,6 +258,7 @@ export default {
 }
 
 .stat-icon {
+  margin: 0 auto 16px;
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -274,10 +275,6 @@ export default {
   color: var(--tg-blue);
 }
 
-.stat-content {
-  flex: 1;
-  text-align: left;
-}
 
 .stat-content h3 {
   font-size: 0.9em;
@@ -299,7 +296,7 @@ export default {
   line-height: 1;
 }
 
-/* Карточка активности */
+
 .activity-card {
   background: var(--tg-card-bg);
   border-radius: var(--border-radius-card);
@@ -377,7 +374,6 @@ export default {
   padding: 40px 0;
 }
 
-/* Быстрые действия */
 .quick-actions {
   display: flex;
   gap: 16px;
@@ -440,69 +436,20 @@ export default {
   box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
 }
 
-/* Адаптивные медиа-запросы */
 
-/* Большие экраны (Desktop) */
-@media (min-width: 1200px) {
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-
-  .stat-card {
-    padding: 28px;
-  }
-
-  .stat-number {
-    font-size: 3em;
-  }
-}
 
 @media (max-width: 1024px) {
   .stats-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 18px;
   }
-
-  .stat-card {
-    padding: 20px;
-  }
-
-  .stat-number {
-    font-size: 2.2em;
-  }
-
-  .stat-icon {
-    width: 50px;
-    height: 50px;
-  }
-
-  .stat-icon i {
-    width: 24px;
-    height: 24px;
-  }
 }
 
-/* Планшеты (Tablet portrait) */
+
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
-  }
-
-  .stat-card {
-    padding: 18px;
-    flex-direction: column;
-    text-align: center;
-    gap: 12px;
-  }
-
-  .stat-content {
-    text-align: center;
-  }
-
-  .stat-number {
-    font-size: 2em;
   }
 
   .quick-actions {
@@ -519,10 +466,6 @@ export default {
     flex-direction: column;
     gap: 8px;
   }
-
-  .activity-time {
-    align-self: flex-start;
-  }
 }
 
 /* Мобильные устройства */
@@ -537,68 +480,19 @@ export default {
     margin-bottom: 16px;
   }
 
+
+
   .stat-card {
     padding: 16px;
-    flex-direction: row;
-    text-align: left;
-    gap: 16px;
-  }
-
-  .stat-content {
-    text-align: left;
-  }
-
-  .stat-content h3 {
-    font-size: 0.8em;
   }
 
   .stat-number {
-    font-size: 1.8em;
-  }
-
-  .stat-icon {
-    width: 45px;
-    height: 45px;
-  }
-
-  .stat-icon i {
-    width: 20px;
-    height: 20px;
+    font-size: 2em;
   }
 
   .activity-card {
     padding: 16px;
   }
-
-  .activity-card h3 {
-    font-size: 1.1em;
-  }
-
-  .btn {
-    padding: 12px 20px;
-    font-size: 0.9em;
-  }
-}
-
-
-@media (max-width: 360px) {
-  .stat-card {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .stat-number {
-    font-size: 1.6em;
-  }
-
-  .stat-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .stat-icon i {
-    width: 18px;
-    height: 18px;
-  }
 }
 </style>
+
