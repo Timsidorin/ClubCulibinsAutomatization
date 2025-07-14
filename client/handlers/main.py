@@ -13,7 +13,7 @@ from client.keyboards.teacher_keyboard import (
     create_back_to_group_actions_keyboard
 )
 from client.APIclient.TeacherAPIClient import TeacherAPIClient
-from client.utils.fio_formate import format_fio
+from client.utils.fio_formate import format_child
 
 router = Router()
 
@@ -78,9 +78,12 @@ async def get_children_list(callback: CallbackQuery, state: FSMContext):
         members_response = await client.get_group_members(uuid_group=group_uuid)
         members = (members_response.get("message", [])["EducationGroupMembers"])
 
+
+        print(members)
+
         if members:
             children_list = "\n".join(
-                f"{x}) {format_fio(m)}" for x,m in enumerate(members, start=1)
+                f"{x}) {format_child(m)}" for x,m in enumerate(members, start=1)
             )
             children_text = f"<b>Список детей в группе:</b>\n{children_list}"
         elif not members:

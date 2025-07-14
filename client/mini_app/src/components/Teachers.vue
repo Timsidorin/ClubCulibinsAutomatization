@@ -150,16 +150,17 @@
   </div>
 </template>
 
-
 <script>
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import TeachersAPIClient from '../../api/TeachersAPIClient.js';
 import { Teachers } from '../../models/Teachers.js';
+import GroupsAPIClient from "../../api/GroupsAPIClient.js";
 
 export default {
   name: 'Teachers',
   setup() {
     const apiClient = new TeachersAPIClient();
+    const groupAPIClient = new GroupsAPIClient();
     const teachers = ref([]);
     const isLoading = ref(false);
     const showModal = ref(false);
@@ -168,7 +169,7 @@ export default {
     const usernameError = ref('');
     const errorMessage = ref('');
     const searchQuery = ref('');
-    const activeCardId = ref(null); // Для отслеживания активной карточки на мобильных устройствах
+    const activeCardId = ref(null);
 
     const newTeacher = ref(new Teachers());
 
@@ -188,33 +189,41 @@ export default {
       );
     });
 
+
     const fetchTeachers = async () => {
       isLoading.value = true;
       errorMessage.value = '';
       try {
-        const response = await apiClient.getAllTeachers(1);
+        const teachersResponse = await apiClient.getAllTeachers(1);
         let teachersData = [];
-        if (response && response.data && Array.isArray(response.data)) {
-          teachersData = response.data;
-        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          teachersData = response.data.data;
-        } else if (Array.isArray(response)) {
-          teachersData = response;
+        if (teachersResponse?.data?.data && Array.isArray(teachersResponse.data.data)) {
+          teachersData = teachersResponse.data.data;
         } else {
-          teachersData = [];
-          errorMessage.value = 'Получены некорректные данные от сервера.';
+          throw new Error('Получены некорректные данные учителей от сервера.');
         }
+        const teachersWithGroupsPromises = teachersData.map(async (teacherData) => {
+          let groupNames = [];
+          const username = teacherData.tgUsername;
 
-        if (Array.isArray(teachersData)) {
-          teachers.value = teachersData.map(teacherData => {
-            return Teachers.fromApiObject(teacherData);
-          });
-        } else {
-          teachers.value = [];
-          errorMessage.value = 'Получены некорректные данные от сервера.';
-        }
+          if (username) {
+            try {
+              // Вызываем API для получения групп по username
+              const groupsResponse = await groupAPIClient.getGroupsByTeacher(username);
+              if (groupsResponse?.message?.groups && Array.isArray(groupsResponse.message.groups)) {
+  groupNames = groupsResponse.message.groups.map(group => group.name);
+  console.log(groupNames);
+}
+            } catch (groupError) {
+              console.error(`Не удалось загрузить группы для учителя ${username}:`, groupError);
+            }
+          }
+
+          return Teachers.fromApiObject(teacherData, groupNames);
+        });
+        teachers.value = await Promise.all(teachersWithGroupsPromises);
+
       } catch (error) {
-        errorMessage.value = 'Не удалось загрузить список учителей. Попробуйте позже.';
+        errorMessage.value = `Не удалось загрузить список учителей. ${error.message}`;
         teachers.value = [];
       } finally {
         isLoading.value = false;
@@ -231,6 +240,7 @@ export default {
     const editTeacher = (teacher) => {
       isEditing.value = true;
       currentTeacherId.value = teacher.id;
+      // Используем конструктор для копирования данных
       newTeacher.value = new Teachers({
         id: teacher.id,
         firstName: teacher.firstName,
@@ -252,7 +262,7 @@ export default {
       usernameError.value = '';
     };
 
-    const validateUsername = async () => {
+    const validateUsername = () => {
       const username = newTeacher.value.telegramUsername;
       if (username.startsWith('@')) {
         newTeacher.value.telegramUsername = username.slice(1);
@@ -264,29 +274,29 @@ export default {
         return;
       }
 
-      if (!isEditing.value || teachers.value.some(t => t.id !== currentTeacherId.value && t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase())) {
-        try {
-          const response = await apiClient.getTeacherByTelegramUsername(newTeacher.value.telegramUsername);
-          if (response.data) {
-            usernameError.value = 'Этот username уже используется другим учителем';
-          } else {
-            usernameError.value = '';
-          }
-        } catch (error) {
-          usernameError.value = '';
-        }
+      // Проверяем уникальность username локально по уже загруженному списку
+      const isUsernameTaken = teachers.value.some(t =>
+          (isEditing.value ? t.id !== currentTeacherId.value : true) &&
+          t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase()
+      );
+
+      if (isUsernameTaken) {
+        usernameError.value = 'Этот username уже используется другим учителем';
       } else {
         usernameError.value = '';
       }
     };
 
     const submitTeacher = async () => {
+      validateUsername(); // Проводим валидацию перед отправкой
       if (!isFormValid.value) return;
 
       isLoading.value = true;
       errorMessage.value = '';
+
+      // Используем метод toApiObject для подготовки данных
       const teacherData = newTeacher.value.toApiObject();
-      teacherData.typeUser = 1;
+      teacherData.typeUser = 1; // Устанавливаем тип пользователя
 
       try {
         if (isEditing.value) {
@@ -295,7 +305,7 @@ export default {
           await apiClient.createTeacher(teacherData);
         }
         closeModal();
-        fetchTeachers();
+        await fetchTeachers(); // Перезагружаем список с группами
       } catch (error) {
         if (error.response) {
           errorMessage.value = `Ошибка: ${error.response.data?.message || 'Не удалось сохранить данные учителя.'}`;
@@ -314,6 +324,7 @@ export default {
         isLoading.value = true;
         errorMessage.value = '';
         try {
+          // Для удаления по-прежнему используем username, как в вашем коде
           await apiClient.deleteTeacher(teacher.telegramUsername);
           await fetchTeachers();
         } catch (error) {
@@ -325,6 +336,7 @@ export default {
     };
 
     const filterTeachers = () => {
+      // Логика поиска уже реализована через computed property 'filteredTeachers'
     };
 
     const toggleActions = (teacherId) => {
@@ -370,6 +382,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .teachers {

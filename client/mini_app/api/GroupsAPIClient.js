@@ -42,6 +42,11 @@ class GroupsAPIClient extends ApiClient {
     return await this.post(`${this.endpoint}/add-childrens`, addData);
   }
 
+    // Получить группы учителя
+    async getGroupsByTeacher(tg_username) {
+        return await this.get(`${this.endpoint}/get-all?tgUsername=${tg_username}`);
+    }
+
 
 
 }
