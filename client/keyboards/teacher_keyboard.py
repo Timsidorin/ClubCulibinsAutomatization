@@ -57,6 +57,23 @@ def create_group_keyboard():
     return builder.as_markup()
 
 
+
+def create_balance_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='Начислить ➕',
+        callback_data='ga:child_list'
+    )
+    builder.button(
+        text='Списать ➖',
+        callback_data='ga:ma_balance'
+    )
+
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+
 def create_back_to_group_actions_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(

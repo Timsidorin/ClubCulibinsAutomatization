@@ -118,3 +118,16 @@ async def back_to_group_selection(callback: CallbackQuery, state: FSMContext):
         await state.set_state(TeacherStates.choosing_group)
     finally:
         await callback.answer()
+
+
+@router.callback_query(F.data == 'ga:ma_balance', TeacherStates.in_group_menu)
+async def back_to_group_actions_menu(callback: CallbackQuery, state: FSMContext):
+    try:
+        await callback.message.edit_text(
+            "Начисление/списание. Выберите действие:",
+            reply_markup=create_group_keyboard()
+        )
+        await state.set_state(TeacherStates.in_balance_menu)
+
+    finally:
+        await callback.answer()

@@ -6,4 +6,5 @@ class TeacherStates(StatesGroup):
     main_menu = State()
     choosing_group = State()
     in_group_menu = State()
+    in_balance_menu = State()
 
