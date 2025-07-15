@@ -10,10 +10,6 @@
 
     <div class="search-bar">
       <input type="text" v-model="searchQuery" placeholder="Поиск по имени учителя...">
-      <button class="btn btn-primary" @click="filterTeachers">
-        <i data-feather="search"></i>
-        Поиск
-      </button>
     </div>
 
     <div v-if="isLoading" class="loading-state">
@@ -21,13 +17,12 @@
       <p>Загрузка данных...</p>
     </div>
 
-    <div v-else class="teachers-list">
+    <div v-else-if="filteredTeachers.length > 0" class="teachers-list">
       <div
         v-for="teacher in filteredTeachers"
         :key="teacher.id"
         class="teacher-item"
-        :class="{ active: activeCardId === teacher.id }"
-        @click="toggleActions(teacher.id)"
+        :class="{ 'actions-visible': activeCardId === teacher.id }"
       >
         <div class="teacher-details">
           <h4> <i data-feather="user"></i>  {{ teacher.fullName }}</h4>
@@ -36,7 +31,8 @@
             Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}
           </p>
         </div>
-        <div class="actions-overlay">
+
+        <div class="actions-overlay" @click.stop="toggleActions(null)">
           <button class="btn btn-secondary" @click.stop="editTeacher(teacher)" :disabled="isLoading">
             <i data-feather="edit-2"></i>
             Редактировать
@@ -46,10 +42,14 @@
             Удалить
           </button>
         </div>
+
+        <button class="teacher-actions-toggle" @click.stop="toggleActions(teacher.id)">
+          <i data-feather="more-vertical"></i>
+        </button>
       </div>
     </div>
 
-    <div class="empty-state" v-if="!isLoading && filteredTeachers.length === 0">
+    <div v-else class="empty-state">
       <div class="empty-icon">
         <i data-feather="user-check"></i>
       </div>
@@ -69,77 +69,33 @@
             <i data-feather="x"></i>
           </button>
         </div>
-
         <form @submit.prevent="submitTeacher" class="teacher-form">
           <div class="form-group">
             <label for="lastName">Фамилия *</label>
-            <input
-              id="lastName"
-              v-model="newTeacher.lastName"
-              type="text"
-              class="form-input"
-              placeholder="Введите фамилию"
-              required
-            />
+            <input id="lastName" v-model="newTeacher.lastName" type="text" class="form-input" placeholder="Введите фамилию" required />
           </div>
-
           <div class="form-group">
             <label for="firstName">Имя *</label>
-            <input
-              id="firstName"
-              v-model="newTeacher.firstName"
-              type="text"
-              class="form-input"
-              placeholder="Введите имя"
-              required
-            />
+            <input id="firstName" v-model="newTeacher.firstName" type="text" class="form-input" placeholder="Введите имя" required />
           </div>
-
           <div class="form-group">
             <label for="middleName">Отчество</label>
-            <input
-              id="middleName"
-              v-model="newTeacher.middleName"
-              type="text"
-              class="form-input"
-              placeholder="Введите отчество (необязательно)"
-            />
+            <input id="middleName" v-model="newTeacher.middleName" type="text" class="form-input" placeholder="Введите отчество (необязательно)" />
           </div>
-
           <div class="form-group">
             <label for="telegramUsername">Username Telegram *</label>
             <div class="input-with-prefix">
               <span class="input-prefix">@</span>
-              <input
-                id="telegramUsername"
-                v-model="newTeacher.telegramUsername"
-                type="text"
-                class="form-input with-prefix"
-                placeholder="username"
-                required
-                @input="validateUsername"
-              />
+              <input id="telegramUsername" v-model="newTeacher.telegramUsername" type="text" class="form-input with-prefix" placeholder="username" required @input="validateUsername" />
             </div>
-            <div v-if="usernameError" class="error-message">
-              {{ usernameError }}
-            </div>
+            <div v-if="usernameError" class="error-message">{{ usernameError }}</div>
           </div>
-
           <div class="form-group">
             <label for="email">Email</label>
-            <input
-              id="email"
-              v-model="newTeacher.email"
-              type="email"
-              class="form-input"
-              placeholder="teacher@example.com (необязательно)"
-            />
+            <input id="email" v-model="newTeacher.email" type="email" class="form-input" placeholder="teacher@example.com (необязательно)" />
           </div>
-
           <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" @click="closeModal">
-              Отмена
-            </button>
+            <button type="button" class="btn btn-secondary" @click="closeModal">Отмена</button>
             <button type="submit" class="btn btn-primary" :disabled="!isFormValid || isLoading">
               {{ isEditing ? 'Сохранить изменения' : 'Добавить учителя' }}
             </button>
@@ -149,6 +105,7 @@
     </div>
   </div>
 </template>
+
 
 <script>
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
@@ -411,21 +368,25 @@ export default {
 .search-bar {
   display: flex;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .search-bar input {
   flex: 1;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: var(--border-radius-button);
   border: 2px solid var(--tg-border);
   font-size: 1em;
+}
+.search-bar input:focus {
+  border-color: var(--tg-blue);
+  outline: none;
 }
 
 .teachers-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .teacher-item {
@@ -437,12 +398,16 @@ export default {
   box-shadow: var(--box-shadow-card);
   padding: 18px 24px;
   position: relative;
-  cursor: pointer;
+  min-height: 110px;
+  transition: box-shadow 0.2s ease;
 }
 
 .teacher-details {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .teacher-details h4 {
@@ -450,14 +415,16 @@ export default {
   font-weight: 600;
   margin: 0 0 6px 0;
   color: var(--tg-text);
-  display: inline;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .teacher-details p {
   margin: 0;
   color: var(--tg-text-light);
-  font-size: 0.95em;
-  line-height: 1.6;
+  font-size: 0.9em;
+  line-height: 1.5;
 }
 
 .actions-overlay {
@@ -466,25 +433,65 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.2s ease;
   padding: 10px;
-  z-index: 2;
+  z-index: 3;
   border-radius: var(--border-radius-card);
 }
 
-.teacher-item:hover .actions-overlay {
-  opacity: 1;
+.teacher-actions-toggle {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  z-index: 2;
+}
+.teacher-actions-toggle:hover {
+  background-color: rgba(0,0,0,0.1);
+}
+.teacher-actions-toggle i {
+  color: var(--tg-text-light);
 }
 
-.teacher-item.active .actions-overlay {
+.teacher-item.actions-visible .actions-overlay {
   opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 769px) {
+  .teacher-item:hover .actions-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-bar {
+    flex-direction: column;
+  }
+  .teacher-actions-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .teacher-item:hover .actions-overlay {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 .empty-state {
@@ -701,23 +708,6 @@ export default {
   cursor: not-allowed;
 }
 
-@media (max-width: 768px) {
-  .section-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-    padding: 20px;
-  }
-
-  .teacher-item:hover .actions-overlay {
-    opacity: 0;
-  }
-
-  .btn {
-    padding: 6px 10px;
-    font-size: 0.8em;
-    width: 95%;
-  }
-}
 </style>
+
 

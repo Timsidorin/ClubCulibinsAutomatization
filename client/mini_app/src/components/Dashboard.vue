@@ -220,18 +220,22 @@ export default {
   gap: 24px;
 }
 
-
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 20px;
   margin-bottom: 24px;
 }
 
 
 .stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 24px;
+
+  padding: 20px;
   background: var(--tg-card-bg);
   border-radius: var(--border-radius-card);
   box-shadow: var(--box-shadow-card);
@@ -239,6 +243,7 @@ export default {
   border: 1px solid transparent;
   position: relative;
   overflow: hidden;
+  min-height: 180px; /* Задаем минимальную высоту для ровного вида */
 }
 
 .stat-card::before {
@@ -258,9 +263,9 @@ export default {
 }
 
 .stat-icon {
-  margin: 0 auto 16px;
-  width: 60px;
-  height: 60px;
+  margin-bottom: 16px; /* Убираем 'auto', так как центрирование делает flex */
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--tg-blue-light) 0%, rgba(224, 242, 255, 0.5) 100%);
   display: flex;
@@ -270,11 +275,15 @@ export default {
 }
 
 .stat-icon i {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   color: var(--tg-blue);
 }
 
+/* Убираем лишние стили, так как центрирование идет от .stat-card */
+.stat-content {
+  /* Пусто */
+}
 
 .stat-content h3 {
   font-size: 0.9em;
@@ -286,7 +295,7 @@ export default {
 }
 
 .stat-number {
-  font-size: 2.5em;
+  font-size: 2.2em; /* Немного уменьшим для лучшей адаптивности */
   font-weight: 800;
   background: linear-gradient(135deg, var(--tg-blue) 0%, var(--tg-green) 100%);
   -webkit-background-clip: text;
@@ -296,7 +305,7 @@ export default {
   line-height: 1;
 }
 
-
+/* --- Остальные стили --- */
 .activity-card {
   background: var(--tg-card-bg);
   border-radius: var(--border-radius-card);
@@ -436,19 +445,12 @@ export default {
   box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
 }
 
-
-
-@media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-  }
-}
-
+/* --- АДАПТИВНОСТЬ --- */
 
 @media (max-width: 768px) {
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    /* На планшетах будет 2 или 3 колонки, в зависимости от ширины */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
   }
 
@@ -468,30 +470,31 @@ export default {
   }
 }
 
-/* Мобильные устройства */
 @media (max-width: 480px) {
-  .dashboard {
-    gap: 16px;
-  }
-
   .stats-grid {
-    grid-template-columns: 1fr;
+    /* На мобильных устройствах будет 2 колонки */
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    margin-bottom: 16px;
   }
-
-
 
   .stat-card {
     padding: 16px;
+    min-height: 150px; /* Уменьшаем высоту на мобильных */
+  }
+
+  .stat-icon {
+    width: 45px;
+    height: 45px;
+    margin-bottom: 12px;
+  }
+
+  .stat-icon i {
+      width: 20px;
+      height: 20px;
   }
 
   .stat-number {
-    font-size: 2em;
-  }
-
-  .activity-card {
-    padding: 16px;
+    font-size: 1.8em;
   }
 }
 </style>
