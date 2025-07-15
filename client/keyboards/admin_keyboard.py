@@ -1,7 +1,7 @@
 
 from aiogram.types import KeyboardButton, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 
-from client.core.config import configs
+from core.config import configs
 
 
 def create_admin_keyboard():

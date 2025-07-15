@@ -3,18 +3,18 @@ from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from client.APIclient.UserAPICLient import UserAPIClient
-from client.keyboards.admin_keyboard import create_admin_keyboard
-from client.states import TeacherStates
-from client.keyboards.teacher_keyboard import (
+from APIclient.UserAPICLient import UserAPIClient
+from keyboards.admin_keyboard import create_admin_keyboard
+from states import TeacherStates
+from keyboards.teacher_keyboard import (
     create_teacher_keyboard,
     create_teacher_groups_keyboard,
     create_group_keyboard,
     create_back_to_group_actions_keyboard,
     create_balance_keyboard, create_children_keyboard
 )
-from client.APIclient.TeacherAPIClient import TeacherAPIClient
-from client.utils.fio_formate import format_child
+from APIclient.TeacherAPIClient import TeacherAPIClient
+from utils.fio_formate import format_child
 
 router = Router()
 

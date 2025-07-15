@@ -1,6 +1,6 @@
 
 
-from client.APIclient.BaseAPI import BaseAPIClient
+from APIclient.BaseAPI import BaseAPIClient
 
 
 class TeacherAPIClient(BaseAPIClient):

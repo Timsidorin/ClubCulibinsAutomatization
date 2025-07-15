@@ -1,7 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from client.APIclient.TeacherAPIClient import TeacherAPIClient
-from client.core.config import configs
+from APIclient.TeacherAPIClient import TeacherAPIClient
+from core.config import configs
 
 
 def create_teacher_keyboard():
