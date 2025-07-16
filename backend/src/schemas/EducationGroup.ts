@@ -18,6 +18,9 @@ EducationGroup.init(
         },
         description: {
             type: DataTypes.STRING,
+        },
+        urlName: {
+            type: DataTypes.STRING,
         }
     },
     {

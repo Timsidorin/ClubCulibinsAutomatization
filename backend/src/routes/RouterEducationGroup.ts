@@ -15,7 +15,8 @@ router.post("/create", jsonParser, async (req: Request, res: Response) => {
         schema: {
             tgUsername: '@string',
             name: 'string',
-            description: 'string'
+            description: 'string',
+            urlName: 'string'
         }
     }
     */

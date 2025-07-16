@@ -277,6 +277,10 @@
                 "description": {
                   "type": "string",
                   "example": "string"
+                },
+                "urlName": {
+                  "type": "string",
+                  "example": "string"
                 }
               }
             }
@@ -528,6 +532,10 @@
                   "type": "string",
                   "example": "@string"
                 },
+                "tgTeacher": {
+                  "type": "string",
+                  "example": "@string"
+                },
                 "operation": {
                   "type": "boolean",
                   "example": true
@@ -541,9 +549,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -568,6 +573,16 @@
           "200": {
             "description": "OK"
           },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/balance/logs": {
+      "get": {
+        "description": "",
+        "responses": {
           "500": {
             "description": "Internal Server Error"
           }

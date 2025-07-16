@@ -28,6 +28,10 @@ export class ModelEducationGroup {
                 }
 
                 insertData['uuidUser'] = teacher?.uuid;
+                let name = data.urlName.match(/\/([^\/\s]+)/);
+                if (name) {
+                    insertData.urlName = name[1];
+                }
             }
             await EducationGroup.create({
                 ...insertData

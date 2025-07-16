@@ -6,6 +6,7 @@ export interface IEducationGroupCreate {
     uuid: string,
     createdAt: Date,
     updatedAt: Date,
+    urlName: string,
 }
 
 export interface IAddChildren<T> {
