@@ -23,12 +23,16 @@ async def cmd_start(message: Message, state: FSMContext):
     client = UserAPIClient()
     username = message.from_user.username
     role = await client.check_user_role(username)
+    print(role)
     if role == "admin":
         await message.answer("Привет, Админ!", reply_markup=create_admin_keyboard())
         await state.clear()
     elif role == "teacher":
         await message.answer("Привет, Преподаватель!", reply_markup=create_teacher_keyboard())
         await state.set_state(TeacherStates.main_menu)
+    elif role == "none":
+        await message.answer("Увы, Вы не зарегистрированы в системе, обратитесь к администратору!")
+
 
 
 
@@ -171,8 +175,8 @@ async def children_balance_menu(callback: CallbackQuery, state: FSMContext):
 
 
 
-    @router.callback_query(F.data.startswith("child_"), TeacherStates.choosing_child_for_balance)
-    async def select_child_for_balance(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data.startswith("child_"), TeacherStates.choosing_child_for_balance)
+async def select_child_for_balance(callback: CallbackQuery, state: FSMContext):
         try:
             selected_child_username = callback.data.split("_")[1]
             await state.update_data(selected_child_username=selected_child_username)

@@ -14,6 +14,7 @@ class BaseAPIClient:
             endpoint: str,
             data: Optional[Dict] = None,
             params: Optional[Dict] = None,
+            raise_for_status: bool = True
     ) -> Any:
         url = f"{self.base_url}{endpoint.lstrip('/')}"
         request_params = params
@@ -29,8 +30,12 @@ class BaseAPIClient:
             params=request_params
         )
 
-        response.raise_for_status()
-        return response.json()
+        if raise_for_status:
+            response.raise_for_status()
+        try:
+            return response.json()
+        except Exception:
+            return None
 
     async def close(self):
         await self.session.aclose()

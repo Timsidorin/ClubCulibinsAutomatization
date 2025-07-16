@@ -39,7 +39,7 @@
           </div>
           <div class="stat-item">
             <i data-feather="user-check"></i>
-            <span class="stat-label">Учитель:</span>
+            <span class="stat-label">Преподаватель:</span>
             <span class="stat-value">{{ group.teacherName || 'Не назначен' }}</span>
           </div>
         </div>
@@ -53,22 +53,25 @@
             <i data-feather="user-plus"></i>
             Участники
           </button>
-          <!-- Показываем эту кнопку, если учитель НЕ назначен (teacherId отсутствует) -->
+
         <button v-if="!group.teacherId" class="btn btn-primary" @click="assignTeacherToGroup(group)" :disabled="isLoading">
             <i data-feather="user-check"></i>
-          Назначить учителя
+          Назначить преподавателя
         </button>
 
-        <!-- Показываем эту кнопку, если учитель НАЗНАЧЕН (teacherId присутствует) -->
         <button v-else class="btn btn-danger" @click="unassignTeacher(group)" :disabled="isLoading">
          <i data-feather="user-x"></i>
-          Отвязать учителя
+          Отвязать преподавателя
         </button>
 
           <button class="btn btn-danger" @click="deleteGroup(group)" :disabled="isLoading">
             <i data-feather="trash-2"></i>
             Удалить
           </button>
+          <button class="btn btn-info" @click="sendGroupBalance(group)" :disabled="isLoading">
+    <i data-feather="send"></i>
+    Отправить баланс в чат
+  </button>
         </div>
       </div>
     </div>
@@ -158,6 +161,15 @@
             <div class="student-details">
               <h4>{{ student.lastName }} {{ student.name }} {{ student.secondName }}</h4>
             </div>
+            <div class="student-actions">
+      <button
+        class="btn btn-icon"
+        @click.stop="sendChildBalance(student)"
+        title="Отправить баланс в чат"
+        :disabled="isLoading">
+        <i data-feather="send"></i>
+      </button>
+    </div>
           </div>
         </div>
         <div class="empty-state-small" v-else>
@@ -1105,7 +1117,61 @@ textarea.form-input {
   .students-list, .teachers-list {
     padding: 0 16px 16px 16px;
   }
+
 }
+  .btn-info {
+  background: var(--tg-blue);
+  border-color: #17a2b8;
+  color: white;
+}
+.btn-info:hover {
+  background: #17a2b8;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.student-item {
+  /* Добавляем flex для красивого выравнивания */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* ... (остальные стили .student-item) ... */
+}
+
+.student-details {
+  /* Заставляем этот блок занимать все доступное пространство */
+  flex-grow: 1;
+}
+
+.student-actions {
+  /* Этот блок будет справа */
+  margin-left: auto;
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--tg-border);
+  border-radius: 50%; /* Делаем кнопку круглой */
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tg-text-light);
+}
+
+.btn-icon:hover {
+  background: var(--tg-blue-light);
+  color: var(--tg-blue);
+  border-color: var(--tg-blue);
+}
+
+.btn-icon i {
+  width: 18px;
+  height: 18px;
+}
+
 </style>
 
 
