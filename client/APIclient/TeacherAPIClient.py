@@ -1,6 +1,6 @@
 
 
-from client.APIclient.BaseAPI import BaseAPIClient
+from APIclient.BaseAPI import BaseAPIClient
 
 
 class TeacherAPIClient(BaseAPIClient):
@@ -15,13 +15,13 @@ class TeacherAPIClient(BaseAPIClient):
         members = await self._send_request("get", f"education-group/get/composition/{uuid_group}",  data={})
         return members
 
-    async  def add_kk(self, child_tg_username:str, coins: int):
+    async  def add_balance(self, child_username:str, amount: int):
         """Добавление монет ребёнку"""
-        response = await self._send_request("post", "child/add-coins", data={"child_tg_username": child_tg_username, "coins_count": coins })
-        return  response
+        response = await self._send_request("patch", "balance/update", data={"tgUsername": child_username, "operation": True, "summ": amount })
+        return  True if response["code"] == 200 else False
 
 
-    async def reduce_kk(self, child_tg_username: str, coins: int):
+    async def subtract_balance(self, child_username: str, amount: int):
         """Уменьшение монет ребёнка"""
-        response = await self._send_request("post", "child/reduce-coins", data={"child_tg_username": child_tg_username, "coins_count": coins})
-        return response
+        response = await self._send_request("patch", "balance/update", data={"tgUsername": child_username, "operation": False, "summ": amount})
+        return  True if response["code"] == 200 else False

@@ -1,6 +1,6 @@
 import httpx
 from typing import Optional, Any, Dict
-from client.core.config import configs
+from core.config import configs
 
 
 class BaseAPIClient:

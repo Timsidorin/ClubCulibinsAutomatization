@@ -10,10 +10,6 @@
 
     <div class="search-bar">
       <input type="text" v-model="searchQuery" placeholder="Поиск по имени учителя...">
-      <button class="btn btn-primary" @click="filterTeachers">
-        <i data-feather="search"></i>
-        Поиск
-      </button>
     </div>
 
     <div v-if="isLoading" class="loading-state">
@@ -21,13 +17,12 @@
       <p>Загрузка данных...</p>
     </div>
 
-    <div v-else class="teachers-list">
+    <div v-else-if="filteredTeachers.length > 0" class="teachers-list">
       <div
         v-for="teacher in filteredTeachers"
         :key="teacher.id"
         class="teacher-item"
-        :class="{ active: activeCardId === teacher.id }"
-        @click="toggleActions(teacher.id)"
+        :class="{ 'actions-visible': activeCardId === teacher.id }"
       >
         <div class="teacher-details">
           <h4> <i data-feather="user"></i>  {{ teacher.fullName }}</h4>
@@ -36,7 +31,8 @@
             Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}
           </p>
         </div>
-        <div class="actions-overlay">
+
+        <div class="actions-overlay" @click.stop="toggleActions(null)">
           <button class="btn btn-secondary" @click.stop="editTeacher(teacher)" :disabled="isLoading">
             <i data-feather="edit-2"></i>
             Редактировать
@@ -46,10 +42,14 @@
             Удалить
           </button>
         </div>
+
+        <button class="teacher-actions-toggle" @click.stop="toggleActions(teacher.id)">
+          <i data-feather="more-vertical"></i>
+        </button>
       </div>
     </div>
 
-    <div class="empty-state" v-if="!isLoading && filteredTeachers.length === 0">
+    <div v-else class="empty-state">
       <div class="empty-icon">
         <i data-feather="user-check"></i>
       </div>
@@ -69,77 +69,33 @@
             <i data-feather="x"></i>
           </button>
         </div>
-
         <form @submit.prevent="submitTeacher" class="teacher-form">
           <div class="form-group">
             <label for="lastName">Фамилия *</label>
-            <input
-              id="lastName"
-              v-model="newTeacher.lastName"
-              type="text"
-              class="form-input"
-              placeholder="Введите фамилию"
-              required
-            />
+            <input id="lastName" v-model="newTeacher.lastName" type="text" class="form-input" placeholder="Введите фамилию" required />
           </div>
-
           <div class="form-group">
             <label for="firstName">Имя *</label>
-            <input
-              id="firstName"
-              v-model="newTeacher.firstName"
-              type="text"
-              class="form-input"
-              placeholder="Введите имя"
-              required
-            />
+            <input id="firstName" v-model="newTeacher.firstName" type="text" class="form-input" placeholder="Введите имя" required />
           </div>
-
           <div class="form-group">
             <label for="middleName">Отчество</label>
-            <input
-              id="middleName"
-              v-model="newTeacher.middleName"
-              type="text"
-              class="form-input"
-              placeholder="Введите отчество (необязательно)"
-            />
+            <input id="middleName" v-model="newTeacher.middleName" type="text" class="form-input" placeholder="Введите отчество (необязательно)" />
           </div>
-
           <div class="form-group">
             <label for="telegramUsername">Username Telegram *</label>
             <div class="input-with-prefix">
               <span class="input-prefix">@</span>
-              <input
-                id="telegramUsername"
-                v-model="newTeacher.telegramUsername"
-                type="text"
-                class="form-input with-prefix"
-                placeholder="username"
-                required
-                @input="validateUsername"
-              />
+              <input id="telegramUsername" v-model="newTeacher.telegramUsername" type="text" class="form-input with-prefix" placeholder="username" required @input="validateUsername" />
             </div>
-            <div v-if="usernameError" class="error-message">
-              {{ usernameError }}
-            </div>
+            <div v-if="usernameError" class="error-message">{{ usernameError }}</div>
           </div>
-
           <div class="form-group">
             <label for="email">Email</label>
-            <input
-              id="email"
-              v-model="newTeacher.email"
-              type="email"
-              class="form-input"
-              placeholder="teacher@example.com (необязательно)"
-            />
+            <input id="email" v-model="newTeacher.email" type="email" class="form-input" placeholder="teacher@example.com (необязательно)" />
           </div>
-
           <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" @click="closeModal">
-              Отмена
-            </button>
+            <button type="button" class="btn btn-secondary" @click="closeModal">Отмена</button>
             <button type="submit" class="btn btn-primary" :disabled="!isFormValid || isLoading">
               {{ isEditing ? 'Сохранить изменения' : 'Добавить учителя' }}
             </button>
@@ -155,11 +111,13 @@
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import TeachersAPIClient from '../../api/TeachersAPIClient.js';
 import { Teachers } from '../../models/Teachers.js';
+import GroupsAPIClient from "../../api/GroupsAPIClient.js";
 
 export default {
   name: 'Teachers',
   setup() {
     const apiClient = new TeachersAPIClient();
+    const groupAPIClient = new GroupsAPIClient();
     const teachers = ref([]);
     const isLoading = ref(false);
     const showModal = ref(false);
@@ -168,7 +126,7 @@ export default {
     const usernameError = ref('');
     const errorMessage = ref('');
     const searchQuery = ref('');
-    const activeCardId = ref(null); // Для отслеживания активной карточки на мобильных устройствах
+    const activeCardId = ref(null);
 
     const newTeacher = ref(new Teachers());
 
@@ -188,33 +146,41 @@ export default {
       );
     });
 
+
     const fetchTeachers = async () => {
       isLoading.value = true;
       errorMessage.value = '';
       try {
-        const response = await apiClient.getAllTeachers(1);
+        const teachersResponse = await apiClient.getAllTeachers(1);
         let teachersData = [];
-        if (response && response.data && Array.isArray(response.data)) {
-          teachersData = response.data;
-        } else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          teachersData = response.data.data;
-        } else if (Array.isArray(response)) {
-          teachersData = response;
+        if (teachersResponse?.data?.data && Array.isArray(teachersResponse.data.data)) {
+          teachersData = teachersResponse.data.data;
         } else {
-          teachersData = [];
-          errorMessage.value = 'Получены некорректные данные от сервера.';
+          throw new Error('Получены некорректные данные учителей от сервера.');
         }
+        const teachersWithGroupsPromises = teachersData.map(async (teacherData) => {
+          let groupNames = [];
+          const username = teacherData.tgUsername;
 
-        if (Array.isArray(teachersData)) {
-          teachers.value = teachersData.map(teacherData => {
-            return Teachers.fromApiObject(teacherData);
-          });
-        } else {
-          teachers.value = [];
-          errorMessage.value = 'Получены некорректные данные от сервера.';
-        }
+          if (username) {
+            try {
+              // Вызываем API для получения групп по username
+              const groupsResponse = await groupAPIClient.getGroupsByTeacher(username);
+              if (groupsResponse?.message?.groups && Array.isArray(groupsResponse.message.groups)) {
+  groupNames = groupsResponse.message.groups.map(group => group.name);
+  console.log(groupNames);
+}
+            } catch (groupError) {
+              console.error(`Не удалось загрузить группы для учителя ${username}:`, groupError);
+            }
+          }
+
+          return Teachers.fromApiObject(teacherData, groupNames);
+        });
+        teachers.value = await Promise.all(teachersWithGroupsPromises);
+
       } catch (error) {
-        errorMessage.value = 'Не удалось загрузить список учителей. Попробуйте позже.';
+        errorMessage.value = `Не удалось загрузить список учителей. ${error.message}`;
         teachers.value = [];
       } finally {
         isLoading.value = false;
@@ -231,6 +197,7 @@ export default {
     const editTeacher = (teacher) => {
       isEditing.value = true;
       currentTeacherId.value = teacher.id;
+      // Используем конструктор для копирования данных
       newTeacher.value = new Teachers({
         id: teacher.id,
         firstName: teacher.firstName,
@@ -252,7 +219,7 @@ export default {
       usernameError.value = '';
     };
 
-    const validateUsername = async () => {
+    const validateUsername = () => {
       const username = newTeacher.value.telegramUsername;
       if (username.startsWith('@')) {
         newTeacher.value.telegramUsername = username.slice(1);
@@ -264,29 +231,29 @@ export default {
         return;
       }
 
-      if (!isEditing.value || teachers.value.some(t => t.id !== currentTeacherId.value && t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase())) {
-        try {
-          const response = await apiClient.getTeacherByTelegramUsername(newTeacher.value.telegramUsername);
-          if (response.data) {
-            usernameError.value = 'Этот username уже используется другим учителем';
-          } else {
-            usernameError.value = '';
-          }
-        } catch (error) {
-          usernameError.value = '';
-        }
+      // Проверяем уникальность username локально по уже загруженному списку
+      const isUsernameTaken = teachers.value.some(t =>
+          (isEditing.value ? t.id !== currentTeacherId.value : true) &&
+          t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase()
+      );
+
+      if (isUsernameTaken) {
+        usernameError.value = 'Этот username уже используется другим учителем';
       } else {
         usernameError.value = '';
       }
     };
 
     const submitTeacher = async () => {
+      validateUsername(); // Проводим валидацию перед отправкой
       if (!isFormValid.value) return;
 
       isLoading.value = true;
       errorMessage.value = '';
+
+      // Используем метод toApiObject для подготовки данных
       const teacherData = newTeacher.value.toApiObject();
-      teacherData.typeUser = 1;
+      teacherData.typeUser = 1; // Устанавливаем тип пользователя
 
       try {
         if (isEditing.value) {
@@ -295,7 +262,7 @@ export default {
           await apiClient.createTeacher(teacherData);
         }
         closeModal();
-        fetchTeachers();
+        await fetchTeachers(); // Перезагружаем список с группами
       } catch (error) {
         if (error.response) {
           errorMessage.value = `Ошибка: ${error.response.data?.message || 'Не удалось сохранить данные учителя.'}`;
@@ -314,6 +281,7 @@ export default {
         isLoading.value = true;
         errorMessage.value = '';
         try {
+          // Для удаления по-прежнему используем username, как в вашем коде
           await apiClient.deleteTeacher(teacher.telegramUsername);
           await fetchTeachers();
         } catch (error) {
@@ -325,6 +293,7 @@ export default {
     };
 
     const filterTeachers = () => {
+      // Логика поиска уже реализована через computed property 'filteredTeachers'
     };
 
     const toggleActions = (teacherId) => {
@@ -371,6 +340,7 @@ export default {
 };
 </script>
 
+
 <style scoped>
 .teachers {
   width: 100%;
@@ -398,21 +368,25 @@ export default {
 .search-bar {
   display: flex;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .search-bar input {
   flex: 1;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: var(--border-radius-button);
   border: 2px solid var(--tg-border);
   font-size: 1em;
+}
+.search-bar input:focus {
+  border-color: var(--tg-blue);
+  outline: none;
 }
 
 .teachers-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .teacher-item {
@@ -424,12 +398,16 @@ export default {
   box-shadow: var(--box-shadow-card);
   padding: 18px 24px;
   position: relative;
-  cursor: pointer;
+  min-height: 110px;
+  transition: box-shadow 0.2s ease;
 }
 
 .teacher-details {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .teacher-details h4 {
@@ -437,14 +415,16 @@ export default {
   font-weight: 600;
   margin: 0 0 6px 0;
   color: var(--tg-text);
-  display: inline;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .teacher-details p {
   margin: 0;
   color: var(--tg-text-light);
-  font-size: 0.95em;
-  line-height: 1.6;
+  font-size: 0.9em;
+  line-height: 1.5;
 }
 
 .actions-overlay {
@@ -453,25 +433,65 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.2s ease;
   padding: 10px;
-  z-index: 2;
+  z-index: 3;
   border-radius: var(--border-radius-card);
 }
 
-.teacher-item:hover .actions-overlay {
-  opacity: 1;
+.teacher-actions-toggle {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  z-index: 2;
+}
+.teacher-actions-toggle:hover {
+  background-color: rgba(0,0,0,0.1);
+}
+.teacher-actions-toggle i {
+  color: var(--tg-text-light);
 }
 
-.teacher-item.active .actions-overlay {
+.teacher-item.actions-visible .actions-overlay {
   opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 769px) {
+  .teacher-item:hover .actions-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-bar {
+    flex-direction: column;
+  }
+  .teacher-actions-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .teacher-item:hover .actions-overlay {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 .empty-state {
@@ -688,23 +708,6 @@ export default {
   cursor: not-allowed;
 }
 
-@media (max-width: 768px) {
-  .section-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-    padding: 20px;
-  }
-
-  .teacher-item:hover .actions-overlay {
-    opacity: 0;
-  }
-
-  .btn {
-    padding: 6px 10px;
-    font-size: 0.8em;
-    width: 95%;
-  }
-}
 </style>
+
 

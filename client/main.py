@@ -9,7 +9,7 @@ from aiogram.types import Update
 from starlette.staticfiles import StaticFiles
 
 from handlers.main import router as rt
-from client.core.create_base_app import create_base_app
+from core.create_base_app import create_base_app
 from core.config import configs
 
 logging.basicConfig(level=logging.INFO)

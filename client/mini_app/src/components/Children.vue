@@ -117,6 +117,7 @@
 <script>
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import ChildrenAPIClient from '../../api/ChildrenAPIClient.js';
+import BalanceAPIClient from '../../api/BalanceAPIClient.js';
 
 export default {
   name: 'Children',
@@ -126,6 +127,7 @@ export default {
   emits: ['update-data'],
   setup(props, { emit }) {
     const apiClient = new ChildrenAPIClient();
+    const balanceApiClient = new BalanceAPIClient();
     const searchQuery = ref('');
     const selectedChildren = ref([]);
     const showModal = ref(false);
@@ -159,13 +161,6 @@ export default {
       newChild.value.dateOfBirth
     );
 
-    const filterChildren = () => {
-      // Функция фильтрации реализована через computed property
-    };
-
-    const distributeCoins = () => {
-    };
-
     const getAge = (dateString) => {
       if (!dateString) return '';
       const today = new Date();
@@ -176,57 +171,56 @@ export default {
       return age;
     };
 
-    const updateFeather = () => {
-      nextTick(() => {
-        if (window.feather) {
-          window.feather.replace();
-        } else {
-        }
-      });
-    };
-
-    const initializeTelegram = () => {
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready();
-      } else {
-      }
-    };
-
-    const extractChildrenData = (response) => {
-      if (response && response.data && Array.isArray(response.data)) return response.data;
-      if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-        return response.data.data;
-      }
-      if (Array.isArray(response)) {
-        return response;
-      }
-      errorMessage.value = 'Получены некорректные данные от сервера.';
-      return [];
-    };
-
-    const mapChildrenData = (data) => data.map(childData => ({
-      id: childData.uuid || Date.now().toString(),
-      tgUsername: childData.tgUsername || '',
-      name: childData.PersonalDatum?.name || '',
-      lastName: childData.PersonalDatum?.lastName || '',
-      secondName: childData.PersonalDatum?.secondName || '',
-      phoneNumber: childData.PersonalDatum?.phoneNumber || '',
-      dateOfBirth: childData.PersonalDatum?.dateOfBirth ? childData.PersonalDatum.dateOfBirth.split('T')[0] : '',
-      coins: childData.coins ?? 0,
-      group: childData.group || '—'
-    }));
-
     const loadChildren = async () => {
       isLoading.value = true;
       errorMessage.value = '';
       try {
-        const response = await apiClient.getAllChildren(3);
-        const childrenData = extractChildrenData(response);
-        children.value = Array.isArray(childrenData) ? mapChildrenData(childrenData) : [];
-        if (!Array.isArray(childrenData)) errorMessage.value = 'Получены некорректные данные от сервера.';
+        const [childrenResponse, balancesResponse] = await Promise.all([
+          apiClient.getAllChildren(3),
+          balanceApiClient.ChildBalanceGet()
+        ]);
+
+        let childrenData = [];
+        if (childrenResponse?.data?.data && Array.isArray(childrenResponse.data.data)) {
+          childrenData = childrenResponse.data.data;
+        } else {
+          throw new Error('Получены некорректные данные детей от сервера.');
+        }
+
+        let balancesData = [];
+        if (Array.isArray(balancesResponse.message)) {
+          balancesData = balancesResponse.message;
+        } else {
+            console.warn('Не удалось получить массив балансов. Ответ API:', balancesResponse);
+        }
+
+        const balanceMap = new Map();
+        balancesData.forEach(balanceEntry => {
+          const username = balanceEntry.User?.tgUsername;
+          if (username) {
+            balanceMap.set(username.replace('@', ''), balanceEntry.money);
+          }
+        });
+
+        children.value = childrenData.map(childData => {
+          const username = childData.tgUsername ? childData.tgUsername.replace('@', '') : null;
+          const balance = username ? balanceMap.get(username) || 0 : 0;
+
+          return {
+            id: childData.uuid,
+            tgUsername: childData.tgUsername || '',
+            name: childData.PersonalDatum?.name || '',
+            lastName: childData.PersonalDatum?.lastName || '',
+            secondName: childData.PersonalDatum?.secondName || '',
+            phoneNumber: childData.PersonalDatum?.phoneNumber || '',
+            dateOfBirth: childData.PersonalDatum?.dateOfBirth ? childData.PersonalDatum.dateOfBirth.split('T')[0] : '',
+            coins: balance,
+            group: childData.group || '—'
+          };
+        });
+
       } catch (error) {
-        if (error.response) console.error('Ответ сервера (ошибка):', error.response);
-        errorMessage.value = 'Не удалось загрузить список детей. Попробуйте позже.';
+        errorMessage.value = `Не удалось загрузить список детей. ${error.message}`;
         children.value = [];
       } finally {
         isLoading.value = false;
@@ -269,7 +263,6 @@ export default {
           dateOfBirth: newChild.value.dateOfBirth,
           note: newChild.value.note || ' '
         };
-        console.log('Отправляемые данные:', childData);
         if (isEditing.value && currentChildTgUsername.value) {
           await apiClient.updateChild(currentChildTgUsername.value, childData);
         } else {
@@ -280,10 +273,6 @@ export default {
       } catch (error) {
         if (error.response) {
           errorMessage.value = `Ошибка: ${error.response.data?.message || 'Не удалось сохранить данные ребенка.'}`;
-        } else if (error.code === 'ERR_NETWORK') {
-          errorMessage.value = 'Ошибка сети: сервер недоступен или блокирует запросы (CORS).';
-        } else {
-          errorMessage.value = 'Не удалось сохранить данные ребенка. Попробуйте снова.';
         }
       } finally {
         isLoading.value = false;
@@ -310,6 +299,23 @@ export default {
       }
     };
 
+    const filterChildren = () => {};
+    const distributeCoins = () => {};
+
+    const updateFeather = () => {
+      nextTick(() => {
+        if (window.feather) {
+          window.feather.replace();
+        }
+      });
+    };
+
+    const initializeTelegram = () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+      }
+    };
+
     onMounted(() => {
       initializeTelegram();
       loadChildren();
@@ -321,11 +327,13 @@ export default {
     return {
       searchQuery, selectedChildren, filteredChildren, filterChildren, distributeCoins,
       showModal, isEditing, openAddChildModal, closeModal, newChild, isChildFormValid,
-      submitChild, editChild, deleteChild, getAge, isLoading, errorMessage
+      submitChild, editChild, deleteChild, getAge, isLoading, errorMessage,
+      children
     };
   }
 };
 </script>
+
 <style scoped>
 .children {
   width: 100%;

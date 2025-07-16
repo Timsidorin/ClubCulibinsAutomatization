@@ -1,7 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from client.APIclient.TeacherAPIClient import TeacherAPIClient
-from client.core.config import configs
+from APIclient.TeacherAPIClient import TeacherAPIClient
+from core.config import configs
 
 
 def create_teacher_keyboard():
@@ -50,19 +50,60 @@ def create_group_keyboard():
         callback_data='ga:ma_balance'
     )
     builder.button(
-        text="Назад ↩️",
+        text="Назад к выбору группы ↩️",
         callback_data='a:back_t_g'
     )
     builder.adjust(1, 1, 1)
     return builder.as_markup()
 
 
+
+def create_balance_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='Начислить ➕',
+        callback_data='balance:add'
+    )
+    builder.button(
+        text='Списать ➖',
+        callback_data='balance:subtract'
+    )
+    builder.button(
+        text="⬅️ Назад к выбору ученика",
+        callback_data="back_to_child_list"
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+
+def create_children_keyboard(child_list, children_username):
+    builder = InlineKeyboardBuilder()
+    if not child_list:
+        builder.button(text="В группе нет детей!", callback_data="no_groups")
+    else:
+        for i in range(len(child_list)):
+            builder.button(text=child_list[i], callback_data=f"child_{children_username[i]}")
+
+    builder.button(
+        text="Назад ↩️",
+        callback_data='a:back_t_g'
+    )
+    builder.adjust(1)
+    return builder
+
+
+
 def create_back_to_group_actions_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="⬅️ Назад к действиям",
+        text="⬅️ Назад к действиям в группе",
         callback_data="a:b_to_gr_act"
     )
     return builder.as_markup()
+
+
+
+
 
 

@@ -43,7 +43,6 @@ class TeachersAPIClient extends ApiClient {
     }
 
 
-
 }
 
 export default TeachersAPIClient;

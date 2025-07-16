@@ -6,7 +6,8 @@ export class Teachers {
     lastName = '',
     middleName = '',
     telegramUsername = '',
-    typeUser =  0
+    typeUser = 0,
+    groups = []
   } = {}) {
     this.id = id;
     this.firstName = firstName;
@@ -14,6 +15,7 @@ export class Teachers {
     this.middleName = middleName;
     this.telegramUsername = telegramUsername;
     this.typeUser = typeUser;
+    this.groups = groups;
   }
 
   // Геттер для полного имени
@@ -30,12 +32,12 @@ export class Teachers {
       name: this.firstName,
       lastName: this.lastName,
       secondName: this.middleName,
-      typeUser:this.typeUser
+      typeUser: this.typeUser
     };
   }
 
-  // Статический метод для создания из API-ответа (возврат всех учителей)
-  static fromApiObject(apiData) {
+ъ
+  static fromApiObject(apiData, groups = []) {
     // Учитываем вложенную структуру PersonalDatum
     const personalData = apiData.PersonalDatum || {};
     return new Teachers({
@@ -44,8 +46,8 @@ export class Teachers {
       lastName: personalData.lastName || '',
       middleName: personalData.secondName || '',
       telegramUsername: apiData.tgUsername || '',
-      typeUser: apiData.typeUser || '',
-
+      typeUser: apiData.typeUser || 0,
+      groups: groups
     });
   }
 }

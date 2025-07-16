@@ -310,16 +310,7 @@ body {
     width: 100%;
 }
 
-.stat-card {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 24px;
-    background: var(--tg-card-bg);
-    border-radius: var(--border-radius-card);
-    box-shadow: var(--box-shadow-card);
-    border-left: 4px solid var(--tg-blue);
-}
+
 
 .stat-icon {
     width: 60px;
@@ -338,10 +329,6 @@ body {
     color: var(--tg-blue);
 }
 
-.stat-content {
-    flex: 1;
-    text-align: left;
-}
 
 .stat-content h3 {
     font-size: 0.9em;

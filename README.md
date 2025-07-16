@@ -25,3 +25,22 @@
 ``pip install -r requirements.txt``- install dependencies
 
 ``python main.py`` - run bot
+
+### .env 
+
+
+``BOT_TOKEN`` -  токен телеграмм бота
+
+``PUBLIC_URL`` - public url для TgMiniAPPS
+
+``API_URL`` - API URL
+
+``DATABASE_NAME`` - Имя БД
+
+``DATABASE_USERNAME`` - имя пользователя БД
+
+``DATABASE_PASSWORD`` - пароль пользователя БД
+
+``DATABASE_HOST`` - Хост БД
+
+
