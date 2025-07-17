@@ -581,7 +581,54 @@
     },
     "/balance/logs": {
       "get": {
+        "tags": [
+          "Баланс"
+        ],
         "description": "",
+        "parameters": [
+          {
+            "name": "tgTeacher",
+            "description": "Получение логов по фильтрам",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "tgChild",
+            "description": "Получение логов по фильтрам",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "operation",
+            "description": "Получение логов по фильтрам",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "summ",
+            "description": "Получение логов по фильтрам",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "startDate",
+            "description": "Получение логов по фильтрам",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "equalSign",
+            "description": "1 - равно 2 - операция меньше переданного числа 3 - операция больше переданного числа",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "endDate",
+            "description": "Получение логов по фильтрам",
+            "in": "query",
+            "type": "string"
+          }
+        ],
         "responses": {
           "500": {
             "description": "Internal Server Error"

@@ -109,7 +109,6 @@ export class ModelEducationGroup {
             answer.groups = groups;
             return { code: 200, message: answer };
         } catch (error) {
-            console.error(error);
             throw new Error(error instanceof Error ? error.message : 'Ошибка получения групп');
         }
     }

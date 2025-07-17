@@ -1,7 +1,7 @@
 import {Balance} from "../schemas/Balance";
 import {User} from "../schemas/User";
 import {sequelize} from "../config/database/database";
-import {PersonalData} from "../schemas/PersonalData";
+import {IAnswer} from "../interfaces/IAnswer";
 
 export class ModelBalance {
     public async createBalance(uuidUser: string) {
@@ -16,13 +16,17 @@ export class ModelBalance {
         }
     }
 
-    public async updateBalance(tgUsername: string, operation: boolean, summ: number): Promise<object> {
+    public async updateBalance(tgUsername: string, operation: boolean, summ: number): Promise<IAnswer<string>> {
         try {
             let uuid = await User.findOne({
                 where: {tgUsername: tgUsername},
                 attributes: ['uuid'],
             })
             const operationForBalance = operation ? sequelize.literal(`money + ${summ}`) : sequelize.literal(`money - ${summ}`);
+            let oldBalance = await Balance.findOne({where: {uuidUser: uuid?.uuid}});
+            if ((!operation) && oldBalance?.dataValues.money < summ) {
+                return {code: 500, message: 'Не хватает средств на балансе'}
+            }
             await Balance.update(
                 {
                     money:  operationForBalance,

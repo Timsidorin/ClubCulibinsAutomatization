@@ -4,6 +4,7 @@ import { User } from "./User";
 import {EducationGroup} from "./EducationGroup";
 import {EducationGroupMember} from "./EducationGroupMember";
 import {Balance} from "./Balance";
+import {BountyLog} from "./BountyLog";
 
 export function setupAssociations() {
     // User <-> PersonalData (1:1)
@@ -25,4 +26,16 @@ export function setupAssociations() {
     //User <-> Balance (1:1)
     User.hasOne(Balance, { foreignKey: "uuidUser", sourceKey: "uuid" });
     Balance.belongsTo(User, { foreignKey: "uuidUser", targetKey: "uuid" });
+
+    BountyLog.belongsTo(User, {
+        foreignKey: 'uuidTeacher',
+        targetKey: 'uuid',
+        as: 'Teacher',
+    });
+
+    BountyLog.belongsTo(User, {
+        foreignKey: 'uuidChild',
+        targetKey: 'uuid',
+        as: 'Child',
+    });
 }

@@ -7,6 +7,7 @@ import '../../schemas/TypeUser';
 import '../../schemas/EducationGroup'
 import '../../schemas/EducationGroupMember'
 import '../../schemas/Balance';
+import '../../schemas/BountyLog';
 //Утилиты для работы с БД
 import {createTypesUser} from "./create/createTypesUser";
 

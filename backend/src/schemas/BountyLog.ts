@@ -1,27 +1,33 @@
 import {DataTypes, Model} from "sequelize";
 import {sequelize} from "../config/database/database";
 
-export class Balance extends Model {
-    declare money: number;
-    declare uuid: string;
-    declare uuidUser: string;
-}
+export class BountyLog extends Model {}
 
-Balance.init(
+BountyLog.init(
     {
         uuid: {
             type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
+            defaultValue: DataTypes.UUIDV4,
         },
-        uuidUser: {
+        uuidTeacher: {
             type: DataTypes.UUID,
+        },
+        uuidChild: {
+            type: DataTypes.UUID,
+        },
+        operation: {
+            type: DataTypes.STRING,
         },
         money: {
             type: DataTypes.INTEGER,
+        },
+        createdAt: {
+            type: DataTypes.DATE,
         }
     },
     {
         sequelize,
         timestamps: false,
-    });
+    }
+);
