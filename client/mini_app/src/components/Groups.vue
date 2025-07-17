@@ -119,6 +119,20 @@
               rows="3"
             ></textarea>
           </div>
+          <div class="form-group">
+    <label for="groupLink">Ссылка на чат</label>
+    <input
+      id="groupLink"
+      v-model="newGroup.urlName"
+      type="text"
+      class="form-input"
+      placeholder="t.me/username_группы"
+    />
+    <p class="form-text">
+    Введите публичную ссылку на чат, если она есть.<br>
+    Без нее невозможно будет отправить баланс группы в чат!
+  </p>
+  </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" @click="closeGroupModal">
               Отмена
@@ -250,7 +264,7 @@ export default {
     const showGroupModal = ref(false);
     const isEditingGroup = ref(false);
     const currentGroupId = ref(null);
-    const newGroup = ref({ name: '', description: '' });
+    const newGroup = ref({ name: '', description: '', urlName: '' });
     const showStudentsModal = ref(false);
     const currentGroup = ref({});
     const students = ref([]);
@@ -315,6 +329,7 @@ export default {
                     teacherName: teacherNameFormatted,
                     studentIds: participantIds,
                     teacherId: groupData.uuidUser || null,
+                    urlName: groupData.urlName || ''
                 };
             });
         } else {
@@ -379,14 +394,14 @@ export default {
       showGroupModal.value = true;
       isEditingGroup.value = false;
       currentGroupId.value = null;
-      newGroup.value = { name: '', description: '' };
+      newGroup.value = { name: '', description: '', urlName: '' };
     };
 
     const editGroup = (group) => {
       showGroupModal.value = true;
       isEditingGroup.value = true;
       currentGroupId.value = group.id;
-      newGroup.value = { name: group.name, description: group.description };
+      newGroup.value = { name: group.name, description: group.description, urlName: group.urlName };
     };
 
     const closeGroupModal = () => {
@@ -400,7 +415,8 @@ export default {
       try {
         const groupData = {
           name: newGroup.value.name,
-          description: newGroup.value.description || ''
+          description: newGroup.value.description || '',
+          urlName: newGroup.value.link || ''
         };
         if (isEditingGroup.value && currentGroupId.value) {
           groupData.uuid = currentGroupId.value;
@@ -1170,6 +1186,14 @@ textarea.form-input {
 .btn-icon i {
   width: 18px;
   height: 18px;
+}
+
+.form-text {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8em;
+  line-height: 1.4;
+  color: var(--tg-text-light);
 }
 
 </style>
