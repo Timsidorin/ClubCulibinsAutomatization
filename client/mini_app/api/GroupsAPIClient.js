@@ -37,15 +37,25 @@ class GroupsAPIClient extends ApiClient {
     return await this.post(`${this.endpoint}/add-teacher`, data);
   }
 
-  // Добавить множество детей в группу
+
   async addChildrens(addData) {
     return await this.post(`${this.endpoint}/add-childrens`, addData);
   }
 
-    // Получить группы учителя
-    async getGroupsByTeacher(tg_username) {
-        return await this.get(`${this.endpoint}/get-all?tgUsername=${tg_username}`);
+    async getGroupsByTeacher(tg_usernames) {
+    if (Array.isArray(tg_usernames)) {
+        const queryParams = tg_usernames
+            .map(username => {
+                const formattedUsername = username.startsWith('@') ? username : `@${username}`;
+                return `tgUsername=${formattedUsername}`;
+            })
+            .join('&');
+
+        return await this.get(`${this.endpoint}/get-all?${queryParams}`);
+    } else {
+        return await this.get(`${this.endpoint}/get-all?tgUsername=${tg_usernames}`);
     }
+}
 
 
 

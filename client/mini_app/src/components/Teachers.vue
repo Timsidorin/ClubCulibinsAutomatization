@@ -106,7 +106,6 @@
   </div>
 </template>
 
-
 <script>
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import TeachersAPIClient from '../../api/TeachersAPIClient.js';
@@ -147,39 +146,68 @@ export default {
     });
 
 
+    const fetchAllTeachersGroups = async (teachersData) => {
+  try {
+    const usernames = teachersData
+      .map(teacher => teacher.tgUsername)
+      .filter(username => username);
+
+    if (usernames.length === 0) {
+      return {};
+    }
+
+
+
+    const groupsResponse = await groupAPIClient.getGroupsByTeacher(usernames);
+
+    const teacherGroupsMap = {};
+
+    if (groupsResponse?.message?.groups && Array.isArray(groupsResponse.message.groups)) {
+      groupsResponse.message.groups.forEach(group => {
+        const teacherUsername = group.User?.tgUsername;
+        if (teacherUsername) {
+          if (!teacherGroupsMap[teacherUsername]) {
+            teacherGroupsMap[teacherUsername] = [];
+          }
+          teacherGroupsMap[teacherUsername].push(group.name);
+        }
+      });
+    }
+
+    return teacherGroupsMap;
+
+  } catch (error) {
+    console.error('Ошибка при загрузке групп для учителей:', error);
+    return {};
+  }
+};
+
     const fetchTeachers = async () => {
       isLoading.value = true;
       errorMessage.value = '';
       try {
         const teachersResponse = await apiClient.getAllTeachers(1);
         let teachersData = [];
+
         if (teachersResponse?.data?.data && Array.isArray(teachersResponse.data.data)) {
           teachersData = teachersResponse.data.data;
         } else {
           throw new Error('Получены некорректные данные учителей от сервера.');
         }
-        const teachersWithGroupsPromises = teachersData.map(async (teacherData) => {
-          let groupNames = [];
+
+        // Получаем группы для всех учителей одним запросом
+        const teacherGroupsMap = await fetchAllTeachersGroups(teachersData);
+
+        teachers.value = teachersData.map(teacherData => {
           const username = teacherData.tgUsername;
-
-          if (username) {
-            try {
-              // Вызываем API для получения групп по username
-              const groupsResponse = await groupAPIClient.getGroupsByTeacher(username);
-              if (groupsResponse?.message?.groups && Array.isArray(groupsResponse.message.groups)) {
-  groupNames = groupsResponse.message.groups.map(group => group.name);
-  console.log(groupNames);
-}
-            } catch (groupError) {
-              console.error(`Не удалось загрузить группы для учителя ${username}:`, groupError);
-            }
-          }
-
+          const groupNames = teacherGroupsMap[username] || [];
           return Teachers.fromApiObject(teacherData, groupNames);
         });
-        teachers.value = await Promise.all(teachersWithGroupsPromises);
+
+        console.log('Итоговый список учителей:', teachers.value);
 
       } catch (error) {
+        console.error('Ошибка при загрузке учителей:', error);
         errorMessage.value = `Не удалось загрузить список учителей. ${error.message}`;
         teachers.value = [];
       } finally {
@@ -197,7 +225,6 @@ export default {
     const editTeacher = (teacher) => {
       isEditing.value = true;
       currentTeacherId.value = teacher.id;
-      // Используем конструктор для копирования данных
       newTeacher.value = new Teachers({
         id: teacher.id,
         firstName: teacher.firstName,
@@ -231,7 +258,6 @@ export default {
         return;
       }
 
-
       const isUsernameTaken = teachers.value.some(t =>
           (isEditing.value ? t.id !== currentTeacherId.value : true) &&
           t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase()
@@ -250,7 +276,6 @@ export default {
 
       isLoading.value = true;
       errorMessage.value = '';
-
 
       const teacherData = newTeacher.value.toApiObject();
       teacherData.typeUser = 1;
@@ -291,9 +316,6 @@ export default {
       }
     };
 
-    const filterTeachers = () => {
-    };
-
     const toggleActions = (teacherId) => {
       activeCardId.value = activeCardId.value === teacherId ? null : teacherId;
     };
@@ -331,13 +353,11 @@ export default {
       validateUsername,
       editTeacher,
       deleteTeacher,
-      filterTeachers,
       toggleActions
     };
   }
 };
 </script>
-
 
 <style scoped>
 .teachers {
@@ -376,6 +396,7 @@ export default {
   border: 2px solid var(--tg-border);
   font-size: 1em;
 }
+
 .search-bar input:focus {
   border-color: var(--tg-blue);
   outline: none;
@@ -458,9 +479,11 @@ export default {
   transition: background-color 0.2s;
   z-index: 2;
 }
+
 .teacher-actions-toggle:hover {
   background-color: rgba(0,0,0,0.1);
 }
+
 .teacher-actions-toggle i {
   color: var(--tg-text-light);
 }
@@ -530,6 +553,29 @@ export default {
 .empty-state p {
   color: var(--tg-text-light);
   margin: 0 0 24px 0;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--tg-text-light);
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--tg-border);
+  border-top: 3px solid var(--tg-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .modal {
@@ -705,7 +751,4 @@ export default {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 </style>
-
-
