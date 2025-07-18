@@ -8,9 +8,11 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "swagger": "ts-node src/config/swagger.ts",
-    "sync-database": "ts-node src/config/database/syncDatabase.ts"
+    "sync-database": "ts-node src/config/database/syncDatabase.ts",
+    "create-random": "ts-node src/config/database/create/createRandomUsers.ts"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.9.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/swagger-ui-express": "^4.1.8",
