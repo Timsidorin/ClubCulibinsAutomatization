@@ -1,6 +1,7 @@
 import { Faker, ru } from '@faker-js/faker';
 import {User} from "../../../schemas/User";
 import {PersonalData} from "../../../schemas/PersonalData";
+import {Balance} from "../../../schemas/Balance";
 
 async function createUsers() {
 
@@ -10,17 +11,62 @@ async function createUsers() {
 
     let [teacher, personalDataTeacher] = createStructure(1, 'teacher', faker);
     let [child, personalDataChild] = createStructure(3, 'children', faker);
-
-    await User.bulkCreate([...teacher, ...child]);
-    await PersonalData.bulkCreate([...personalDataTeacher, ...personalDataChild])
+    let uuidChilds = child.map(child => {
+        return {uuidUser: child?.uuid, money: 0};
+    });
+    await Promise.all(
+        [
+            User.bulkCreate([...teacher, ...child]),
+            PersonalData.bulkCreate([...personalDataTeacher, ...personalDataChild]),
+            Balance.bulkCreate([...uuidChilds]),
+        ]);
 }
 
-function createStructure(typeUser: number, name: string, faker: Faker) {
-    let users = [];
-    let personalData = [];
+function createStructure(
+    typeUser: number,
+    name: string,
+    faker: Faker
+): [
+    Array<{
+        uuid: string;
+        tgId: string;
+        typeUser: number;
+        tgUsername: string;
+    }>,
+    Array<{
+        uuidUser: string;
+        name: string;
+        secondName: string;
+        lastName: string;
+        phoneNumber: string;
+        dateOfBirth: Date;
+    }>
+] {
+    let users: Array<{
+        uuid: string;
+        tgId: string;
+        typeUser: number;
+        tgUsername: string;
+    }> = [];
+
+    let personalData: Array<{
+        uuidUser: string;
+        name: string;
+        secondName: string;
+        lastName: string;
+        phoneNumber: string;
+        dateOfBirth: Date;
+    }> = [];
+
     for (let i = 0; i < 50; i++) {
         let uuid = faker.string.uuid();
-        let newUser =  {tgId: `@${i+Math.random()}`, typeUser: typeUser, uuid: uuid, tgUsername: `@${name}${i}`};
+        let newUser = {
+            tgId: `@${i + Math.random()}`,
+            typeUser: typeUser,
+            uuid: uuid,
+            tgUsername: `@${name}${i}`,
+        };
+
         let newPersonalData = {
             uuidUser: uuid,
             name: faker.person.firstName(),
@@ -33,6 +79,7 @@ function createStructure(typeUser: number, name: string, faker: Faker) {
         users.push(newUser);
         personalData.push(newPersonalData);
     }
+
     return [users, personalData];
 }
 

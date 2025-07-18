@@ -6,7 +6,6 @@ import {IAnswer} from "../interfaces/IAnswer";
 export class ModelBalance {
     public async createBalance(uuidUser: string) {
         try {
-            console.log(uuidUser);
             await Balance.create({
                 uuidUser: uuidUser,
                 money: 0,
