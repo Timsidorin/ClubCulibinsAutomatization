@@ -16,6 +16,8 @@
 
 ``npm run sync-database`` - sync database
 
+``npm run create-random`` - Создание пула случаных юзеров (для тестирования)
+
 ### Запуск клиента (телеграмм бота)
 
 ``cd client``
