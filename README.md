@@ -29,7 +29,9 @@
 ### .env 
 
 
-``BOT_TOKEN`` -  токен телеграмм бота
+``BOT_TOKEN`` -  токен главного телеграмм бота
+
+``TOKEN_INFO_BOT`` -  токен информационного бота
 
 ``PUBLIC_URL`` - public url для TgMiniAPPS
 
@@ -42,5 +44,12 @@
 ``DATABASE_PASSWORD`` - пароль пользователя БД
 
 ``DATABASE_HOST`` - Хост БД
+
+``INFO_BOT_URL`` - Хост бота уведомлений
+
+
+
+
+
 
 
