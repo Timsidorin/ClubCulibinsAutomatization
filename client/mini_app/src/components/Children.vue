@@ -10,10 +10,6 @@
 
     <div class="search-bar">
       <input type="text" v-model="searchQuery" placeholder="Поиск ребенка...">
-      <button class="btn btn-primary" @click="filterChildren">
-        <i data-feather="search"></i>
-        Поиск
-      </button>
     </div>
 
     <div class="bulk-actions-toolbar" v-if="selectedChildren.length > 0">

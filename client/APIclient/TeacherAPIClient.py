@@ -15,13 +15,13 @@ class TeacherAPIClient(BaseAPIClient):
         members = await self._send_request("get", f"education-group/get/composition/{uuid_group}",  data={})
         return members
 
-    async  def add_balance(self, child_username:str, amount: int):
+    async  def add_balance(self, child_username:str, teacher_username:str, amount: int):
         """Добавление монет ребёнку"""
-        response = await self._send_request("patch", "balance/update", data={"tgUsername": child_username, "operation": True, "summ": amount })
+        response = await self._send_request("patch", "balance/update", data={"tgUsername": child_username, "tgTeacher":"@"+teacher_username, "operation": True, "summ": amount })
         return  True if response["code"] == 200 else False
 
 
-    async def subtract_balance(self, child_username: str, amount: int):
+    async def subtract_balance(self, child_username: str,teacher_username:str, amount: int):
         """Уменьшение монет ребёнка"""
-        response = await self._send_request("patch", "balance/update", data={"tgUsername": child_username, "operation": False, "summ": amount})
+        response = await self._send_request("patch", "balance/update", data={"tgUsername": child_username, "tgTeacher":"@"+teacher_username, "operation": False, "summ": amount})
         return  True if response["code"] == 200 else False

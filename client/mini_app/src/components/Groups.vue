@@ -249,6 +249,7 @@ import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import GroupsAPIClient from '../../api/GroupsAPIClient.js';
 import ChildrenAPIClient from '../../api/ChildrenAPIClient.js';
 import TeachersAPIClient from '../../api/TeachersAPIClient.js';
+import InfoBotAPIClient from '../../api/InfoBotAPIClient.js';
 
 export default {
   name: 'Groups',
@@ -277,6 +278,19 @@ export default {
 
     const isGroupFormValid = computed(() => newGroup.value.name.trim());
 
+      const showAppAlert = (message) => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        try {
+          window.Telegram.WebApp.showAlert(message);
+        } catch (e) {
+          console.warn('Telegram.WebApp.showAlert is not supported, falling back to alert().', e);
+          alert(message);
+        }
+      } else {
+        console.log('Telegram WebApp not available, using alert().');
+        alert(message);
+      }
+    };
     const filteredStudents = computed(() => {
       const filtered = students.value.filter(student =>
         `${student.name} ${student.lastName || ''} ${student.secondName || ''}`
@@ -302,6 +316,42 @@ export default {
       );
     });
 
+
+    const sendGroupBalance = async (group) => {
+  if (!group.urlName || group.urlName.trim() === '') {
+    showAppAlert('У этой группы не указана публичная ссылка. Добавьте ее в настройках группы.');
+    return;
+  }
+
+  const isConfirmed = confirm(`Вы уверены, что хотите отправить отчет по балансу группы "${group.name}" в связанный чат?`);
+  if (!isConfirmed) {
+    return;
+  }
+
+  isLoading.value = true;
+  errorMessage.value = '';
+
+  try {
+
+    const reportText = `Отчет по балансу для группы: ${group.name}`;
+
+    await InfoBotAPIClient.sendNotification({
+      chat_identifier: group.urlName,
+      uuid_group:group.id,
+      text: reportText
+    });
+
+
+  } catch (error) {
+    console.error('Ошибка при отправке отчета о балансе:', error);
+    const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+    errorMessage.value = `Не удалось отправить отчет: ${detail}`;
+    showAppAlert(errorMessage.value);
+
+  } finally {
+    isLoading.value = false;
+  }
+};
 
     const fetchGroups = async () => {
       isLoading.value = true;
@@ -416,7 +466,7 @@ export default {
         const groupData = {
           name: newGroup.value.name,
           description: newGroup.value.description || '',
-          urlName: newGroup.value.link || ''
+          urlName: newGroup.value.urlName || ''
         };
         if (isEditingGroup.value && currentGroupId.value) {
           groupData.uuid = currentGroupId.value;
@@ -586,7 +636,8 @@ export default {
       closeTeacherModal,
       selectTeacher,
       saveTeacherToGroup,
-      unassignTeacher
+      unassignTeacher,
+      sendGroupBalance
     };
   }
 };
@@ -1147,27 +1198,27 @@ textarea.form-input {
 }
 
 .student-item {
-  /* Добавляем flex для красивого выравнивания */
+
   display: flex;
   align-items: center;
   gap: 12px;
-  /* ... (остальные стили .student-item) ... */
+
 }
 
 .student-details {
-  /* Заставляем этот блок занимать все доступное пространство */
+
   flex-grow: 1;
 }
 
 .student-actions {
-  /* Этот блок будет справа */
+
   margin-left: auto;
 }
 
 .btn-icon {
   background: transparent;
   border: 1px solid var(--tg-border);
-  border-radius: 50%; /* Делаем кнопку круглой */
+  border-radius: 50%;
   width: 36px;
   height: 36px;
   padding: 0;

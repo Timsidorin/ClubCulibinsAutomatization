@@ -84,18 +84,22 @@ async def get_children_list(callback: CallbackQuery, state: FSMContext):
         members = members_response.get("message", [])["EducationGroupMembers"]
 
         if members:
-            header = f'{"№":<4}{"Ученик":<25}{"Баланс":>12}'
-            separator = "-" * (4 + 25 + 12)
+            header = f'{"№":<3}{"Ученик":<18}{"Баланс":>8}'
+            separator = "-" * (3 + 18 + 8)
             table_rows = [header, separator]
 
             for i, member_data in enumerate(members, start=1):
                 full_string = format_child(member_data)
-
                 try:
                     name_part, balance_part = full_string.rsplit(' <b>', 1)
                     balance = balance_part.replace('</b>', '').replace('[', '').replace(']', '')
-                    row_text = f'{str(i) + ".":<4}{name_part:<25}{balance:>12}'
+                    if len(name_part) > 17:
+                        name_part = name_part[:15] + ".."
+
+                    row_text = f'{str(i) + ".":<3}{name_part:<18}{balance:>8}'
                     table_rows.append(row_text)
+                except ValueError:
+                    table_rows.append(full_string)
 
                 except ValueError:
                     table_rows.append(full_string)
@@ -220,9 +224,10 @@ async def process_adding_amount(message: Message, state: FSMContext):
     amount = int(message.text)
     data = await state.get_data()
     child_username = data.get("selected_child_username")
+    teacher_username = message.from_user.username
 
     client = TeacherAPIClient()
-    response = await client.add_balance(child_username=child_username, amount=amount)
+    response = await client.add_balance(child_username=child_username, teacher_username=teacher_username, amount=amount)
     if response:
         await message.answer(f"✅ Успешно начислено `{amount}` КК ученику `{child_username}`.", parse_mode="Markdown")
         await message.answer(
@@ -244,9 +249,9 @@ async def process_subtracting_amount(message: Message, state: FSMContext):
     amount = int(message.text)
     data = await state.get_data()
     child_username = data.get("selected_child_username")
-
+    teacher_username = message.from_user.username
     client = TeacherAPIClient()
-    if await client.subtract_balance(child_username=child_username, amount=amount):
+    if await client.subtract_balance(child_username=child_username, teacher_username=teacher_username, amount=amount):
         await message.answer(f"✅ Успешно списано `{amount}` КК у ученика `{child_username}`.", parse_mode="Markdown")
         await message.answer(
             "Вы снова в меню группы. Выберите следующее действие:",
