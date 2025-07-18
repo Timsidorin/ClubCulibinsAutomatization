@@ -1,242 +1,204 @@
 <template>
   <div class="dashboard">
     <!-- Статистические карточки -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-4 col-sm-6">
-        <div class="card stat-card h-100">
-          <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
-            <div class="stat-icon mb-2">
-              <i data-feather="users"></i>
-            </div>
-            <div class="stat-content">
-              <h3 class="mb-2">Всего групп</h3>
-              <p class="stat-number mb-0">{{ groups.length }}</p>
-            </div>
+    <div class="stats-grid mb-4">
+      <div class="stat-card">
+        <div class="stat-card-inner">
+          <div class="stat-icon">
+            <i data-feather="users"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Всего групп</h3>
+            <p class="stat-number">{{ groups.length }}</p>
           </div>
         </div>
       </div>
-      <div class="col-md-4 col-sm-6">
-        <div class="card stat-card h-100">
-          <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
-            <div class="stat-icon mb-2">
-              <i data-feather="user-check"></i>
-            </div>
-            <div class="stat-content">
-              <h3 class="mb-2">Всего учителей</h3>
-              <p class="stat-number mb-0">{{ teachers.length }}</p>
-            </div>
+
+      <div class="stat-card">
+        <div class="stat-card-inner">
+          <div class="stat-icon">
+            <i data-feather="user-check"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Всего учителей</h3>
+            <p class="stat-number">{{ teachers.length }}</p>
           </div>
         </div>
       </div>
-      <div class="col-md-4 col-sm-6">
-        <div class="card stat-card h-100">
-          <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
-            <div class="stat-icon mb-2">
-              <i data-feather="smile"></i>
-            </div>
-            <div class="stat-content">
-              <h3 class="mb-2">Всего детей</h3>
-              <p class="stat-number mb-0">{{ children.length }}</p>
-            </div>
+
+      <div class="stat-card">
+        <div class="stat-card-inner">
+          <div class="stat-icon">
+            <i data-feather="smile"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Всего детей</h3>
+            <p class="stat-number">{{ children.length }}</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Таблица логов -->
-    <div class="card logs-card">
-      <div class="card-header logs-header d-flex justify-content-between align-items-center">
-        <h3 class="mb-0">Логи операций с балансом</h3>
-        <button class="btn btn-clear-header" @click="clearFilters" title="Очистить фильтры">
+    <div class="logs-card">
+      <div class="logs-header">
+        <h3>Логи операций с балансом</h3>
+        <button class="btn-clear-header" @click="clearFilters" title="Очистить фильтры">
           <i data-feather="x"></i>
         </button>
       </div>
 
-      <div class="card-body">
+      <div class="logs-body">
         <!-- Фильтры -->
-        <div class="filters-section mb-3">
-          <div class="filters-container p-3 rounded">
-            <div class="row g-2 mb-2">
-              <div class="col-md-3 col-sm-6">
-                <div class="filter-group">
-                  <label class="form-label">Учитель</label>
-                  <select class="form-select form-select-sm" v-model="filters.tgTeacher" @change="applyFiltersImmediate">
-                    <option value="">Все</option>
-                    <option v-for="teacher in teachers" :key="teacher.uuid" :value="teacher.tgUsername">
-                      {{ teacher.PersonalDatum?.name }} {{ teacher.PersonalDatum?.lastName }}
-                    </option>
+        <div class="filters-section">
+          <div class="filters-container">
+            <div class="filters-grid">
+              <div class="filter-group">
+                <label class="filter-label">Учитель</label>
+                <select class="filter-select" v-model="filters.tgTeacher" @change="applyFiltersImmediate">
+                  <option value="">Все</option>
+                  <option v-for="teacher in teachers" :key="teacher.uuid" :value="teacher.tgUsername">
+                    {{ teacher.PersonalDatum?.name }} {{ teacher.PersonalDatum?.lastName }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label class="filter-label">Ребенок</label>
+                <select class="filter-select" v-model="filters.tgChild" @change="applyFiltersImmediate">
+                  <option value="">Все</option>
+                  <option v-for="child in children" :key="child.uuid" :value="child.tgUsername">
+                    {{ child.PersonalDatum?.name }} {{ child.PersonalDatum?.lastName }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label class="filter-label">Операция</label>
+                <select class="filter-select" v-model="filters.operation" @change="applyFiltersImmediate">
+                  <option value="">Все</option>
+                  <option value="true">Начисление</option>
+                  <option value="false">Списание</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label class="filter-label">Сумма</label>
+                <div class="amount-filter">
+                  <select class="filter-select-small" v-model="filters.equalSign" @change="applyFiltersImmediate">
+                    <option value="1">=</option>
+                    <option value="2">&lt;</option>
+                    <option value="3">&gt;</option>
                   </select>
-                </div>
-              </div>
-
-              <div class="col-md-3 col-sm-6">
-                <div class="filter-group">
-                  <label class="form-label">Ребенок</label>
-                  <select class="form-select form-select-sm" v-model="filters.tgChild" @change="applyFiltersImmediate">
-                    <option value="">Все</option>
-                    <option v-for="child in children" :key="child.uuid" :value="child.tgUsername">
-                      {{ child.PersonalDatum?.name }} {{ child.PersonalDatum?.lastName }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="col-md-3 col-sm-6">
-                <div class="filter-group">
-                  <label class="form-label">Операция</label>
-                  <select class="form-select form-select-sm" v-model="filters.operation" @change="applyFiltersImmediate">
-                    <option value="">Все</option>
-                    <option value="true">Начисление</option>
-                    <option value="false">Списание</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="col-md-3 col-sm-6">
-                <div class="filter-group">
-                  <label class="form-label">Сумма</label>
-                  <div class="input-group input-group-sm">
-                    <select class="form-select" v-model="filters.equalSign" @change="applyFiltersImmediate" style="max-width: 60px;">
-                      <option value="1">=</option>
-                      <option value="2">&lt;</option>
-                      <option value="3">&gt;</option>
-                    </select>
-                    <input
-                      type="number"
-                      class="form-control"
-                      v-model="filters.summ"
-                      placeholder="0"
-                      @input="applyFilters"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row g-2">
-              <div class="col-md-6 col-sm-6">
-                <div class="filter-group">
-                  <label class="form-label">От</label>
                   <input
-                    type="date"
-                    class="form-control form-control-sm"
-                    v-model="filters.startDate"
-                    @change="applyFiltersImmediate"
+                    type="number"
+                    class="filter-input"
+                    v-model="filters.summ"
+                    placeholder="0"
+                    @input="applyFilters"
                   />
                 </div>
               </div>
 
-              <div class="col-md-6 col-sm-6">
-                <div class="filter-group">
-                  <label class="form-label">До</label>
-                  <input
-                    type="date"
-                    class="form-control form-control-sm"
-                    v-model="filters.endDate"
-                    @change="applyFiltersImmediate"
-                  />
-                </div>
+              <div class="filter-group">
+                <label class="filter-label">От</label>
+                <input
+                  type="date"
+                  class="filter-input"
+                  v-model="filters.startDate"
+                  @change="applyFiltersImmediate"
+                />
+              </div>
+
+              <div class="filter-group">
+                <label class="filter-label">До</label>
+                <input
+                  type="date"
+                  class="filter-input"
+                  v-model="filters.endDate"
+                  @change="applyFiltersImmediate"
+                />
               </div>
             </div>
           </div>
         </div>
 
         <!-- Таблица логов -->
-        <div class="table-responsive">
-          <table class="table table-hover logs-table">
-            <thead class="table-primary">
-              <tr>
-                <th>Дата</th>
-                <th>Учитель</th>
-                <th>Ребенок</th>
-                <th>Операция</th>
-                <th class="text-end">Сумма</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="log in logs" :key="log.uuid">
-                <td>
-                  <small class="text-muted d-block d-sm-none">Дата:</small>
-                  {{ formatDate(log.createdAt) }}
-                </td>
-                <td>
-                  <small class="text-muted d-block d-sm-none">Учитель:</small>
-                  <div class="user-info">
-                    <strong>{{ log.Teacher?.PersonalDatum?.name }} {{ log.Teacher?.PersonalDatum?.lastName }}</strong>
-                    <small class="text-muted">{{ log.Teacher?.tgUsername }}</small>
-                  </div>
-                </td>
-                <td>
-                  <small class="text-muted d-block d-sm-none">Ребенок:</small>
-                  <div class="user-info">
-                    <strong>{{ log.Child?.PersonalDatum?.name }} {{ log.Child?.PersonalDatum?.lastName }}</strong>
-                    <small class="text-muted">{{ log.Child?.tgUsername }}</small>
-                  </div>
-                </td>
-                <td>
-                  <small class="text-muted d-block d-sm-none">Операция:</small>
-                  <span :class="['badge', 'operation-badge', log.operation === 'true' ? 'bg-success' : 'bg-danger']">
-                    {{ log.operation === 'true' ? 'Начисление' : 'Списание' }}
-                  </span>
-                </td>
-                <td class="text-end">
-                  <small class="text-muted d-block d-sm-none">Сумма:</small>
-                  <span :class="['amount-value', 'fw-bold', log.operation === 'true' ? 'text-success' : 'text-danger']">
-                    {{ log.operation === 'true' ? '+' : '-' }}{{ log.money }} КК
-                  </span>
-                </td>
-              </tr>
-              <tr v-if="logs.length === 0 && !loading">
-                <td colspan="5" class="text-center py-4">
-                  <div class="empty-state">
-                    <i data-feather="inbox" class="mb-2"></i>
-                    <p class="text-muted mb-0">Нет данных для отображения</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="table-container">
+          <div class="table-wrapper">
+            <table class="logs-table">
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Учитель</th>
+                  <th>Ребенок</th>
+                  <th>Операция</th>
+                  <th class="text-end">Сумма</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="log in logs" :key="log.uuid">
+                  <td data-label="Дата">
+                    {{ formatDate(log.createdAt) }}
+                  </td>
+                  <td data-label="Учитель">
+                    <div class="user-info">
+                      <strong>{{ log.Teacher?.PersonalDatum?.name }} {{ log.Teacher?.PersonalDatum?.lastName }}</strong>
+                      <small>{{ log.Teacher?.tgUsername }}</small>
+                    </div>
+                  </td>
+                  <td data-label="Ребенок">
+                    <div class="user-info">
+                      <strong>{{ log.Child?.PersonalDatum?.name }} {{ log.Child?.PersonalDatum?.lastName }}</strong>
+                      <small>{{ log.Child?.tgUsername }}</small>
+                    </div>
+                  </td>
+                  <td data-label="Операция">
+                    <span :class="['operation-badge', log.operation === 'true' ? 'success' : 'danger']">
+                      {{ log.operation === 'true' ? 'Начисление' : 'Списание' }}
+                    </span>
+                  </td>
+                  <td data-label="Сумма" class="text-end">
+                    <span :class="['amount-value', log.operation === 'true' ? 'positive' : 'negative']">
+                      {{ log.operation === 'true' ? '+' : '-' }}{{ log.money }} КК
+                    </span>
+                  </td>
+                </tr>
+                <tr v-if="logs.length === 0 && !loading">
+                  <td colspan="5" class="empty-state">
+                    <div class="empty-content">
+                      <i data-feather="inbox"></i>
+                      <p>Нет данных для отображения</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Загрузка -->
-        <div v-if="loading" class="text-center py-4">
-          <div class="spinner-border text-primary me-2" role="status">
-            <span class="visually-hidden">Загрузка...</span>
-          </div>
-          <span class="text-muted">Загрузка логов...</span>
+        <div v-if="loading" class="loading-state">
+          <div class="spinner"></div>
+          <span>Загрузка логов...</span>
         </div>
       </div>
     </div>
 
     <!-- Быстрые действия -->
-    <div class="row g-2 mt-3">
-      <div class="col-md-4 col-sm-6">
-        <button
-          class="btn btn-primary w-100"
-          @click="$emit('navigate', 'children')"
-        >
-          <i data-feather="plus-circle" class="me-2"></i>
-          Добавить ребенка
-        </button>
-      </div>
-      <div class="col-md-4 col-sm-6">
-        <button
-          class="btn btn-primary w-100"
-          @click="$emit('navigate', 'groups')"
-        >
-          <i data-feather="plus-circle" class="me-2"></i>
-          Добавить группу
-        </button>
-      </div>
-      <div class="col-md-4 col-sm-6">
-        <button
-          class="btn btn-secondary w-100"
-          @click="$emit('navigate', 'teachers')"
-        >
-          <i data-feather="user-plus" class="me-2"></i>
-          Добавить учителя
-        </button>
-      </div>
+    <div class="quick-actions">
+      <button class="action-btn primary" @click="$emit('navigate', 'children')">
+        <i data-feather="plus-circle"></i>
+        <span>Добавить ребенка</span>
+      </button>
+      <button class="action-btn primary" @click="$emit('navigate', 'groups')">
+        <i data-feather="plus-circle"></i>
+        <span>Добавить группу</span>
+      </button>
+      <button class="action-btn secondary" @click="$emit('navigate', 'teachers')">
+        <i data-feather="user-plus"></i>
+        <span>Добавить учителя</span>
+      </button>
     </div>
   </div>
 </template>
@@ -465,20 +427,27 @@ export default {
 
 <style scoped>
 .dashboard {
-  padding: 0 8px;
+  padding: 16px;
   max-width: 100%;
+  background: var(--tg-bg-color, #f8f9fa);
 }
 
 /* Статистические карточки */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
 .stat-card {
   background: var(--tg-card-bg, #ffffff);
-  border-radius: var(--border-radius-card, 12px);
-  box-shadow: var(--box-shadow-card, 0 2px 8px rgba(0, 0, 0, 0.1));
-  transition: all var(--transition-speed, 0.3s);
-  border: 1px solid transparent;
-  position: relative;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid var(--tg-border, #e9ecef);
   overflow: hidden;
-  min-height: 140px;
+  position: relative;
 }
 
 .stat-card::before {
@@ -486,194 +455,510 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, var(--tg-blue, #0088cc) 0%, var(--tg-green, #28a745) 100%);
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0088cc 0%, #28a745 100%);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--box-shadow-hover, 0 4px 16px rgba(0, 0, 0, 0.15));
-  border-color: var(--tg-blue-light, #e0f2ff);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card-inner {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
 }
 
 .stat-icon {
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--tg-blue-light, #e0f2ff) 0%, rgba(224, 242, 255, 0.5) 100%);
+  background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 136, 204, 0.2);
 }
 
 .stat-icon i {
-  width: 20px;
-  height: 20px;
-  color: var(--tg-blue, #0088cc);
+  width: 24px;
+  height: 24px;
+  color: #0088cc;
 }
 
 .stat-content h3 {
-  font-size: 0.8em;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--tg-text-light, #6c757d);
+  color: #6c757d;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .stat-number {
-  font-size: 1.8em;
+  font-size: 32px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--tg-blue, #0088cc) 0%, var(--tg-green, #28a745) 100%);
+  background: linear-gradient(135deg, #0088cc 0%, #28a745 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  line-height: 1;
+  margin: 0;
 }
 
 /* Карточка логов */
 .logs-card {
   background: var(--tg-card-bg, #ffffff);
-  border-radius: var(--border-radius-card, 12px);
-  box-shadow: var(--box-shadow-card, 0 2px 8px rgba(0, 0, 0, 0.1));
-  border: 1px solid var(--tg-border, #dee2e6);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--tg-border, #e9ecef);
+  overflow: hidden;
+  margin-bottom: 24px;
 }
 
 .logs-header {
-  background: var(--tg-blue-light, #e0f2ff);
-  border-bottom: 1px solid var(--tg-border, #dee2e6);
+  background: linear-gradient(135deg, #0088cc 0%, #0066aa 100%);
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .logs-header h3 {
-  color: var(--tg-blue, #0088cc);
-  font-size: 1.2em;
+  font-size: 18px;
   font-weight: 600;
+  margin: 0;
 }
 
 .btn-clear-header {
-  background: var(--tg-red, #dc3545);
+  background: rgba(255, 255, 255, 0.2);
   color: white;
   border: none;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  cursor: pointer;
 }
 
 .btn-clear-header:hover {
-  background: #c82333;
+  background: rgba(255, 255, 255, 0.3);
   transform: scale(1.05);
 }
 
 .btn-clear-header i {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
+}
+
+.logs-body {
+  padding: 24px;
 }
 
 /* Фильтры */
-.filters-container {
-  background: var(--tg-blue-light, #e0f2ff);
-  border: 1px solid var(--tg-border, #dee2e6);
+.filters-section {
+  margin-bottom: 24px;
 }
 
-.filter-group label {
+.filters-container {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-label {
   font-weight: 600;
-  color: var(--tg-text, #212529);
-  font-size: 0.75em;
+  color: #495057;
+  font-size: 14px;
+}
+
+.filter-select,
+.filter-input {
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: white;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  outline: none;
+  border-color: #0088cc;
+  box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.1);
+}
+
+.amount-filter {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-select-small {
+  padding: 10px 8px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  flex: 0 0 60px;
+}
+
+.filter-input {
+  flex: 1;
 }
 
 /* Таблица */
+.table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
 .logs-table {
-  margin-bottom: 0;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
 }
 
 .logs-table thead th {
-  background: var(--tg-blue, #0088cc) !important;
+  background: linear-gradient(135deg, #0088cc 0%, #0066aa 100%);
   color: white;
+  padding: 16px;
   font-weight: 600;
-  font-size: 0.8em;
+  font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   border: none;
+  white-space: nowrap;
+}
+
+.logs-table tbody td {
+  padding: 16px;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+  vertical-align: middle;
 }
 
 .logs-table tbody tr:hover {
-  background: var(--tg-blue-light, #e0f2ff);
+  background: #f8f9fa;
 }
 
-.logs-table td {
-  vertical-align: middle;
-  font-size: 0.85em;
-  border-bottom: 1px solid var(--tg-border, #dee2e6);
+.logs-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .user-info strong {
-  color: var(--tg-text, #212529);
+  color: #495057;
   font-weight: 600;
-  font-size: 0.85em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 140px;
+  font-size: 14px;
 }
 
 .user-info small {
-  font-size: 0.7em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 140px;
+  color: #6c757d;
+  font-size: 12px;
 }
 
 .operation-badge {
-  font-size: 0.7em;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.2px;
-  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.operation-badge.success {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.operation-badge.danger {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
 }
 
 .amount-value {
-  font-size: 0.9em;
-  white-space: nowrap;
+  font-weight: 700;
+  font-size: 15px;
 }
 
+.amount-value.positive {
+  color: #28a745;
+}
+
+.amount-value.negative {
+  color: #dc3545;
+}
+
+.text-end {
+  text-align: right;
+}
+
+/* Состояния */
 .empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
 }
 
-.empty-state i {
-  width: 40px;
-  height: 40px;
+.empty-content i {
+  width: 48px;
+  height: 48px;
+  color: #6c757d;
   opacity: 0.5;
 }
 
-/* Адаптивность */
+.empty-content p {
+  color: #6c757d;
+  font-size: 16px;
+  margin: 0;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: #6c757d;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e9ecef;
+  border-top: 3px solid #0088cc;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Быстрые действия */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #0088cc 0%, #0066aa 100%);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 136, 204, 0.3);
+}
+
+.action-btn.secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+}
+
+.action-btn.secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.3);
+}
+
+.action-btn i {
+  width: 16px;
+  height: 16px;
+}
+
+/* Мобильная адаптивность */
 @media (max-width: 768px) {
   .dashboard {
-    padding: 0 4px;
+    padding: 12px;
   }
 
-  .stat-card {
-    min-height: 100px;
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card-inner {
+    padding: 20px;
+    gap: 12px;
   }
 
   .stat-icon {
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .stat-icon i {
+    width: 20px;
+    height: 20px;
+  }
+
+  .stat-number {
+    font-size: 28px;
+  }
+
+  .logs-header {
+    padding: 16px;
+  }
+
+  .logs-header h3 {
+    font-size: 16px;
+  }
+
+  .logs-body {
+    padding: 16px;
+  }
+
+  .filters-container {
+    padding: 16px;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .action-btn {
+    padding: 14px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard {
+    padding: 8px;
+  }
+
+  .stat-card-inner {
+    padding: 16px;
+  }
+
+  .stat-number {
+    font-size: 24px;
+  }
+
+  .logs-header {
+    padding: 12px;
+  }
+
+  .logs-body {
+    padding: 12px;
+  }
+
+  .filters-container {
+    padding: 12px;
+  }
+
+  .logs-table thead th,
+  .logs-table tbody td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  .user-info strong {
+    font-size: 13px;
+  }
+
+  .user-info small {
+    font-size: 11px;
+  }
+
+  .operation-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .amount-value {
+    font-size: 14px;
+  }
+
+  .action-btn {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 480px) {
+  .dashboard {
+    padding: 4px;
+  }
+
+  .stats-grid {
+    gap: 8px;
+  }
+
+  .stat-card-inner {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
   }
 
   .stat-icon i {
@@ -681,80 +966,88 @@ export default {
     height: 16px;
   }
 
-  .stat-content h3 {
-    font-size: 0.7em;
-  }
-
   .stat-number {
-    font-size: 1.5em;
+    font-size: 20px;
   }
 
   .logs-header h3 {
-    font-size: 1.1em;
+    font-size: 14px;
   }
 
   .btn-clear-header {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
 
   .btn-clear-header i {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
   }
 
-  .logs-table td {
-    font-size: 0.75em;
+  .logs-body {
+    padding: 8px;
+  }
+
+  .filters-container {
+    padding: 8px;
+  }
+
+  .logs-table thead th,
+  .logs-table tbody td {
+    padding: 8px 4px;
+    font-size: 12px;
   }
 
   .user-info strong {
-    font-size: 0.75em;
-    max-width: 120px;
+    font-size: 12px;
   }
 
   .user-info small {
-    font-size: 0.65em;
-    max-width: 120px;
+    font-size: 10px;
+  }
+
+  .operation-badge {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
+  .amount-value {
+    font-size: 13px;
+  }
+
+  .action-btn {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .action-btn span {
+    display: none;
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 576px) {
-  .dashboard {
-    padding: 0 2px;
+/* Альбомная ориентация на мобильных */
+@media (max-width: 768px) and (orientation: landscape) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 
-  .stat-card {
-    min-height: 80px;
+  .quick-actions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Планшеты */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 
-  .stat-icon {
-    width: 24px;
-    height: 24px;
-  }
-
-  .stat-icon i {
-    width: 12px;
-    height: 12px;
-  }
-
-  .stat-content h3 {
-    font-size: 0.65em;
-  }
-
-  .stat-number {
-    font-size: 1.3em;
-  }
-
-  .logs-table td {
-    font-size: 0.7em;
-  }
-
-  .user-info strong {
-    max-width: 100px;
-  }
-
-  .user-info small {
-    max-width: 100px;
+  .quick-actions {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 </style>

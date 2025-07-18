@@ -153,25 +153,9 @@ export default {
 
     onMounted(() => {
       initTelegramWebApp()
-      loadData()
     })
 
-    const loadData = async () => {
-      appData.value = {
-        groups: [
 
-        ],
-        teachers: [
-
-        ],
-        children: [
-
-        ],
-        activities: [
-
-        ]
-      }
-    }
 
     return {
       currentSection,

@@ -32,7 +32,8 @@ async def create_teacher_groups_keyboard(username: str):
         for group in groups_list:
             group_name = group.get("name", "Без названия")
             group_uuid = group.get("uuid", "")
-            keyboard.button(text=group_name, callback_data=f"group_{group_uuid}")
+            group_url = group.get("urlName", "")
+            keyboard.button(text=group_name, callback_data=f"group_{group_uuid}_{group_url}")
 
     keyboard.adjust(1)
     return keyboard
@@ -45,8 +46,14 @@ def create_group_keyboard():
         text='Список детей 🧒',
         callback_data='ga:child_list'
     )
+
     builder.button(
-        text='Начисление/списание КК',
+        text='Опубликовать баланс в групповой чат 📢',
+        callback_data='ga:public_balance'
+    )
+
+    builder.button(
+        text='Начисление/списание КК 💸',
         callback_data='ga:ma_balance'
     )
     builder.button(

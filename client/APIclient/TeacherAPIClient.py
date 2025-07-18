@@ -12,6 +12,7 @@ class TeacherAPIClient(BaseAPIClient):
         return  groups
 
     async def get_group_members(self, uuid_group: str):
+        """Получение учатсников группы"""
         members = await self._send_request("get", f"education-group/get/composition/{uuid_group}",  data={})
         return members
 
