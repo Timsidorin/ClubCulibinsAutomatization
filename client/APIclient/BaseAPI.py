@@ -4,8 +4,8 @@ from core.config import configs
 
 
 class BaseAPIClient:
-    def __init__(self):
-        self.base_url = configs.API_URL
+    def __init__(self, base_url: str = configs.API_URL) -> None:
+        self.base_url = base_url
         self.session = httpx.AsyncClient()
 
     async def _send_request(

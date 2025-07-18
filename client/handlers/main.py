@@ -14,6 +14,7 @@ from keyboards.teacher_keyboard import (
     create_balance_keyboard, create_children_keyboard
 )
 from APIclient.TeacherAPIClient import TeacherAPIClient
+from APIclient.balanceAPIClient import BalanceAPIClient
 from utils.fio_formate import format_child
 
 router = Router()
@@ -23,7 +24,6 @@ async def cmd_start(message: Message, state: FSMContext):
     client = UserAPIClient()
     username = message.from_user.username
     role = await client.check_user_role(username)
-    print(role)
     if role == "admin":
         await message.answer("Привет, Админ!", reply_markup=create_admin_keyboard())
         await state.clear()
@@ -58,7 +58,9 @@ async def show_my_groups(message: Message, state: FSMContext):
 async def select_group_callback(callback: CallbackQuery, state: FSMContext):
     try:
         group_uuid = callback.data.split("_")[1]
+        group_url = callback.data.split("_")[2]
         await state.update_data(selected_group_uuid=group_uuid)
+        await state.update_data(selected_group_url=group_url)
         await callback.message.edit_text(
             "Выбрана группа. Выберите действие:",
             reply_markup=create_group_keyboard()
@@ -84,19 +86,20 @@ async def get_children_list(callback: CallbackQuery, state: FSMContext):
         members = members_response.get("message", [])["EducationGroupMembers"]
 
         if members:
-            header = f'{"№":<4}{"Ученик":<25}{"Баланс":>12}'
-            separator = "-" * (4 + 25 + 12)
+            header = f'{"№":<3}{"Ученик":<18}{"Баланс":>8}'
+            separator = "-" * (3 + 18 + 8)
             table_rows = [header, separator]
 
             for i, member_data in enumerate(members, start=1):
                 full_string = format_child(member_data)
-
                 try:
                     name_part, balance_part = full_string.rsplit(' <b>', 1)
                     balance = balance_part.replace('</b>', '').replace('[', '').replace(']', '')
-                    row_text = f'{str(i) + ".":<4}{name_part:<25}{balance:>12}'
-                    table_rows.append(row_text)
+                    if len(name_part) > 17:
+                        name_part = name_part[:15] + ".."
 
+                    row_text = f'{str(i) + ".":<3}{name_part:<18}{balance:>8}'
+                    table_rows.append(row_text)
                 except ValueError:
                     table_rows.append(full_string)
             final_text = "\n".join(table_rows)
@@ -131,7 +134,6 @@ async def back_to_group_actions_menu(callback: CallbackQuery, state: FSMContext)
 
 
 
-
 @router.callback_query(F.data == 'a:back_t_g', TeacherStates.in_group_menu)
 async def back_to_group_selection(callback: CallbackQuery, state: FSMContext):
     try:
@@ -141,6 +143,41 @@ async def back_to_group_selection(callback: CallbackQuery, state: FSMContext):
             reply_markup=keyboard.as_markup()
         )
         await state.set_state(TeacherStates.choosing_group)
+    finally:
+        await callback.answer()
+
+
+@router.callback_query(F.data == 'ga:public_balance', TeacherStates.in_group_menu)
+async def group_balance_publish(callback: CallbackQuery, state: FSMContext):
+    try:
+        await callback.answer(text="Публикую баланс в групповой чат...")
+
+        data = await state.get_data()
+        group_url = data.get("selected_group_url")
+        group_uuid = data.get("selected_group_uuid")
+        if not group_url:
+            await callback.message.edit_text(
+                "Ошибка: не удалось определить группу. Попробуйте снова.",
+                reply_markup=create_back_to_group_actions_keyboard()
+            )
+            return
+        repost_client = BalanceAPIClient()
+        response = await repost_client.SendReportOfGroup(group_url, group_uuid)
+        if response and response.get("ok"):
+            await callback.message.edit_text(
+                "✅ Баланс успешно опубликован в групповой чат!",
+                reply_markup=create_back_to_group_actions_keyboard()
+            )
+        else:
+            await callback.message.edit_text(
+                "❌ Произошла ошибка при публикации баланса. Попробуйте еще раз.",
+                reply_markup=create_back_to_group_actions_keyboard()
+            )
+    except Exception as e:
+        await callback.message.edit_text(
+            f"❌ Произошла ошибка: {e}",
+            reply_markup=create_back_to_group_actions_keyboard()
+        )
     finally:
         await callback.answer()
 
@@ -220,9 +257,10 @@ async def process_adding_amount(message: Message, state: FSMContext):
     amount = int(message.text)
     data = await state.get_data()
     child_username = data.get("selected_child_username")
+    teacher_username = message.from_user.username
 
     client = TeacherAPIClient()
-    response = await client.add_balance(child_username=child_username, amount=amount)
+    response = await client.add_balance(child_username=child_username, teacher_username=teacher_username, amount=amount)
     if response:
         await message.answer(f"✅ Успешно начислено `{amount}` КК ученику `{child_username}`.", parse_mode="Markdown")
         await message.answer(
@@ -244,9 +282,9 @@ async def process_subtracting_amount(message: Message, state: FSMContext):
     amount = int(message.text)
     data = await state.get_data()
     child_username = data.get("selected_child_username")
-
+    teacher_username = message.from_user.username
     client = TeacherAPIClient()
-    if await client.subtract_balance(child_username=child_username, amount=amount):
+    if await client.subtract_balance(child_username=child_username, teacher_username=teacher_username, amount=amount):
         await message.answer(f"✅ Успешно списано `{amount}` КК у ученика `{child_username}`.", parse_mode="Markdown")
         await message.answer(
             "Вы снова в меню группы. Выберите следующее действие:",

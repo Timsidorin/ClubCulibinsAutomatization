@@ -231,7 +231,7 @@ export default {
         return;
       }
 
-      // Проверяем уникальность username локально по уже загруженному списку
+
       const isUsernameTaken = teachers.value.some(t =>
           (isEditing.value ? t.id !== currentTeacherId.value : true) &&
           t.telegramUsername.toLowerCase() === newTeacher.value.telegramUsername.toLowerCase()
@@ -245,15 +245,15 @@ export default {
     };
 
     const submitTeacher = async () => {
-      validateUsername(); // Проводим валидацию перед отправкой
+      validateUsername();
       if (!isFormValid.value) return;
 
       isLoading.value = true;
       errorMessage.value = '';
 
-      // Используем метод toApiObject для подготовки данных
+
       const teacherData = newTeacher.value.toApiObject();
-      teacherData.typeUser = 1; // Устанавливаем тип пользователя
+      teacherData.typeUser = 1;
 
       try {
         if (isEditing.value) {
@@ -262,7 +262,7 @@ export default {
           await apiClient.createTeacher(teacherData);
         }
         closeModal();
-        await fetchTeachers(); // Перезагружаем список с группами
+        await fetchTeachers();
       } catch (error) {
         if (error.response) {
           errorMessage.value = `Ошибка: ${error.response.data?.message || 'Не удалось сохранить данные учителя.'}`;
@@ -281,7 +281,6 @@ export default {
         isLoading.value = true;
         errorMessage.value = '';
         try {
-          // Для удаления по-прежнему используем username, как в вашем коде
           await apiClient.deleteTeacher(teacher.telegramUsername);
           await fetchTeachers();
         } catch (error) {
@@ -293,7 +292,6 @@ export default {
     };
 
     const filterTeachers = () => {
-      // Логика поиска уже реализована через computed property 'filteredTeachers'
     };
 
     const toggleActions = (teacherId) => {
