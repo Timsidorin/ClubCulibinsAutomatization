@@ -57,8 +57,8 @@
                 <label class="filter-label">Учитель</label>
                 <select class="filter-select" v-model="filters.tgTeacher" @change="applyFiltersImmediate">
                   <option value="">Все</option>
-                  <option v-for="teacher in teachers" :key="teacher.uuid" :value="teacher.tgUsername">
-                    {{ teacher.PersonalDatum?.name }} {{ teacher.PersonalDatum?.lastName }}
+                  <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.tgUsername">
+                    {{ teacher.firstName }} {{ teacher.lastName }}
                   </option>
                 </select>
               </div>
