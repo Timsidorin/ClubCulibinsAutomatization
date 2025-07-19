@@ -1,7 +1,7 @@
 import { Faker, ru } from '@faker-js/faker';
-import {User} from "../../../schemas/User";
-import {PersonalData} from "../../../schemas/PersonalData";
-import {Balance} from "../../../schemas/Balance";
+import {User} from "../../src/schemas/User";
+import {PersonalData} from "../../src/schemas/PersonalData";
+import {Balance} from "../../src/schemas/Balance";
 
 async function createUsers() {
 

@@ -9,7 +9,7 @@
     "start": "node dist/app.js",
     "swagger": "ts-node src/config/swagger.ts",
     "sync-database": "ts-node src/config/database/syncDatabase.ts",
-    "create-random": "ts-node src/config/database/create/createRandomUsers.ts"
+    "create-random": "ts-node scripts/db/createRandomUsers.ts"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",
