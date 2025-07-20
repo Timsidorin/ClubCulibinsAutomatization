@@ -1,14 +1,17 @@
-import {Router} from "express";
-import {Request, Response} from 'express';
+//Инструменты из express
+import {Request, Response, Router} from 'express';
 import bodyParser from "body-parser";
+//Контроллеры
 import {ControllerUser} from "../controllers/ControllerUser";
-import {SchemasCreate, SchemasRegister}  from "../middleware/validator/schemas/Schemas";
+//Схемы для валидации
+import {SchemasCreate, SchemasRegister, SchemasUpdateUser} from "../middleware/validator/schemas/SchemasUser";
+import {SchemasTgUsername} from "../middleware/validator/schemas/SchemasUniversal";
 
 const router: Router = Router();
 const controllerUser: ControllerUser = new ControllerUser();
 const jsonParser = bodyParser.json();
 
-router.post('/create',  jsonParser, async (req: Request, res: Response) => {
+router.post('/create', jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Пользователь']
     #swagger.parameters['body'] = {
@@ -31,13 +34,9 @@ router.post('/create',  jsonParser, async (req: Request, res: Response) => {
     }
     */
     try {
-        const validate = SchemasCreate.parse(req.body);
+        SchemasCreate.parse(req.body);
         let answer = await controllerUser.createUser(req.body);
-        if (answer.code === 201) {
-            res.status(201).send(answer);
-        } else {
-            res.status(400).send(answer);
-        }
+        res.status(answer.code).send({message: answer.message});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
@@ -55,13 +54,9 @@ router.patch('/register', jsonParser, async (req: Request, res: Response) => {
     }
 */
     try {
-        const validate = SchemasRegister.parse(req.body);
+        SchemasRegister.parse(req.body);
         let answer = await controllerUser.registerUser(req.body);
-        if (answer.code === 200) {
-            res.status(200).send(answer);
-        } else {
-            res.status(400).send(answer);
-        }
+        res.status(answer.code).send({message: answer.message});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
@@ -74,8 +69,9 @@ router.get('/:tgUsername', async (req: Request, res: Response) => {
         }
     */
     try {
+        SchemasTgUsername.parse(req.params.tgUsername);
         let userData = await controllerUser.getDataUser(req.params.tgUsername);
-        res.status(200).send({data: userData});
+        res.status(userData.code).send({data: userData});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
@@ -95,7 +91,7 @@ router.get('/get/all', async (req: Request, res: Response) => {
         res.status(500).send({data: JSON.parse(e.message)});
     }
 });
-router.put('/:tgUsername',  jsonParser, async (req: Request, res: Response) => {
+router.put('/:tgUsername', jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Пользователь']
     #swagger.parameters['body'] = {
@@ -105,36 +101,33 @@ router.put('/:tgUsername',  jsonParser, async (req: Request, res: Response) => {
             name: 'string',
             lastName: 'string',
             secondName: 'string',
+            phoneNumber: 'string',
+            dateOfBirth: '2000-01-01',
+            note: 'string'
         }
     }
     */
     try {
         let data = {...req.body, tgUsername: req.params.tgUsername};
+        SchemasUpdateUser.parse(data);
         let answer = await controllerUser.updateUser(data);
-        if (answer.code === 200) {
-            res.status(200).send(answer);
-        } else {
-            res.status(500).send(answer);
-        }
+        res.status(answer.code).send(answer);
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
+});
 router.delete('/:tgUsername', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Пользователь']
     */
     try {
         let answer = await controllerUser.deleteUser(req.params.tgUsername);
-        if (answer.code === 200) {
-            res.status(200).send(answer);
-        } else {
-            res.status(500).send({message: answer});
-        }
+        SchemasTgUsername.parse(req.params.tgUsername);
+        res.status(answer.code).send(answer);
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
+});
 router.get('/get/role', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Пользователь']
@@ -144,14 +137,11 @@ router.get('/get/role', async (req: Request, res: Response) => {
     */
     try {
         let paramsType = req.query.tgUsername;
-        let answer =  await controllerUser.getUserRole(paramsType);
-        if (answer.code === 500) {
-            res.status(500).send(answer)
-        }
-        res.status(200).send(answer);
+        let answer = await controllerUser.getUserRole(paramsType);
+        res.status(answer.code).send(answer)
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
+});
 
 export default router;

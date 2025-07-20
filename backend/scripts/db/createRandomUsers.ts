@@ -1,4 +1,4 @@
-import { Faker, ru } from '@faker-js/faker';
+import {Faker, ru} from '@faker-js/faker';
 import {User} from "../../src/schemas/User";
 import {PersonalData} from "../../src/schemas/PersonalData";
 import {Balance} from "../../src/schemas/Balance";

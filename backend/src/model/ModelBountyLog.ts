@@ -1,17 +1,21 @@
+//Схемы для работы с БД
 import {BountyLog} from "../schemas/BountyLog";
-import {IBalanceLog} from '../interfaces/IBalance'
+import {PersonalData} from "../schemas/PersonalData";
 import {User} from "../schemas/User";
+//Типизация
+import {IBalanceLog} from '../interfaces/IBalance'
 import {IAnswer} from "../interfaces/IAnswer";
 import {IFilterLogs} from "../interfaces/IBalance";
+import {Literal} from "sequelize/types/utils";
+//Утилиты
 import {sequelize} from "../config/database/database";
-import {PersonalData} from "../schemas/PersonalData";
 
 export class ModelBountyLog {
     public async create(data: IBalanceLog): Promise<boolean> {
         try {
             const [teacher, child] = await Promise.all([
-                User.findOne({ where: { tgUsername: data.tgTeacher }, attributes: ['uuid'] }),
-                User.findOne({ where: { tgUsername: data.tgUsername }, attributes: ['uuid'] }),
+                User.findOne({where: {tgUsername: data.tgTeacher}, attributes: ['uuid']}),
+                User.findOne({where: {tgUsername: data.tgUsername}, attributes: ['uuid']}),
             ]);
 
             if (!teacher || !child) {
@@ -29,14 +33,12 @@ export class ModelBountyLog {
                 createdAt: date,
             });
             return true;
-        } catch (error) {
-            console.log(error);
+        } catch {
             return false;
         }
     }
 
     public async getLogs(data: IFilterLogs): Promise<IAnswer<BountyLog[] | string>> {
-        //Мб это и можно было как-то улучшить, но я пока не знаю
         let filters = Object.fromEntries(
             Object.entries(data)
                 .filter(([_, value]) => value !== undefined && !(typeof value === 'number' && isNaN(value)))
@@ -51,16 +53,16 @@ export class ModelBountyLog {
         if (filters.endDate) {
             const startDate = filters.createdAt;
             const endDate = filters.endDate;
-            filters.createdAt = sequelize.literal(`"createdAt" BETWEEN '${startDate}' AND '${endDate}'`);
+            filters.createdAt = sequelize.literal(`"BountyLog"."createdAt" BETWEEN '${startDate}' AND '${endDate}'`);
         }
 
         if (filters.tgTeacher) {
-            teacher = await User.findOne({ where: { tgUsername: filters.tgTeacher }, attributes: ['uuid'] });
+            teacher = await User.findOne({where: {tgUsername: filters.tgTeacher}, attributes: ['uuid']});
             filters.uuidTeacher = teacher?.uuid;
         }
 
         if (filters.tgChild) {
-            child = await User.findOne({ where: { tgUsername: filters.tgChild }, attributes: ['uuid'] });
+            child = await User.findOne({where: {tgUsername: filters.tgChild}, attributes: ['uuid']});
             delete filters.tgChild;
             filters.uuidChild = child?.uuid;
         }
@@ -70,7 +72,7 @@ export class ModelBountyLog {
         delete filters.endDate;
         try {
             let searchLogs = await BountyLog.findAll({
-                where: { ...filters },
+                where: {...filters},
                 include: [
                     {
                         model: User,
@@ -89,13 +91,13 @@ export class ModelBountyLog {
                 ]
             });
             return {code: 200, message: searchLogs}
-        } catch(e) {
+        } catch (e) {
             console.log(e);
             return {code: 500, message: 'Произошла ошибка'}
         }
     }
 
-    private generateFiterOperation(number: number, operation: number): any {
+    private generateFiterOperation(number: number, operation: number): Literal | undefined {
         switch (operation) {
             case 1:
                 return sequelize.literal(`${number} = money`);

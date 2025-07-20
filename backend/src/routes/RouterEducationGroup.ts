@@ -1,6 +1,11 @@
+//Инструменты из express
 import {Request, Response, Router} from "express";
-import {ControllerEducationGroup} from "../controllers/ControllerEducationGroup";
 import bodyParser from "body-parser";
+//Контроллеры
+import {ControllerEducationGroup} from "../controllers/ControllerEducationGroup";
+//Схемы для валидации
+import {SchemasCreateEducationGroup, SchemasAddChildrens} from "../middleware/validator/schemas/SchemasEducationGroup";
+import {SchemasTgUsername, SchemasUuidAndTgName, SchemasUuid} from "../middleware/validator/schemas/SchemasUniversal";
 
 const router: Router = Router();
 const controllerEducationGroup: ControllerEducationGroup = new ControllerEducationGroup();
@@ -21,12 +26,13 @@ router.post("/create", jsonParser, async (req: Request, res: Response) => {
     }
     */
     try {
-        await controllerEducationGroup.createGroup(req.body);
-        res.status(201).send({message: 'Группа создана'});
+        SchemasCreateEducationGroup.parse(req.body);
+        let response = await controllerEducationGroup.createGroup(req.body);
+        res.status(response.code).send({message: response.message});
     } catch (e: any) {
-        res.status(500).send({message: JSON.parse(e.message)});
+        res.status(500).send({message: JSON.parse(e)});
     }
-})
+});
 router.get("/get-all", async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учебная группа']
@@ -53,9 +59,9 @@ router.get("/get-all", async (req: Request, res: Response) => {
         }
 
         let response = await controllerEducationGroup.getAllEducationGroups(tgUsernames);
-        res.status(200).send(response);
+        res.status(200).send({message: response?.message});
     } catch (e: any) {
-        res.status(500).send({ message: e.message }); // Убрал JSON.parse, если ошибка уже в формате объекта
+        res.status(500).send({message: e.message});
     }
 });
 router.post("/add-childrens", jsonParser, async (req: Request, res: Response) => {
@@ -71,36 +77,41 @@ router.post("/add-childrens", jsonParser, async (req: Request, res: Response) =>
     }
     */
     try {
-        await controllerEducationGroup.addChildrens(req.body);
-        res.status(200).send({message: 'Успешное наполнение группы'});
+        SchemasAddChildrens.parse(req.body);
+        let answer = await controllerEducationGroup.addChildrens(req.body);
+        res.status(answer.code).send({message: answer.message});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
+});
 router.delete('/:uuid', jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учебная группа']
     */
     try {
         let uuid = req.params.uuid;
+        SchemasUuid.parse(uuid);
         let response = await controllerEducationGroup.deleteEducationGroup(uuid);
-        res.status(200).send({message: 'Успешное удаление'});
+        res.status(response.code).send({message: response.message});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
-router.delete('/children/:tgUsername', async (req: Request, res: Response) => {
+});
+router.delete('/children/:tgUsername/:uuidGroup', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учебная группа']
     */
     try {
         let tgUsername = req.params.tgUsername;
-        let response = await controllerEducationGroup.deleteChildren(tgUsername);
-        res.status(200).send({message: 'Успешное удаление'});
+        let uuidGroup = req.params.uuidGroup;
+        SchemasTgUsername.parse(tgUsername);
+        SchemasUuid.parse(uuidGroup);
+        let response = await controllerEducationGroup.deleteChildren(tgUsername, uuidGroup);
+        res.status(response.code).send({message: response.message});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
+});
 router.post('/add-teacher', jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учебная группа']
@@ -114,42 +125,45 @@ router.post('/add-teacher', jsonParser, async (req: Request, res: Response) => {
     }
     */
     try {
+        SchemasUuidAndTgName.parse(req.body);
         let answer = await controllerEducationGroup.connectWithGroup(req.body.tgUsername, req.body.uuid);
-        res.status(200).send(answer);
+        res.status(answer.code).send({message: answer.message});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
+});
 router.put('/update-group', jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учебная группа']
     #swagger.parameters['body'] = {
         in: 'body',
-        description: 'Назначение препода к группе',
+        description: 'Обновление группы',
         schema: {
             uuid: 'string',
             name: 'string',
             description: 'string',
+            urlName: 'string',
         }
     }
     */
     try {
         let answer = await controllerEducationGroup.updateInfoGroup(req.body);
-        res.status(200).send(answer);
+        res.status(answer.code).send({message: answer.message});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
-})
+});
 router.get('/get/composition/:uuid', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учебная группа']
     */
     try {
+        SchemasUuid.parse(req.params.uuid);
         let answer = await controllerEducationGroup.getGroupComposition(req.params.uuid);
-        res.status(200).send(answer);
-    } catch (e) {
-        res.status(500).send(e);
+        res.status(answer.code).send({message: answer.message});
+    } catch (e: any) {
+        res.status(500).send(JSON.parse(e));
     }
-})
+});
 
 export default router;

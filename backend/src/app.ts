@@ -1,7 +1,7 @@
-import express, { Express } from 'express';
-import { useRouter } from "./routes";
-import { sequelize } from "./config/database/database";
-import { setupAssociations } from "./schemas/Associations";
+import express, {Express} from 'express';
+import {useRouter} from "./routes";
+import {sequelize} from "./config/database/database";
+import {setupAssociations} from "./schemas/Associations";
 import cors from 'cors';
 
 async function startServer() {

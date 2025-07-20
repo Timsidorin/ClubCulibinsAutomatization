@@ -1,7 +1,14 @@
+//Инструменты из express
 import {Request, Response, Router} from "express";
-import {ControllerBalance} from "../controllers/ControllerBalance";
 import bodyParser from "body-parser";
+//Типизация
 import {IAnswer} from "../interfaces/IAnswer";
+//Схемы для валидации
+import {SchemasUpdateBalance} from "../middleware/validator/schemas/SchemasBalance";
+import {SchemasTgUsername} from "../middleware/validator/schemas/SchemasUniversal";
+import {SchemasLogsBalance} from "../middleware/validator/schemas/SchemasBalance";
+//Контроллеры
+import {ControllerBalance} from "../controllers/ControllerBalance";
 
 const router: Router = Router();
 const controllerBalance: ControllerBalance = new ControllerBalance();
@@ -22,10 +29,11 @@ router.patch("/update", jsonParser, async (req: Request, res: Response) => {
     }
     */
     try {
+        SchemasUpdateBalance.parse(req.body);
         let answer: IAnswer<object> = await controllerBalance.updateBalance(req.body.tgUsername, req.body.operation, req.body.summ, req.body.tgTeacher);
-        res.status(answer.code).send(answer);
+        res.status(answer.code).send({message: answer});
     } catch (error: any) {
-        res.status(500).send({error: error.message});
+        res.status(500).send(JSON.parse(error));
     }
 });
 router.get("/get", async (req: Request, res: Response) => {
@@ -36,10 +44,11 @@ router.get("/get", async (req: Request, res: Response) => {
     }
     */
     try {
-        let answer = await controllerBalance.getBalance(req.query.tgUsername);
-        res.status(200).send(answer);
+        SchemasTgUsername.parse(req.query.tgUsername);
+        let answer = await controllerBalance.getBalance(String(req.query.tgUsername));
+        res.status(answer.code).send({message: answer.message});
     } catch (error: any) {
-        res.status(500).send(error);
+        res.status(500).send(JSON.parse(error));
     }
 });
 router.get("/logs", jsonParser, async (req: Request, res: Response) => {
@@ -72,15 +81,16 @@ router.get("/logs", jsonParser, async (req: Request, res: Response) => {
             tgTeacher: req.query?.tgTeacher?.toString(),
             tgChild: req.query?.tgChild?.toString(),
             operation: req.query?.operation?.toString(),
-            money: Number(req.query?.summ),
-            equalSign: Number(req.query?.equalSign),
+            money: Number(req.query.summ),
+            equalSign: Number(req.query.equalSign),
             createdAt: req.query?.startDate?.toString(),
             endDate: req.query?.endDate?.toString(),
         };
+        SchemasLogsBalance.parse(filters);
         let response = await controllerBalance.getLogs(filters);
-        res.status(response.code).send(response.message);
+        res.status(response.code).send({message: response.message});
     } catch (error: any) {
-        res.status(500).send(error);
+        res.status(500).send(JSON.parse(error));
     }
 });
 

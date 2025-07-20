@@ -1,5 +1,5 @@
 //Экземпляр БД
-import { sequelize } from './database';
+import {sequelize} from './database';
 //Схемы таблиц
 import '../../schemas/PersonalData';
 import '../../schemas/User';
@@ -15,8 +15,7 @@ async function syncDatabase() {
     try {
         await sequelize.authenticate();
         console.log('Подключение к БД успешно.');
-
-        await sequelize.sync({ force: true });
+        await sequelize.sync({force: true});
         console.log('Все модели синхронизированы.');
         await createTypesUser();
     } catch (error) {

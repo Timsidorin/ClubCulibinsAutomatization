@@ -1,14 +1,16 @@
-//Типы для ответов
-import {ModelEducationGroup} from "../model/ModelEducationGroup";
+//Типизация
 import {IEducationGroupCreate, IAddChildren} from "../interfaces/IEducationGroup";
 import {IUser} from "../interfaces/IUser";
 import {IAnswer} from "../interfaces/IAnswer";
+//Модель из БД
 import {EducationGroup} from "../schemas/EducationGroup";
+//Классы для агрегации
+import {ModelEducationGroup} from "../model/ModelEducationGroup";
 
 export class ControllerEducationGroup {
     EducationGroup: ModelEducationGroup = new ModelEducationGroup();
 
-    public async createGroup(data: IEducationGroupCreate): Promise<void> {
+    public async createGroup(data: IEducationGroupCreate): Promise<IAnswer<string>> {
         return await this.EducationGroup.createGroup(data);
     }
 
@@ -24,8 +26,8 @@ export class ControllerEducationGroup {
         return this.EducationGroup.deleteEducationGroup(uuid);
     }
 
-    public async deleteChildren(uuid: string): Promise<IAnswer<string>> {
-        return await this.EducationGroup.deleteChildren(uuid);
+    public async deleteChildren(tgUsername: string, uuidGroup: string): Promise<IAnswer<string>> {
+        return await this.EducationGroup.deleteChildren(tgUsername, uuidGroup);
     }
 
     public async connectWithGroup(tgUsername: string, uuid: string): Promise<IAnswer<string>> {

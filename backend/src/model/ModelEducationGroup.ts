@@ -1,15 +1,18 @@
+//Схемы для работы с БД
 import {EducationGroup} from "../schemas/EducationGroup";
-import {IAddChildren, IEducationGroupCreate} from "../interfaces/IEducationGroup";
 import {User} from "../schemas/User";
-import {EducationGroupMember} from "../schemas/EducationGroupMember";
-import {IUser} from "../interfaces/IUser";
-import {sequelize} from "../config/database/database";
-import {IAnswer} from "../interfaces/IAnswer";
 import {PersonalData} from "../schemas/PersonalData";
 import {Balance} from "../schemas/Balance";
+import {EducationGroupMember} from "../schemas/EducationGroupMember";
+//Типизация
+import {IAddChildren, IEducationGroupCreate} from "../interfaces/IEducationGroup";
+import {IUser} from "../interfaces/IUser";
+import {IAnswer} from "../interfaces/IAnswer";
+//Утилиты
+import {sequelize} from "../config/database/database";
 
 export class ModelEducationGroup {
-    public async createGroup(data: IEducationGroupCreate): Promise<void> {
+    public async createGroup(data: IEducationGroupCreate): Promise<IAnswer<string>> {
         const transaction = await sequelize.transaction();
         try {
             let teacher: User | null;
@@ -24,20 +27,23 @@ export class ModelEducationGroup {
                     transaction
                 });
                 if (!teacher) {
-                    throw new Error(`Учитель с tgUsername "${data.tgUsername}" (type=1) не найден`);
+                    return {code: 500, message: `Учитель с tgUsername "${data.tgUsername}" (type=1) не найден`};
                 }
 
                 insertData['uuidUser'] = teacher?.uuid;
-                let name = data.urlName.match(/\/([^\/\s]+)/);
-                if (name) {
-                    insertData.urlName = name[1];
+                if (data.urlName) {
+                    let name = data.urlName.match(/\/([^\/\s]+)/);
+                    if (name) {
+                        insertData.urlName = name[1];
+                    }
                 }
             }
             await EducationGroup.create({
                 ...insertData
-            }, { transaction });
+            }, {transaction});
 
             await transaction.commit();
+            return {code: 200, message: 'Успешное создание'}
         } catch (error) {
             await transaction.rollback();
             if (error instanceof Error && error.message.includes('Учитель')) {
@@ -50,7 +56,7 @@ export class ModelEducationGroup {
     public async getAllGroups(tgUsername: unknown): Promise<IAnswer<object> | null> {
         try {
             let uuidUser = {};
-            let answer = { groups: {} };
+            let answer = {groups: {}};
             let usernames: string[] = [];
             if (tgUsername) {
                 if (Array.isArray(tgUsername)) {
@@ -77,11 +83,11 @@ export class ModelEducationGroup {
                     throw new Error(`Учителя с tgUsername ${usernames.join(', ')} (type=1) не найдены`);
                 }
 
-                uuidUser = { uuidUser: teachers.map(teacher => teacher.uuid) };
+                uuidUser = {uuidUser: teachers.map(teacher => teacher.uuid)};
             }
 
             let groups = await EducationGroup.findAll({
-                where: { ...uuidUser },
+                where: {...uuidUser},
                 include: [
                     {
                         model: User,
@@ -107,7 +113,7 @@ export class ModelEducationGroup {
             });
 
             answer.groups = groups;
-            return { code: 200, message: answer };
+            return {code: 200, message: answer};
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Ошибка получения групп');
         }
@@ -138,10 +144,10 @@ export class ModelEducationGroup {
         }
     }
 
-    public async deleteChildren(tgUsername: string): Promise<IAnswer<string>> {
+    public async deleteChildren(tgUsername: string, uuidGroup: string): Promise<IAnswer<string>> {
         try {
             await EducationGroupMember.destroy({
-                where: {tgUsername}
+                where: {tgUsername: tgUsername, uuidGroup: uuidGroup},
             })
             return {code: 200, message: 'Успешное удаление'};
         } catch {

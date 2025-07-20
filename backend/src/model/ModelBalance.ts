@@ -1,10 +1,13 @@
+//Схемы для работы с БД
 import {Balance} from "../schemas/Balance";
 import {User} from "../schemas/User";
-import {sequelize} from "../config/database/database";
+//Типизация
 import {IAnswer} from "../interfaces/IAnswer";
+//Утилиты
+import {sequelize} from "../config/database/database";
 
 export class ModelBalance {
-    public async createBalance(uuidUser: string) {
+    public async createBalance(uuidUser: string): Promise<void> {
         try {
             await Balance.create({
                 uuidUser: uuidUser,
@@ -28,7 +31,7 @@ export class ModelBalance {
             }
             await Balance.update(
                 {
-                    money:  operationForBalance,
+                    money: operationForBalance,
                 },
                 {
                     where: {uuidUser: uuid?.uuid}
@@ -39,26 +42,32 @@ export class ModelBalance {
         }
     }
 
-    public async getBalance(tgUsername?: unknown) {
-            try {
-                let filter = {};
-                if (tgUsername) {
-                    let user = await User.findOne({
-                        where: {tgUsername: tgUsername},
-                    })
-                    filter = {uuidUser: user?.uuid};
+    public async getBalance(tgUsername?: string): Promise<IAnswer<string | Balance[]>> {
+        try {
+            let filter = {};
+            if (tgUsername && tgUsername != 'undefined') {
+                let user = await User.findOne({
+                    where: {tgUsername: tgUsername},
+                })
+
+                if (!user) {
+                    return {code: 500, message: 'Пользователь не найден'};
                 }
-                let balances = await Balance.findAll(
-                    {
-                        where: {...filter},
-                        include: [{
-                            model: User,
-                            required: false,
-                        }],
-                    });
-                return {code: 200, message: balances.length > 0 ? balances : 'Нет данных'}
-            } catch {
-                throw new Error('Не удалось обратиться к балансу');
+
+                filter = {uuidUser: user?.uuid};
             }
+
+            let balances = await Balance.findAll(
+                {
+                    where: {...filter},
+                    include: [{
+                        model: User,
+                        required: false,
+                    }],
+                });
+            return {code: 200, message: balances.length > 0 ? balances : 'Нет данных'}
+        } catch {
+            return {code: 500, message: 'Произошла ошибка'}
         }
+    }
 }

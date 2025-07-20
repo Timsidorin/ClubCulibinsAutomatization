@@ -1,16 +1,16 @@
-import {ModelUser} from "../model/ModelUser";
-import {
-    IAnswerUser,
-    IGetAnswerUser,
-    IGetAllUsers, IUser
-} from "../interfaces/IUser";
+//Типизация
+import {IUser} from "../interfaces/IUser";
+import {User} from "../schemas/User";
+//Классы для агрегации
 import {ModelBalance} from "../model/ModelBalance";
+import {ModelUser} from "../model/ModelUser";
+import {IAnswer} from "../interfaces/IAnswer";
 
 export class ControllerUser {
     User: ModelUser = new ModelUser();
     Balance: ModelBalance = new ModelBalance();
 
-    public async createUser(body: Omit<IUser, 'tgId'>): Promise<IAnswerUser<string>> {
+    public async createUser(body: Omit<IUser, 'tgId'>): Promise<IAnswer<string>> {
         try {
             let answerUser = await this.User.createUser(body);
             if (answerUser.code === 201) {
@@ -25,27 +25,27 @@ export class ControllerUser {
         }
     }
 
-    public async registerUser(body: Pick<IUser, 'tgId' | 'tgUsername'>): Promise<IAnswerUser<string>> {
+    public async registerUser(body: Pick<IUser, 'tgId' | 'tgUsername'>): Promise<IAnswer<string>> {
         return await this.User.registerUser(body);
     }
 
-    public async getDataUser(tgUsername: string): Promise<IGetAnswerUser> {
+    public async getDataUser(tgUsername: string): Promise<IAnswer<object>> {
         return await this.User.getDataUser(tgUsername);
     }
 
-    public async getAllUsers(typeUser: any): Promise<IGetAllUsers> {
+    public async getAllUsers(typeUser: any): Promise<IAnswer<User[]>> {
         return await this.User.getAllUsers(typeUser);
     }
 
-    public async updateUser(data: IUser): Promise<IAnswerUser<string>> {
+    public async updateUser(data: IUser): Promise<IAnswer<string>> {
         return await this.User.updateUser(data);
     }
 
-    public async deleteUser(tgId: string): Promise<IAnswerUser<string>> {
+    public async deleteUser(tgId: string): Promise<IAnswer<string>> {
         return await this.User.deleteUser(tgId);
     }
 
-    public async getUserRole(userName: unknown): Promise<IAnswerUser<string>> {
+    public async getUserRole(userName: unknown): Promise<IAnswer<string>> {
         return await this.User.getUserRole(userName);
     }
 }

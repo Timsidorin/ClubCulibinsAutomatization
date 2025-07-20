@@ -1,5 +1,3 @@
-import {User} from "../schemas/User";
-
 export interface IUser {
     tgId: string;
     tgUsername: string;
@@ -10,26 +8,4 @@ export interface IUser {
     phoneNumber: string;
     dateOfBirth: Date;
     note: string;
-}
-
-export interface IAnswerUser<T> {
-    code: number;
-    message: T;
-}
-
-export interface IGetAnswerUser {
-    data: {
-        tgUsername: string;
-        personalData: {
-            name: string;
-            secondName: string;
-            lastName: string;
-        };
-    }
-    code: number
-}
-
-export interface IGetAllUsers {
-    data: User[];
-    code: number
 }

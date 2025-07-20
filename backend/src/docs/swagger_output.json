@@ -62,12 +62,6 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -101,12 +95,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -129,9 +117,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -167,15 +152,24 @@
                 "secondName": {
                   "type": "string",
                   "example": "string"
+                },
+                "phoneNumber": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "dateOfBirth": {
+                  "type": "string",
+                  "example": "2000-01-01"
+                },
+                "note": {
+                  "type": "string",
+                  "example": "string"
                 }
               }
             }
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -195,9 +189,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -243,9 +234,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -287,9 +275,6 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Created"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -357,9 +342,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -381,16 +363,13 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
         }
       }
     },
-    "/education-group/children/{tgUsername}": {
+    "/education-group/children/{tgUsername}/{uuidGroup}": {
       "delete": {
         "tags": [
           "Учебная группа"
@@ -402,12 +381,15 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "uuidGroup",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -441,9 +423,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -460,7 +439,7 @@
           {
             "name": "body",
             "in": "body",
-            "description": "Назначение препода к группе",
+            "description": "Обновление группы",
             "schema": {
               "type": "object",
               "properties": {
@@ -475,15 +454,16 @@
                 "description": {
                   "type": "string",
                   "example": "string"
+                },
+                "urlName": {
+                  "type": "string",
+                  "example": "string"
                 }
               }
             }
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -505,9 +485,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -570,9 +547,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "500": {
             "description": "Internal Server Error"
           }

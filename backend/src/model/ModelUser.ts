@@ -1,32 +1,31 @@
+//Схемы для работы с БД
 import {User} from "../schemas/User";
 import {PersonalData} from "../schemas/PersonalData";
-import {
-    IUser,
-    IAnswerUser,
-    IGetAnswerUser,
-    IGetAllUsers
-} from "../interfaces/IUser";
+//Типизация
+import {IUser} from "../interfaces/IUser";
+import {IAnswer} from "../interfaces/IAnswer";
+//Утилиты
 import {sequelize} from "../config/database/database";
 
 export class ModelUser {
-    public async createUser(data: Omit<IUser, 'tgId'>): Promise<IAnswerUser<string>> {
+    public async createUser(data: Omit<IUser, 'tgId'>): Promise<IAnswer<string>> {
         try {
             let newUser: User = await User.create({
                 tgUsername: data.tgUsername,
                 typeUser: data.typeUser
             });
-            const userData: Omit<IUser, 'tgId'> = { ...data };
+            const userData: Omit<IUser, 'tgId'> = {...data};
             await PersonalData.create({
                 uuidUser: newUser.uuid,
                 ...userData
             })
             return {code: 201, message: newUser.uuid};
         } catch (e: any) {
-            return {code: e.parent.code, message: e.errors[0].path};
+            return {code: 500, message: e.parent.code};
         }
     }
 
-    public async registerUser(data: Pick<IUser, 'tgId' | 'tgUsername'>): Promise<IAnswerUser<string>> {
+    public async registerUser(data: Pick<IUser, 'tgId' | 'tgUsername'>): Promise<IAnswer<string>> {
         try {
             await User.update(
                 {tgId: data.tgId,},
@@ -41,45 +40,48 @@ export class ModelUser {
         }
     }
 
-    public async getDataUser(tgUsername: string): Promise<IGetAnswerUser> {
+    public async getDataUser(tgUsername: string): Promise<IAnswer<object>> {
         try {
             const user = await User.findOne({
-                where: { tgUsername },
+                where: {tgUsername},
                 include: [{
                     model: PersonalData,
                     required: false,
                 }]
             });
-            return { code: 200, data: { tgUsername: user?.dataValues.tgUsername ?? '',
+            return {
+                code: 200, message: {
+                    tgUsername: user?.dataValues.tgUsername ?? '',
                     personalData: {
                         name: user?.dataValues.PersonalDatum.dataValues.name ?? '',
                         secondName: user?.dataValues.PersonalDatum.dataValues.secondName ?? '',
                         lastName: user?.dataValues.PersonalDatum.dataValues.lastName ?? '',
                     }
-            }};
+                }
+            };
         } catch (e: any) {
-            return {code: e.parent.code, data: e.errors[0].path};
+            return {code: e.parent.code, message: e.errors[0].path};
         }
     }
 
-    public async getAllUsers(typeUser: any): Promise<IGetAllUsers> {
+    public async getAllUsers(typeUser: any): Promise<IAnswer<User[]>> {
         const filters: Record<string, any> = {};
         if (typeUser) filters.typeUser = typeUser;
         try {
             let allUsers: User[] = await User.findAll({
-                    include: [{
-                        model: PersonalData,
-                        required: false,
-                    }],
-                    where: Object.keys(filters).length ? filters : {}
-                });
-            return { code: 200, data: allUsers };
+                include: [{
+                    model: PersonalData,
+                    required: false,
+                }],
+                where: Object.keys(filters).length ? filters : {}
+            });
+            return {code: 200, message: allUsers};
         } catch (e: any) {
-            return { code: e.parent.code, data: e.errors[0].path };
+            return {code: e.parent.code, message: e.errors[0].path};
         }
     }
 
-    public async updateUser(data: IUser): Promise<IAnswerUser<string>> {
+    public async updateUser(data: IUser): Promise<IAnswer<string>> {
         try {
             let userData = await User.findOne({
                 where: {tgUsername: data.tgUsername}
@@ -98,11 +100,11 @@ export class ModelUser {
         }
     }
 
-    public async deleteUser(tgUsername: string): Promise<IAnswerUser<string>> {
+    public async deleteUser(tgUsername: string): Promise<IAnswer<string>> {
         const transaction = await sequelize.transaction();
         try {
             const user = await User.findOne({
-                where: { tgUsername },
+                where: {tgUsername},
                 transaction
             });
 
@@ -112,10 +114,10 @@ export class ModelUser {
 
             let uuid: string = user?.dataValues.uuid ?? '';
             await PersonalData.destroy({
-                where: { uuidUser: uuid },
+                where: {uuidUser: uuid},
                 transaction
             });
-            await user.destroy({ transaction });
+            await user.destroy({transaction});
             await transaction.commit();
             return {code: 200, message: 'Пользователь удален'};
         } catch (error) {
@@ -123,7 +125,7 @@ export class ModelUser {
         }
     }
 
-    public async getUserRole(tgUsername: unknown): Promise<IAnswerUser<string>>  {
+    public async getUserRole(tgUsername: unknown): Promise<IAnswer<string>> {
         try {
             let user = await User.findOne({
                 where: {tgUsername: tgUsername}
