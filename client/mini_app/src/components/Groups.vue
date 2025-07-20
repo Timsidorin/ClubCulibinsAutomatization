@@ -399,7 +399,7 @@ export default {
     const fetchStudents = async () => {
       try {
         const response = await childrenApiClient.getAllChildren(3);
-        const studentsData = response.data.data;
+        const studentsData = response.data.message;
 
         if (Array.isArray(studentsData)) {
           students.value = studentsData.map(studentData => ({
@@ -421,7 +421,7 @@ export default {
     const fetchTeachers = async () => {
       try {
         const response = await teachersApiClient.getAllTeachers(1);
-        const teachersData = response.data.data;
+        const teachersData = response.data.message;
 
         if (Array.isArray(teachersData)) {
           teachers.value = teachersData.map(teacherData => ({

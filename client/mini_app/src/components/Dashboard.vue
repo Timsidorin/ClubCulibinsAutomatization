@@ -268,15 +268,7 @@ export default {
       loading.value = true;
       try {
         const response = await balanceApiClient.BalanceLogs(logsData);
-        console.log('Logs response:', response);
-
-        if (response && response.data && Array.isArray(response.data)) {
-          logs.value = response.data;
-        } else if (Array.isArray(response)) {
-          logs.value = response;
-        } else {
-          logs.value = [];
-        }
+        logs.value = response.message;
       } catch (error) {
         console.error('Ошибка при загрузке логов:', error);
         logs.value = [];
@@ -335,10 +327,8 @@ export default {
       try {
         const response = await teachersApiClient.getAllTeachers(1);
         let teachersData = [];
-
-        if (response && response.data && response.data.data) {
-          teachersData = response.data.data;
-        }
+          teachersData = response.data.message;
+        
 
         if (Array.isArray(teachersData)) {
           teachers.value = teachersData.map(teacherData => {
@@ -358,10 +348,8 @@ export default {
       try {
         const response = await childrenApiClient.getAllChildren(3);
         let childrenData = [];
-
-        if (response && response.data && response.data.data) {
-          childrenData = response.data.data;
-        }
+        childrenData = response.data.message;
+        
 
         if (Array.isArray(childrenData)) {
           children.value = childrenData;

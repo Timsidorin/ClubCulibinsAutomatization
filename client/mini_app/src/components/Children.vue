@@ -178,14 +178,14 @@ export default {
 
         let childrenData = [];
         if (childrenResponse?.data?.data && Array.isArray(childrenResponse.data.data)) {
-          childrenData = childrenResponse.data.data;
+          childrenData = childrenResponse.data.message;
         } else {
           throw new Error('Получены некорректные данные детей от сервера.');
         }
 
         let balancesData = [];
         if (Array.isArray(balancesResponse.message)) {
-          balancesData = balancesResponse.message;
+          balancesData = balancesResponse.data.message;
         } else {
             console.warn('Не удалось получить массив балансов. Ответ API:', balancesResponse);
         }
