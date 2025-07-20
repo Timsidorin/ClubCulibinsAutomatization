@@ -38,8 +38,6 @@ class ChildrenAPIClient extends ApiClient {
   }
 
 
-
-
 }
 
 export default ChildrenAPIClient;
