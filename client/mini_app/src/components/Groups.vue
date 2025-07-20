@@ -1192,8 +1192,6 @@ textarea.form-input {
   color: white;
 }
 .btn-info:hover {
-  background: #17a2b8;
-  color: white;
   transform: translateY(-1px);
 }
 
