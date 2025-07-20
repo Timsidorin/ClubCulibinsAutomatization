@@ -188,13 +188,8 @@ export default {
       try {
         const teachersResponse = await apiClient.getAllTeachers(1);
         let teachersData = [];
-
-        if (teachersResponse?.data?.data && Array.isArray(teachersResponse.data.data)) {
-          teachersData = teachersResponse.data.data;
-        } else {
-          throw new Error('Получены некорректные данные учителей от сервера.');
-        }
-
+        teachersData = teachersResponse.data.message;
+        
         // Получаем группы для всех учителей одним запросом
         const teacherGroupsMap = await fetchAllTeachersGroups(teachersData);
 
