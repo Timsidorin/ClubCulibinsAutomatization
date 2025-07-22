@@ -119,7 +119,6 @@ export class ModelEducationGroup {
         }
     }
 
-// Всё правильно, если childrens - это string[]
     public async addChildrens(data: IAddChildren<string>): Promise<IAnswer<string>> {
         try {
             const dataInsert = data.childrens.map(uuidUser => ({

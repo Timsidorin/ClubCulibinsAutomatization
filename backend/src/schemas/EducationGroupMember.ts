@@ -8,7 +8,7 @@ export class EducationGroupMember extends Model {
 
 EducationGroupMember.init({
     uuidUser: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
     },
     uuidGroup: {
         type: DataTypes.UUID,
