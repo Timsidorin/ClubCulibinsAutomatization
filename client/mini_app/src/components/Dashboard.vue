@@ -43,15 +43,23 @@
     <div class="logs-card">
       <div class="logs-header">
         <h3>Логи операций с балансом</h3>
-        <button class="btn-clear-header" @click="clearFilters" title="Очистить фильтры">
-          <i data-feather="x"></i>
-        </button>
       </div>
 
       <div class="logs-body">
         <!-- Фильтры -->
         <div class="filters-section">
           <div class="filters-container">
+            <div class="filters-header">
+              <h4 class="filters-title">
+                <i data-feather="filter"></i>
+                Фильтры
+              </h4>
+              <button class="btn-clear-filters" @click="clearFilters" title="Очистить все фильтры">
+                <i data-feather="x"></i>
+                <span>Очистить</span>
+              </button>
+            </div>
+
             <div class="filters-grid">
               <div class="filter-group">
                 <label class="filter-label">Учитель</label>
@@ -165,7 +173,7 @@
                   </td>
                 </tr>
                 <tr v-if="logs.length === 0 && !loading">
-                  <td colspan="5" class="empty-state">
+                  <td colspan="5" class="empty-state-cell">
                     <div class="empty-content">
                       <i data-feather="inbox"></i>
                       <p>Нет данных для отображения</p>
@@ -328,7 +336,7 @@ export default {
         const response = await teachersApiClient.getAllTeachers(1);
         let teachersData = [];
           teachersData = response.data.message;
-        
+
 
         if (Array.isArray(teachersData)) {
           teachers.value = teachersData.map(teacherData => {
@@ -349,7 +357,7 @@ export default {
         const response = await childrenApiClient.getAllChildren(3);
         let childrenData = [];
         childrenData = response.data.message;
-        
+
 
         if (Array.isArray(childrenData)) {
           children.value = childrenData;
@@ -523,35 +531,11 @@ export default {
   margin: 0;
 }
 
-.btn-clear-header {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  cursor: pointer;
-}
-
-.btn-clear-header:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.btn-clear-header i {
-  width: 16px;
-  height: 16px;
-}
-
 .logs-body {
   padding: 24px;
 }
 
-/* Фильтры */
+/* Фильтры с заголовком и кнопкой очистки */
 .filters-section {
   margin-bottom: 24px;
 }
@@ -563,32 +547,104 @@ export default {
   border: 1px solid #e9ecef;
 }
 
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.filters-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #495057;
+  margin: 0;
+}
+
+.filters-title i {
+  width: 18px;
+  height: 18px;
+  color: #0088cc;
+}
+
+.btn-clear-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-clear-filters:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.btn-clear-filters i {
+  width: 14px;
+  height: 14px;
+}
+
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: end;
+}
+
+/* На больших экранах делаем 3 колонки в первой строке и 3 во второй */
+@media (min-width: 1200px) {
+  .filters-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+}
+
+/* На средних экранах - 2 колонки */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0; /* Важно для корректного сжатия */
 }
 
 .filter-label {
   font-weight: 600;
   color: #495057;
   font-size: 14px;
+  margin-bottom: 4px;
 }
 
 .filter-select,
 .filter-input {
+  width: 100%;
   padding: 10px 12px;
   border: 1px solid #ced4da;
   border-radius: 8px;
   font-size: 14px;
   transition: all 0.2s;
   background: white;
+  box-sizing: border-box;
 }
 
 .filter-select:focus,
@@ -601,6 +657,7 @@ export default {
 .amount-filter {
   display: flex;
   gap: 8px;
+  width: 100%;
 }
 
 .filter-select-small {
@@ -609,11 +666,19 @@ export default {
   border-radius: 8px;
   font-size: 14px;
   background: white;
-  flex: 0 0 60px;
+  min-width: 70px;
+  flex-shrink: 0;
 }
 
-.filter-input {
+.filter-select-small:focus {
+  outline: none;
+  border-color: #0088cc;
+  box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.1);
+}
+
+.amount-filter .filter-input {
   flex: 1;
+  min-width: 0;
 }
 
 /* Таблица */
@@ -717,17 +782,20 @@ export default {
   text-align: right;
 }
 
-/* Состояния */
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
+/* Состояния - исправлено центрирование пустого состояния */
+.empty-state-cell {
+  text-align: center !important;
+  padding: 40px 20px !important;
+  vertical-align: middle !important;
 }
 
 .empty-content {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
+  width: 100%;
 }
 
 .empty-content i {
@@ -814,7 +882,7 @@ export default {
 }
 
 /* Мобильная адаптивность */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .dashboard {
     padding: 12px;
   }
@@ -858,6 +926,22 @@ export default {
 
   .filters-container {
     padding: 16px;
+  }
+
+  .filters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .btn-clear-filters span {
+    display: none;
+  }
+
+  .btn-clear-filters {
+    padding: 6px 8px;
+    align-self: flex-end;
   }
 
   .filters-grid {
@@ -962,16 +1046,6 @@ export default {
     font-size: 14px;
   }
 
-  .btn-clear-header {
-    width: 32px;
-    height: 32px;
-  }
-
-  .btn-clear-header i {
-    width: 14px;
-    height: 14px;
-  }
-
   .logs-body {
     padding: 8px;
   }
@@ -1018,7 +1092,7 @@ export default {
 }
 
 /* Альбомная ориентация на мобильных */
-@media (max-width: 768px) and (orientation: landscape) {
+@media (max-width: 767px) and (orientation: landscape) {
   .stats-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -1026,10 +1100,15 @@ export default {
   .quick-actions {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  .filters-header {
+    flex-direction: row;
+    justify-content: space-between;
+  }
 }
 
 /* Планшеты */
-@media (min-width: 769px) and (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1024px) {
   .stats-grid {
     grid-template-columns: repeat(3, 1fr);
   }

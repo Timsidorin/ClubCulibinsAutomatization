@@ -145,60 +145,70 @@
       </div>
     </div>
 
-    <!-- Модальное окно для добавления участников в группу -->
-    <div v-if="showStudentsModal" class="modal" @click.self="closeStudentsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Добавить участников в группу "{{ currentGroup.name }}"</h3>
-          <button class="close-btn" @click="closeStudentsModal">
-            <i data-feather="x"></i>
-          </button>
-        </div>
-        <div class="search-bar">
-          <input
-            type="text"
-            v-model="studentSearchQuery"
-            placeholder="Поиск по имени ребенка..."
-          />
-        </div>
-        <div class="students-list" v-if="filteredStudents.length > 0">
-          <div
-            v-for="student in filteredStudents"
-            :key="student.id"
-            class="student-item"
-          >
-            <input
-              type="checkbox"
-              :value="student.id"
-              v-model="selectedStudents"
-            />
-            <div class="student-details">
-              <h4>{{ student.lastName }} {{ student.name }} {{ student.secondName }}</h4>
-            </div>
-            <div class="student-actions">
-      <button
-        class="btn btn-icon"
-        @click.stop="sendChildBalance(student)"
-        title="Отправить баланс в чат"
-        :disabled="isLoading">
-        <i data-feather="send"></i>
+<!-- Модальное окно для добавления участников в группу -->
+<div v-if="showStudentsModal" class="modal" @click.self="closeStudentsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Управление участниками группы "{{ currentGroup.name }}"</h3>
+      <button class="close-btn" @click="closeStudentsModal">
+        <i data-feather="x"></i>
       </button>
     </div>
-          </div>
+    <div class="search-bar">
+      <input
+        type="text"
+        v-model="studentSearchQuery"
+        placeholder="Поиск по имени ребенка..."
+      />
+    </div>
+    <div class="students-list" v-if="filteredStudents.length > 0">
+      <div
+        v-for="student in filteredStudents"
+        :key="student.id"
+        class="student-item"
+        :class="{ 'is-member': isStudentMember(student.id) }"
+      >
+        <input
+          type="checkbox"
+          :value="student.id"
+          v-model="selectedStudents"
+          :disabled="isStudentMember(student.id)"
+        />
+        <div class="student-details">
+          <h4>
+            {{ student.lastName }} {{ student.name }} {{ student.secondName }}
+            <span v-if="isStudentMember(student.id)" class="member-badge">Участник</span>
+          </h4>
         </div>
-        <div class="empty-state-small" v-else>
-          <p>Нет доступных учеников для добавления</p>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" @click="closeStudentsModal">
-            Отмена
-          </button>
-          <button class="btn btn-primary" @click="saveStudentsToGroup" :disabled="selectedStudents.length === 0 || isLoading">
-            Добавить выбранных ({{ selectedStudents.length }})
+        <div class="student-actions">
+          <button
+            v-if="isStudentMember(student.id)"
+            class="btn btn-icon btn-danger-icon"
+            @click.stop="removeStudentFromGroup(student)"
+            title="Удалить из группы"
+            :disabled="isLoading">
+            <i data-feather="user-minus"></i>
           </button>
         </div>
       </div>
     </div>
+    <div class="empty-state-small" v-else>
+      <p>Нет доступных учеников</p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" @click="closeStudentsModal">
+        Отмена
+      </button>
+      <button
+        class="btn btn-primary"
+        @click="saveStudentsToGroup"
+        :disabled="selectedStudents.filter(id => !isStudentMember(id)).length === 0 || isLoading"
+      >
+        Добавить новых ({{ selectedStudents.filter(id => !isStudentMember(id)).length }})
+      </button>
+    </div>
+  </div>
+</div>
 
     <!-- Модальное окно для привязки учителя к группе -->
     <div v-if="showTeacherModal" class="modal" @click.self="closeTeacherModal">
@@ -278,7 +288,7 @@ export default {
 
     const isGroupFormValid = computed(() => newGroup.value.name.trim());
 
-      const showAppAlert = (message) => {
+    const showAppAlert = (message) => {
       if (window.Telegram && window.Telegram.WebApp) {
         try {
           window.Telegram.WebApp.showAlert(message);
@@ -291,6 +301,7 @@ export default {
         alert(message);
       }
     };
+
     const filteredStudents = computed(() => {
       const filtered = students.value.filter(student =>
         `${student.name} ${student.lastName || ''} ${student.secondName || ''}`
@@ -316,42 +327,37 @@ export default {
       );
     });
 
-
     const sendGroupBalance = async (group) => {
-  if (!group.urlName || group.urlName.trim() === '') {
-    showAppAlert('У этой группы не указана публичная ссылка. Добавьте ее в настройках группы.');
-    return;
-  }
+      if (!group.urlName || group.urlName.trim() === '') {
+        showAppAlert('У этой группы не указана публичная ссылка. Добавьте ее в настройках группы.');
+        return;
+      }
 
-  const isConfirmed = confirm(`Вы уверены, что хотите отправить отчет по балансу группы "${group.name}" в связанный чат?`);
-  if (!isConfirmed) {
-    return;
-  }
+      const isConfirmed = confirm(`Вы уверены, что хотите отправить отчет по балансу группы "${group.name}" в связанный чат?`);
+      if (!isConfirmed) {
+        return;
+      }
 
-  isLoading.value = true;
-  errorMessage.value = '';
+      isLoading.value = true;
+      errorMessage.value = '';
 
-  try {
+      try {
+        const reportText = `Отчет по балансу для группы: ${group.name}`;
 
-    const reportText = `Отчет по балансу для группы: ${group.name}`;
-
-    await InfoBotAPIClient.sendNotification({
-      chat_identifier: group.urlName,
-      uuid_group:group.id,
-      text: reportText
-    });
-
-
-  } catch (error) {
-    console.error('Ошибка при отправке отчета о балансе:', error);
-    const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
-    errorMessage.value = `Не удалось отправить отчет: ${detail}`;
-    showAppAlert(errorMessage.value);
-
-  } finally {
-    isLoading.value = false;
-  }
-};
+        await InfoBotAPIClient.sendNotification({
+          chat_identifier: group.urlName,
+          uuid_group:group.id,
+          text: reportText
+        });
+      } catch (error) {
+        console.error('Ошибка при отправке отчета о балансе:', error);
+        const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+        errorMessage.value = `Не удалось отправить отчет: ${detail}`;
+        showAppAlert(errorMessage.value);
+      } finally {
+        isLoading.value = false;
+      }
+    };
 
     const fetchGroups = async () => {
       isLoading.value = true;
@@ -394,7 +400,6 @@ export default {
           isLoading.value = false;
       }
     };
-
 
     const fetchStudents = async () => {
       try {
@@ -500,11 +505,16 @@ export default {
     };
 
     const addStudentsToGroup = async (group) => {
-      currentGroup.value = group;
-      selectedStudents.value = [...(group.studentIds || [])];
-      await fetchStudents();
-      showStudentsModal.value = true;
-    };
+  currentGroup.value = group;
+  selectedStudents.value = [];
+  await fetchStudents();
+  showStudentsModal.value = true;
+};
+    const isStudentMember = computed(() => {
+  return (studentId) => {
+    return currentGroup.value.studentIds?.includes(studentId) || false;
+  };
+});
 
     const closeStudentsModal = () => {
       showStudentsModal.value = false;
@@ -512,32 +522,79 @@ export default {
     };
 
     const saveStudentsToGroup = async () => {
+  isLoading.value = true;
+  errorMessage.value = '';
+  try {
+    const newSelectedUuids = selectedStudents.value.filter(studentId =>
+      !currentGroup.value.studentIds?.includes(studentId)
+    ).map(studentId => {
+      const student = students.value.find(s => s.id === studentId);
+      return student ? student.id : null;
+    }).filter(uuid => uuid !== null);
+
+    if (newSelectedUuids.length === 0) {
+      errorMessage.value = 'Не выбраны новые ученики для добавления в группу.';
+      isLoading.value = false;
+      return;
+    }
+    const allUuids = [
+      ...(currentGroup.value.studentIds || []),
+      ...newSelectedUuids
+    ];
+
+    const addData = {
+      uuidGroup: currentGroup.value.id,
+      childrens: allUuids
+    };
+
+    await groupsApiClient.addChildrens(addData);
+    closeStudentsModal();
+    await fetchGroups();
+  } catch (error) {
+    errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+    const removeStudentFromGroup = async (student) => {
+      if (!student.id || !currentGroup.value.id) {
+        showAppAlert('Ошибка: Не удается определить студента или группу');
+        return;
+      }
+
+      const isConfirmed = confirm(
+        `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`
+      );
+
+      if (!isConfirmed) {
+        return;
+      }
+
       isLoading.value = true;
       errorMessage.value = '';
+
       try {
-        const selectedUsernames = selectedStudents.value.map(studentId => {
-          const student = students.value.find(s => s.id === studentId);
-          return student ? student.tgUsername : null;
-        }).filter(username => username !== null);
+        await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
 
-        const addData = {
-          uuidGroup: currentGroup.value.id,
-          childrens: selectedUsernames
-        };
+        selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
 
-        if (addData.childrens.length === 0) {
-            errorMessage.value = 'Не выбраны ученики с действительным Telegram username.';
-            isLoading.value = false;
-            return;
-        }
-        await groupsApiClient.addChildrens(addData);
-        closeStudentsModal();
         await fetchGroups();
+        await fetchStudents();
+
+
       } catch (error) {
-        errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
+        console.error('Ошибка при удалении студента из группы:', error);
+        const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+        errorMessage.value = `Не удалось удалить студента: ${detail}`;
+        showAppAlert(errorMessage.value);
       } finally {
         isLoading.value = false;
       }
+    };
+
+    const isStudentInGroup = (studentId) => {
+      return currentGroup.value.studentIds?.includes(studentId) || false;
     };
 
     const assignTeacherToGroup = async (group) => {
@@ -624,6 +681,7 @@ export default {
       teacherSearchQuery,
       filteredTeachers,
       selectedTeacherId,
+      isStudentMember,
       addNewGroup,
       editGroup,
       deleteGroup,
@@ -632,6 +690,8 @@ export default {
       addStudentsToGroup,
       closeStudentsModal,
       saveStudentsToGroup,
+      removeStudentFromGroup,
+      isStudentInGroup,
       assignTeacherToGroup,
       closeTeacherModal,
       selectTeacher,
@@ -642,8 +702,6 @@ export default {
   }
 };
 </script>
-
-
 
 
 <style scoped>
@@ -703,10 +761,10 @@ export default {
 .group-header, .group-stats {
   margin-bottom: 20px;
 }
+
 .group-stats {
   flex-grow: 1;
 }
-
 
 .group-header {
   display: flex;
@@ -780,7 +838,6 @@ export default {
   font-weight: 500;
 }
 
-
 .group-actions {
   display: flex;
   flex-direction: column;
@@ -809,22 +866,27 @@ export default {
   background: var(--tg-blue);
   color: white;
 }
+
 .btn-primary:hover {
   background: #007bbd;
   transform: translateY(-1px);
 }
+
 .btn-secondary {
   background: var(--tg-secondary);
   color: white;
 }
+
 .btn-secondary:hover {
   background: #5a6268;
   transform: translateY(-1px);
 }
+
 .btn-danger {
   background: var(--tg-red);
   color: white;
 }
+
 .btn-danger:hover {
   background: #c82333;
   transform: translateY(-1px);
@@ -841,6 +903,7 @@ export default {
   border-color: var(--tg-blue);
   color: var(--tg-blue);
 }
+
 .group-actions .btn-primary:hover {
   background: var(--tg-blue);
   color: white;
@@ -852,6 +915,7 @@ export default {
   border-color: var(--tg-secondary);
   color: var(--tg-secondary);
 }
+
 .group-actions .btn-secondary:hover {
   background: var(--tg-secondary);
   color: white;
@@ -863,6 +927,7 @@ export default {
   border-color: var(--tg-red);
   color: var(--tg-red);
 }
+
 .group-actions .btn-danger:hover {
   background: var(--tg-red);
   color: white;
@@ -921,6 +986,35 @@ export default {
   text-align: center;
   padding: 20px;
   color: var(--tg-text-light);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--tg-border);
+  border-top: 4px solid var(--tg-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: var(--tg-text-light);
+  margin: 0;
 }
 
 .modal {
@@ -1107,6 +1201,78 @@ textarea.form-input {
   color: var(--tg-text);
 }
 
+.student-actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--tg-border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tg-text-light);
+}
+
+.btn-icon:hover {
+  background: var(--tg-blue-light);
+  color: var(--tg-blue);
+  border-color: var(--tg-blue);
+}
+
+.btn-icon i {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-danger-icon {
+  background: transparent;
+  border: 1px solid var(--tg-red);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tg-red);
+  margin-left: 8px;
+}
+
+.btn-danger-icon:hover {
+  background: var(--tg-red);
+  color: white;
+  border-color: var(--tg-red);
+}
+
+.btn-danger-icon i {
+  width: 18px;
+  height: 18px;
+}
+
+.form-text {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8em;
+  line-height: 1.4;
+  color: var(--tg-text-light);
+}
+
+.btn-info {
+  background: var(--tg-blue);
+  border-color: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  transform: translateY(-1px);
+}
 
 /* Адаптивность */
 @media (max-width: 768px) {
@@ -1184,68 +1350,31 @@ textarea.form-input {
   .students-list, .teachers-list {
     padding: 0 16px 16px 16px;
   }
-
 }
-  .btn-info {
-  background: var(--tg-blue);
-  border-color: #17a2b8;
-  color: white;
-}
-.btn-info:hover {
-  transform: translateY(-1px);
+.student-item.is-member {
+  background: rgba(40, 167, 69, 0.05);
+  border-left: 3px solid #28a745;
 }
 
-.student-item {
-
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
+.student-item.is-member input[type="checkbox"] {
+  opacity: 0.6;
 }
 
-.student-details {
-
-  flex-grow: 1;
-}
-
-.student-actions {
-
-  margin-left: auto;
-}
-
-.btn-icon {
-  background: transparent;
-  border: 1px solid var(--tg-border);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--tg-text-light);
-}
-
-.btn-icon:hover {
-  background: var(--tg-blue-light);
-  color: var(--tg-blue);
-  border-color: var(--tg-blue);
-}
-
-.btn-icon i {
-  width: 18px;
-  height: 18px;
-}
-
-.form-text {
-  display: block;
-  margin-top: 6px;
+.member-badge {
   font-size: 0.8em;
-  line-height: 1.4;
-  color: var(--tg-text-light);
+  color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+  font-weight: 500;
 }
 
+.student-item.is-member .student-details h4 {
+  color: #28a745;
+}
 </style>
+
 
 
 

@@ -83,7 +83,7 @@
             <input id="secondName" v-model="newChild.secondName" type="text" class="form-input">
           </div>
           <div class="form-group">
-            <label for="tgUsername">Telegram Username</label>
+            <label for="tgUsername">Telegram Username (необязательное поле)</label>
             <input id="tgUsername" v-model="newChild.tgUsername" type="text" class="form-input" placeholder="@username">
           </div>
           <div class="form-group">
@@ -131,7 +131,7 @@ export default {
     const isLoading = ref(false);
     const errorMessage = ref('');
     const children = ref([]);
-    const currentChildTgUsername = ref(null);
+    const currentChildId = ref(null);
     const newChild = ref({
       tgUsername: '',
       name: '',
@@ -179,7 +179,6 @@ export default {
         let childrenData = [];
         childrenData = childrenResponse.data.message;
 
-
         let balancesData = [];
         balancesData = balancesResponse.message;
 
@@ -219,7 +218,7 @@ export default {
     const openAddChildModal = () => {
       showModal.value = true;
       isEditing.value = false;
-      currentChildTgUsername.value = null;
+      currentChildId.value = null;
       Object.assign(newChild.value, {
         tgUsername: '', name: '', lastName: '', secondName: '',
         phoneNumber: '', dateOfBirth: '', note: ''
@@ -228,7 +227,7 @@ export default {
 
     const editChild = (child) => {
       isEditing.value = true;
-      currentChildTgUsername.value = child.tgUsername;
+      currentChildId.value = child.id;
       Object.assign(newChild.value, { ...child, note: '' });
       showModal.value = true;
     };
@@ -243,7 +242,7 @@ export default {
       errorMessage.value = '';
       try {
         const childData = {
-          tgUsername: newChild.value.tgUsername || '',
+          id: newChild.value.tgUsername || '',
           name: newChild.value.name,
           lastName: newChild.value.lastName,
           secondName: newChild.value.secondName || '',
@@ -252,8 +251,8 @@ export default {
           dateOfBirth: newChild.value.dateOfBirth,
           note: newChild.value.note || ' '
         };
-        if (isEditing.value && currentChildTgUsername.value) {
-          await apiClient.updateChild(currentChildTgUsername.value, childData);
+        if (isEditing.value && currentChildId.value) {
+          await apiClient.updateChild(currentChildId.value, childData);
         } else {
           await apiClient.createChild(childData);
         }
@@ -269,15 +268,15 @@ export default {
     };
 
     const deleteChild = async (child) => {
-      if (!child.tgUsername) {
-        alert('Нет tgUsername для удаления');
+      if (!child.id) {
+        alert('Нет uuid для удаления');
         return;
       }
       if (confirm(`Вы уверены, что хотите удалить ребенка "${child.name} ${child.lastName}"?`)) {
         isLoading.value = true;
         errorMessage.value = '';
         try {
-          await apiClient.deleteChild(child.tgUsername);
+          await apiClient.deleteChild(child.id);
           await loadChildren();
         } catch (error) {
           if (error.response) console.error('Ответ сервера (ошибка удаления):', error.response);
@@ -314,14 +313,29 @@ export default {
     onUpdated(updateFeather);
 
     return {
-      searchQuery, selectedChildren, filteredChildren, filterChildren, distributeCoins,
-      showModal, isEditing, openAddChildModal, closeModal, newChild, isChildFormValid,
-      submitChild, editChild, deleteChild, getAge, isLoading, errorMessage,
+      searchQuery,
+      selectedChildren,
+      filteredChildren,
+      filterChildren,
+      distributeCoins,
+      showModal,
+      isEditing,
+      openAddChildModal,
+      closeModal,
+      newChild,
+      isChildFormValid,
+      submitChild,
+      editChild,
+      deleteChild,
+      getAge,
+      isLoading,
+      errorMessage,
       children
     };
   }
 };
 </script>
+
 
 <style scoped>
 .children {

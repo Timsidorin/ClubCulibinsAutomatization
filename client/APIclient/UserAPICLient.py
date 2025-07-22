@@ -8,7 +8,7 @@ class UserAPIClient(BaseAPIClient):
         role_data = await self._send_request(
             "get",
             "user/get/role",
-            data={"tgUsername": "@" + tg_username},
+            data={"id": "@" + tg_username},
             raise_for_status=False
         )
 

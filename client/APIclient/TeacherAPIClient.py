@@ -27,19 +27,16 @@ class TeacherAPIClient(BaseAPIClient):
             )
             return members
         except Exception as e:
-            print(f"Ошибка в get_group_members: {e}")
             return None
 
-    async def add_balance(self, child_username: str, teacher_username: str, amount: int):
+    async def add_balance(self, child_uuid: str, teacher_username: str, amount: int):
         """Добавление монет ребёнку"""
         try:
-            print(f"Отправляю запрос на добавление баланса: {child_username}, {teacher_username}, {amount}")
-
             response = await self._send_request(
                 "patch",
                 "balance/update",
                 data={
-                    "tgUsername": child_username,
+                    "uuidUser": child_uuid,
                     "tgTeacher": "@" + teacher_username,
                     "operation": True,
                     "summ": amount
@@ -55,16 +52,15 @@ class TeacherAPIClient(BaseAPIClient):
             print(f"Ошибка в add_balance: {e}")
             return False
 
-    async def subtract_balance(self, child_username: str, teacher_username: str, amount: int):
+    async def subtract_balance(self, child_uuid: str, teacher_username: str, amount: int):
         """Уменьшение монет ребёнка"""
         try:
-            print(f"Отправляю запрос на списание баланса: {child_username}, {teacher_username}, {amount}")
 
             response = await self._send_request(
                 "patch",
                 "balance/update",
                 data={
-                    "tgUsername": child_username,
+                    "uuidUser": child_uuid,
                     "tgTeacher": "@" + teacher_username,
                     "operation": False,
                     "summ": amount

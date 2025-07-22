@@ -114,6 +114,7 @@
   </div>
 </template>
 
+
 <script>
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import TeachersAPIClient from '../../api/TeachersAPIClient.js';
@@ -153,28 +154,30 @@ export default {
       );
     });
 
+    // Измененная функция для получения групп по UUID учителей
     const fetchAllTeachersGroups = async (teachersData) => {
       try {
-        const usernames = teachersData
-          .map(teacher => teacher.tgUsername)
-          .filter(username => username);
+        const teacherUuids = teachersData
+          .map(teacher => teacher.uuid) // Используем UUID вместо tgUsername
+          .filter(uuid => uuid);
 
-        if (usernames.length === 0) {
+        if (teacherUuids.length === 0) {
           return {};
         }
 
-        const groupsResponse = await groupAPIClient.getGroupsByTeacher(usernames);
+        const groupsResponse = await groupAPIClient.getGroupsByTeacher(teacherUuids);
 
         const teacherGroupsMap = {};
 
         if (groupsResponse?.message?.groups && Array.isArray(groupsResponse.message.groups)) {
           groupsResponse.message.groups.forEach(group => {
-            const teacherUsername = group.User?.tgUsername;
-            if (teacherUsername) {
-              if (!teacherGroupsMap[teacherUsername]) {
-                teacherGroupsMap[teacherUsername] = [];
+            // Сопоставляем по UUID учителя вместо tgUsername
+            const teacherUuid = group.uuidUser; // UUID учителя в группе
+            if (teacherUuid) {
+              if (!teacherGroupsMap[teacherUuid]) {
+                teacherGroupsMap[teacherUuid] = [];
               }
-              teacherGroupsMap[teacherUsername].push(group.name);
+              teacherGroupsMap[teacherUuid].push(group.name);
             }
           });
         }
@@ -199,8 +202,9 @@ export default {
         const teacherGroupsMap = await fetchAllTeachersGroups(teachersData);
 
         teachers.value = teachersData.map(teacherData => {
-          const username = teacherData.tgUsername;
-          const groupNames = teacherGroupsMap[username] || [];
+          // Сопоставляем группы по UUID учителя
+          const uuid = teacherData.uuid;
+          const groupNames = teacherGroupsMap[uuid] || [];
           return Teachers.fromApiObject(teacherData, groupNames);
         });
 
@@ -244,7 +248,7 @@ export default {
     const resetForm = () => {
       newTeacher.value = new Teachers();
       usernameError.value = '';
-      errorMessage.value = ''; // Очищаем ошибки при сбросе формы
+      errorMessage.value = '';
     };
 
     const validateUsername = () => {
@@ -293,7 +297,7 @@ export default {
         console.error('Ошибка при сохранении учителя:', error);
 
         if (error.response?.data?.message === "23505") {
-          errorMessage.value = 'Такой преподадователь уже существует!';
+          errorMessage.value = 'Такой преподаватель уже существует!';
         }
       } finally {
         isLoading.value = false;
@@ -358,10 +362,8 @@ export default {
 };
 </script>
 
-<style scoped>
-/* ... все остальные стили остаются без изменений ... */
 
-/* Добавляем стили для отображения ошибки в модальном окне */
+<style scoped>
 .modal-error {
   padding: 0 24px;
   margin-bottom: 16px;
@@ -389,7 +391,6 @@ export default {
   flex-shrink: 0;
 }
 
-/* Остальные стили без изменений */
 .teachers {
   width: 100%;
 }
@@ -782,3 +783,4 @@ export default {
   cursor: not-allowed;
 }
 </style>
+

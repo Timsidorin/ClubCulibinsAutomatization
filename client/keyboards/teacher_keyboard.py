@@ -17,27 +17,29 @@ def create_teacher_keyboard():
 
 async def create_teacher_groups_keyboard(username: str):
     keyboard = InlineKeyboardBuilder()
-
     client = TeacherAPIClient()
-    response = await client.get_my_groups(teacher_tg_username=username)
 
-    if not response or "message" not in response or "groups" not in response["message"]:
-        raise ValueError("Некорректный ответ от API")
+    try:
+        response = await client.get_my_groups(teacher_tg_username=username)
 
-    groups_list = response["message"]["groups"]
+        if not response or "message" not in response or "groups" not in response["message"]:
+            raise ValueError("Некорректный ответ от API")
 
-    if not groups_list:
-        keyboard.button(text="У вас нет групп", callback_data="no_groups")
-    else:
-        for group in groups_list:
-            group_name = group.get("name", "Без названия")
-            group_uuid = group.get("uuid", "")
-            group_url = group.get("urlName", "")
-            keyboard.button(text=group_name, callback_data=f"group*{group_uuid}*{group_url}")
+        groups_list = response["message"]["groups"]
 
-    keyboard.adjust(1)
-    return keyboard
+        if not groups_list:
+            keyboard.button(text="У вас нет групп", callback_data="no_groups")
+        else:
+            for group in groups_list:
+                group_name = group.get("name", "Без названия")
+                group_uuid = group.get("uuid", "")
+                group_url = group.get("urlName", "")
+                keyboard.button(text=group_name, callback_data=f"group*{group_uuid}*{group_url}")
 
+        keyboard.adjust(1)
+        return keyboard
+    finally:
+        await client.close()
 
 
 def create_group_keyboard():
@@ -60,9 +62,8 @@ def create_group_keyboard():
         text="Назад к выбору группы ↩️",
         callback_data='a:back_t_g'
     )
-    builder.adjust(1, 1, 1)
+    builder.adjust(1, 1, 1, 1)
     return builder.as_markup()
-
 
 
 def create_balance_keyboard():
@@ -79,26 +80,24 @@ def create_balance_keyboard():
         text="⬅️ Назад к выбору ученика",
         callback_data="back_to_child_list"
     )
-    builder.adjust(1)
+    builder.adjust(1, 1, 1)
     return builder.as_markup()
 
 
-
-def create_children_keyboard(child_list, children_username):
+def create_children_keyboard(child_list, children_uuids):
     builder = InlineKeyboardBuilder()
     if not child_list:
         builder.button(text="В группе нет детей!", callback_data="no_groups")
     else:
-        for i in range(len(child_list)):
-            builder.button(text=child_list[i], callback_data=f"child_{children_username[i]}")
+        for i, child_name in enumerate(child_list):
+            builder.button(text=child_name, callback_data=f"child_{i}")
 
     builder.button(
-        text="Назад ↩️",
-        callback_data='a:back_t_g'
+        text="Назад к действиям группы ↩️",
+        callback_data='a:b_to_gr_act'
     )
     builder.adjust(1)
     return builder
-
 
 
 def create_back_to_group_actions_keyboard():
@@ -108,9 +107,3 @@ def create_back_to_group_actions_keyboard():
         callback_data="a:b_to_gr_act"
     )
     return builder.as_markup()
-
-
-
-
-
-

@@ -42,22 +42,21 @@ class GroupsAPIClient extends ApiClient {
     return await this.post(`${this.endpoint}/add-childrens`, addData);
   }
 
-    async getGroupsByTeacher(tg_usernames) {
-    if (Array.isArray(tg_usernames)) {
-        const queryParams = tg_usernames
-            .map(username => {
-                const formattedUsername = username.startsWith('@') ? username : `@${username}`;
-                return `tgUsername=${formattedUsername}`;
-            })
+    async getGroupsByTeacher(teacher_uuids) {
+    if (Array.isArray(teacher_uuids)) {
+        const queryParams = teacher_uuids
+            .map(uuid => `teacherUuid=${uuid}`)
             .join('&');
 
         return await this.get(`${this.endpoint}/get-all?${queryParams}`);
     } else {
-        return await this.get(`${this.endpoint}/get-all?tgUsername=${tg_usernames}`);
+        return await this.get(`${this.endpoint}/get-all?teacherUuid=${teacher_uuids}`);
     }
 }
 
-
+async deleteChildren(child_uuid, group_uuid) {
+    return await this.delete(`${this.endpoint}/children/${child_uuid}/${group_uuid}`);
+  }
 
 }
 

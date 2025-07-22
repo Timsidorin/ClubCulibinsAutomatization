@@ -19,21 +19,23 @@ from utils.fio_formate import format_child
 
 router = Router()
 
+
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
     client = UserAPIClient()
-    username = message.from_user.username
-    role = await client.check_user_role(username)
-    if role == "admin":
-        await message.answer("Привет, Админ!", reply_markup=create_admin_keyboard())
-        await state.clear()
-    elif role == "teacher":
-        await message.answer("Привет, Преподаватель!", reply_markup=create_teacher_keyboard())
-        await state.set_state(TeacherStates.main_menu)
-    elif role == "none":
-        await message.answer("Увы, Вы не зарегистрированы в системе, обратитесь к администратору!")
-
-
+    try:
+        username = message.from_user.username
+        role = await client.check_user_role(username)
+        if role == "admin":
+            await message.answer("Привет, Админ!", reply_markup=create_admin_keyboard())
+            await state.clear()
+        elif role == "teacher":
+            await message.answer("Привет, Преподаватель!", reply_markup=create_teacher_keyboard())
+            await state.set_state(TeacherStates.main_menu)
+        elif role == "none":
+            await message.answer("Увы, Вы не зарегистрированы в системе, обратитесь к администратору!")
+    finally:
+        await client.close()
 
 
 @router.message(F.text == "Главная 🏠")
@@ -45,13 +47,14 @@ async def back_to_main_menu(message: Message, state: FSMContext):
     await state.set_state(TeacherStates.main_menu)
 
 
-
 @router.message(F.text == "Мои группы 📜", TeacherStates.main_menu)
 async def show_my_groups(message: Message, state: FSMContext):
-    keyboard = await create_teacher_groups_keyboard(username=message.from_user.username)
-    await message.answer("Выберите группу:", reply_markup=keyboard.as_markup())
-    await state.set_state(TeacherStates.choosing_group)
-
+    try:
+        keyboard = await create_teacher_groups_keyboard(username=message.from_user.username)
+        await message.answer("Выберите группу:", reply_markup=keyboard.as_markup())
+        await state.set_state(TeacherStates.choosing_group)
+    except Exception as e:
+        await message.answer(f"Ошибка при загрузке групп: {e}")
 
 
 @router.callback_query(F.data.startswith("group*"), TeacherStates.choosing_group)
@@ -59,8 +62,10 @@ async def select_group_callback(callback: CallbackQuery, state: FSMContext):
     try:
         group_uuid = callback.data.split("*")[1]
         group_url = callback.data.split("*")[2]
-        await state.update_data(selected_group_uuid=group_uuid)
-        await state.update_data(selected_group_url=group_url)
+        await state.update_data(
+            selected_group_uuid=group_uuid,
+            selected_group_url=group_url
+        )
         await callback.message.edit_text(
             "Выбрана группа. Выберите действие:",
             reply_markup=create_group_keyboard()
@@ -73,17 +78,21 @@ async def select_group_callback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == 'ga:child_list', TeacherStates.in_group_menu)
 async def get_children_list(callback: CallbackQuery, state: FSMContext):
     await callback.answer(text="Загружаю список...")
+
     data = await state.get_data()
     group_uuid = data.get("selected_group_uuid")
 
     if not group_uuid:
-        await callback.message.answer("Ошибка: не удалось определить группу. Попробуйте снова.")
+        await callback.message.edit_text(
+            "Ошибка: не удалось определить группу. Попробуйте снова.",
+            reply_markup=create_back_to_group_actions_keyboard()
+        )
         return
 
+    client = TeacherAPIClient()
     try:
-        client = TeacherAPIClient()
         members_response = await client.get_group_members(uuid_group=group_uuid)
-        members = members_response.get("message", [])["EducationGroupMembers"]
+        members = members_response.get("message", {}).get("EducationGroupMembers", [])
 
         if members:
             header = f'{"№":<3}{"Ученик":<18}{"Баланс":>8}'
@@ -102,9 +111,9 @@ async def get_children_list(callback: CallbackQuery, state: FSMContext):
                     table_rows.append(row_text)
                 except ValueError:
                     table_rows.append(full_string)
+
             final_text = "\n".join(table_rows)
             children_text = f"<b>Список детей в группе:</b>\n<pre>{final_text}</pre>"
-
         else:
             children_text = "В этой группе пока нет детей!"
 
@@ -114,13 +123,18 @@ async def get_children_list(callback: CallbackQuery, state: FSMContext):
             parse_mode="HTML"
         )
     except Exception as e:
-        await callback.message.answer(f"Произошла ошибка при загрузке данных: {e}")
+        await callback.message.edit_text(
+            f"Произошла ошибка при загрузке данных: {e}",
+            reply_markup=create_back_to_group_actions_keyboard()
+        )
     finally:
-        await callback.answer()
+        await client.close()
 
 
 @router.callback_query(
-    F.data == 'a:b_to_gr_act', StateFilter(TeacherStates.in_group_menu, TeacherStates.choosing_child_for_balance)
+    F.data == 'a:b_to_gr_act',
+    StateFilter(TeacherStates.in_group_menu, TeacherStates.choosing_child_for_balance,
+                TeacherStates.choosing_balance_action)
 )
 async def back_to_group_actions_menu(callback: CallbackQuery, state: FSMContext):
     try:
@@ -133,7 +147,6 @@ async def back_to_group_actions_menu(callback: CallbackQuery, state: FSMContext)
         await callback.answer()
 
 
-
 @router.callback_query(F.data == 'a:back_t_g', TeacherStates.in_group_menu)
 async def back_to_group_selection(callback: CallbackQuery, state: FSMContext):
     try:
@@ -143,25 +156,32 @@ async def back_to_group_selection(callback: CallbackQuery, state: FSMContext):
             reply_markup=keyboard.as_markup()
         )
         await state.set_state(TeacherStates.choosing_group)
+    except Exception as e:
+        await callback.message.edit_text(
+            f"Ошибка при загрузке групп: {e}",
+            reply_markup=create_back_to_group_actions_keyboard()
+        )
     finally:
         await callback.answer()
 
 
 @router.callback_query(F.data == 'ga:public_balance', TeacherStates.in_group_menu)
 async def group_balance_publish(callback: CallbackQuery, state: FSMContext):
-    try:
-        await callback.answer(text="Публикую баланс в групповой чат...")
+    await callback.answer(text="Публикую баланс в групповой чат...")
 
-        data = await state.get_data()
-        group_url = data.get("selected_group_url")
-        group_uuid = data.get("selected_group_uuid")
-        if not group_url:
-            await callback.message.edit_text(
-                "Ошибка: не удалось определить группу. Попробуйте снова.",
-                reply_markup=create_back_to_group_actions_keyboard()
-            )
-            return
-        repost_client = BalanceAPIClient()
+    data = await state.get_data()
+    group_url = data.get("selected_group_url")
+    group_uuid = data.get("selected_group_uuid")
+
+    if not group_url or not group_uuid:
+        await callback.message.edit_text(
+            "Ошибка: не удалось определить группу. Попробуйте снова.",
+            reply_markup=create_back_to_group_actions_keyboard()
+        )
+        return
+
+    repost_client = BalanceAPIClient()
+    try:
         response = await repost_client.SendReportOfGroup(group_url, group_uuid)
         if response and response.get("ok"):
             await callback.message.edit_text(
@@ -179,22 +199,24 @@ async def group_balance_publish(callback: CallbackQuery, state: FSMContext):
             reply_markup=create_back_to_group_actions_keyboard()
         )
     finally:
-        await callback.answer()
+        await repost_client.close()
 
 
 @router.callback_query(F.data == 'ga:ma_balance', TeacherStates.in_group_menu)
 async def children_balance_menu(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    group_uuid = data.get("selected_group_uuid")
+
+    client = TeacherAPIClient()
     try:
-        data = await state.get_data()
-        group_uuid = data.get("selected_group_uuid")
-        client = TeacherAPIClient()
         members_response = await client.get_group_members(uuid_group=group_uuid)
-        members = members_response.get("message", {}).get("EducationGroupMembers")
+        members = members_response.get("message", {}).get("EducationGroupMembers", [])
 
         if members:
+            await state.update_data(group_members=members)
+
             children_list = [format_child(m).replace("<b>", "").replace("</b>", "") for m in members]
-            children_usernames = [member.get("tgUsername", "none") for member in members]
-            children_list_keyboard = create_children_keyboard(children_list, children_usernames)
+            children_list_keyboard = create_children_keyboard(children_list, None)
 
             await callback.message.edit_text(
                 "Выберите ученика:",
@@ -202,30 +224,57 @@ async def children_balance_menu(callback: CallbackQuery, state: FSMContext):
             )
             await state.set_state(TeacherStates.choosing_child_for_balance)
         else:
-            await callback.message.edit_text(text="В этой группе пока нет учеников.")
-            await callback.message.answer("Выберите действие:", reply_markup=create_group_keyboard())
-
+            await callback.message.edit_text(
+                "В этой группе пока нет учеников.",
+                reply_markup=create_back_to_group_actions_keyboard()
+            )
     except Exception as e:
-        await callback.message.answer(f"Произошла ошибка: {e}")
+        await callback.message.edit_text(
+            f"Произошла ошибка: {e}",
+            reply_markup=create_back_to_group_actions_keyboard()
+        )
     finally:
+        await client.close()
         await callback.answer()
-
 
 
 @router.callback_query(F.data.startswith("child_"), TeacherStates.choosing_child_for_balance)
 async def select_child_for_balance(callback: CallbackQuery, state: FSMContext):
-        try:
-            selected_child_username = callback.data.split("_")[1]
-            await state.update_data(selected_child_username=selected_child_username)
+    try:
+        child_index = int(callback.data.split("_")[1])
+        data = await state.get_data()
+
+        members = data.get("group_members", [])
+
+        if members and child_index < len(members):
+            selected_member = members[child_index]
+            selected_child_uuid = selected_member.get("User", {}).get("uuid")
+            child_name = format_child(selected_member).replace("<b>", "").replace("</b>", "").rsplit(' [', 1)[0]
+
+            await state.update_data(
+                selected_child_uuid=selected_child_uuid,
+                selected_child_fio=child_name
+            )
 
             await callback.message.edit_text(
-                f"Выбран ученик с юзернеймом: `{selected_child_username}`\nВыберите действие:",
+                f"Выбран ученик: `{child_name}`\nВыберите действие:",
                 reply_markup=create_balance_keyboard(),
                 parse_mode="Markdown"
             )
             await state.set_state(TeacherStates.choosing_balance_action)
-        finally:
-            await callback.answer()
+        else:
+            await callback.message.edit_text(
+                "Ошибка: ученик не найден",
+                reply_markup=create_back_to_group_actions_keyboard()
+            )
+
+    except Exception as e:
+        await callback.message.edit_text(
+            f"Произошла ошибка: {e}",
+            reply_markup=create_back_to_group_actions_keyboard()
+        )
+    finally:
+        await callback.answer()
 
 
 @router.callback_query(F.data == 'balance:add', TeacherStates.choosing_balance_action)
@@ -254,19 +303,20 @@ async def process_adding_amount(message: Message, state: FSMContext):
 
     amount = int(message.text)
     data = await state.get_data()
-    child_username = data.get("selected_child_username")
+    child_uuid = data.get("selected_child_uuid")
+    child_fio = data.get("selected_child_fio")
     teacher_username = message.from_user.username
 
     client = TeacherAPIClient()
     try:
         response = await client.add_balance(
-            child_username=child_username,
+            child_uuid=child_uuid,
             teacher_username=teacher_username,
             amount=amount
         )
         if response:
             await message.answer(
-                f"✅ Успешно начислено `{amount}` КК ученику `{child_username}`.",
+                f"✅ Успешно начислено `{amount}` КК ученику {child_fio}.",
                 parse_mode="Markdown"
             )
             await message.answer(
@@ -292,22 +342,21 @@ async def process_subtracting_amount(message: Message, state: FSMContext):
 
     amount = int(message.text)
     data = await state.get_data()
-    child_username = data.get("selected_child_username")
+    child_fio = data.get("selected_child_fio")
+    child_uuid = data.get("selected_child_uuid")
     teacher_username = message.from_user.username
-
 
     client = TeacherAPIClient()
     try:
         response = await client.subtract_balance(
-            child_username=child_username,
+            child_uuid=child_uuid,
             teacher_username=teacher_username,
             amount=amount
         )
 
-
         if response:
             await message.answer(
-                f"✅ Успешно списано `{amount}` КК у ученика `{child_username}`.",
+                f"✅ Успешно списано `{amount}` КК у ученика {child_fio}.",
                 parse_mode="Markdown"
             )
             await message.answer(
@@ -325,13 +374,6 @@ async def process_subtracting_amount(message: Message, state: FSMContext):
         await client.close()
 
 
-
 @router.callback_query(F.data == 'back_to_child_list', TeacherStates.choosing_balance_action)
 async def back_to_child_list_from_balance_menu(callback: CallbackQuery, state: FSMContext):
     await children_balance_menu(callback, state)
-
-
-
-
-
-
