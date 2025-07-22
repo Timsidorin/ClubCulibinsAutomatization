@@ -69,6 +69,14 @@
             <i data-feather="x"></i>
           </button>
         </div>
+
+        <div v-if="errorMessage" class="modal-error">
+          <div class="alert alert-error">
+            <i data-feather="alert-circle"></i>
+            {{ errorMessage }}
+          </div>
+        </div>
+
         <form @submit.prevent="submitTeacher" class="teacher-form">
           <div class="form-group">
             <label for="lastName">Фамилия *</label>
@@ -145,42 +153,39 @@ export default {
       );
     });
 
-
     const fetchAllTeachersGroups = async (teachersData) => {
-  try {
-    const usernames = teachersData
-      .map(teacher => teacher.tgUsername)
-      .filter(username => username);
+      try {
+        const usernames = teachersData
+          .map(teacher => teacher.tgUsername)
+          .filter(username => username);
 
-    if (usernames.length === 0) {
-      return {};
-    }
-
-
-
-    const groupsResponse = await groupAPIClient.getGroupsByTeacher(usernames);
-
-    const teacherGroupsMap = {};
-
-    if (groupsResponse?.message?.groups && Array.isArray(groupsResponse.message.groups)) {
-      groupsResponse.message.groups.forEach(group => {
-        const teacherUsername = group.User?.tgUsername;
-        if (teacherUsername) {
-          if (!teacherGroupsMap[teacherUsername]) {
-            teacherGroupsMap[teacherUsername] = [];
-          }
-          teacherGroupsMap[teacherUsername].push(group.name);
+        if (usernames.length === 0) {
+          return {};
         }
-      });
-    }
 
-    return teacherGroupsMap;
+        const groupsResponse = await groupAPIClient.getGroupsByTeacher(usernames);
 
-  } catch (error) {
-    console.error('Ошибка при загрузке групп для учителей:', error);
-    return {};
-  }
-};
+        const teacherGroupsMap = {};
+
+        if (groupsResponse?.message?.groups && Array.isArray(groupsResponse.message.groups)) {
+          groupsResponse.message.groups.forEach(group => {
+            const teacherUsername = group.User?.tgUsername;
+            if (teacherUsername) {
+              if (!teacherGroupsMap[teacherUsername]) {
+                teacherGroupsMap[teacherUsername] = [];
+              }
+              teacherGroupsMap[teacherUsername].push(group.name);
+            }
+          });
+        }
+
+        return teacherGroupsMap;
+
+      } catch (error) {
+        console.error('Ошибка при загрузке групп для учителей:', error);
+        return {};
+      }
+    };
 
     const fetchTeachers = async () => {
       isLoading.value = true;
@@ -189,7 +194,7 @@ export default {
         const teachersResponse = await apiClient.getAllTeachers(1);
         let teachersData = [];
         teachersData = teachersResponse.data.message;
-        
+
         // Получаем группы для всех учителей одним запросом
         const teacherGroupsMap = await fetchAllTeachersGroups(teachersData);
 
@@ -239,6 +244,7 @@ export default {
     const resetForm = () => {
       newTeacher.value = new Teachers();
       usernameError.value = '';
+      errorMessage.value = ''; // Очищаем ошибки при сбросе формы
     };
 
     const validateUsername = () => {
@@ -284,12 +290,10 @@ export default {
         closeModal();
         await fetchTeachers();
       } catch (error) {
-        if (error.response) {
-          errorMessage.value = `Ошибка: ${error.response.data?.message || 'Не удалось сохранить данные учителя.'}`;
-        } else if (error.code === 'ERR_NETWORK') {
-          errorMessage.value = 'Ошибка сети: сервер недоступен или блокирует запросы (CORS).';
-        } else {
-          errorMessage.value = 'Не удалось сохранить данные учителя. Попробуйте снова.';
+        console.error('Ошибка при сохранении учителя:', error);
+
+        if (error.response?.data?.message === "23505") {
+          errorMessage.value = 'Такой преподадователь уже существует!';
         }
       } finally {
         isLoading.value = false;
@@ -355,6 +359,37 @@ export default {
 </script>
 
 <style scoped>
+/* ... все остальные стили остаются без изменений ... */
+
+/* Добавляем стили для отображения ошибки в модальном окне */
+.modal-error {
+  padding: 0 24px;
+  margin-bottom: 16px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--border-radius-button);
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.alert-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: var(--tg-red);
+}
+
+.alert i {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Остальные стили без изменений */
 .teachers {
   width: 100%;
 }

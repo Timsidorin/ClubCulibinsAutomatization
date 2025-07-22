@@ -177,18 +177,11 @@ export default {
         ]);
 
         let childrenData = [];
-        if (childrenResponse?.data?.data && Array.isArray(childrenResponse.data.data)) {
-          childrenData = childrenResponse.data.message;
-        } else {
-          throw new Error('Получены некорректные данные детей от сервера.');
-        }
+        childrenData = childrenResponse.data.message;
+
 
         let balancesData = [];
-        if (Array.isArray(balancesResponse.message)) {
-          balancesData = balancesResponse.data.message;
-        } else {
-            console.warn('Не удалось получить массив балансов. Ответ API:', balancesResponse);
-        }
+        balancesData = balancesResponse.message;
 
         const balanceMap = new Map();
         balancesData.forEach(balanceEntry => {

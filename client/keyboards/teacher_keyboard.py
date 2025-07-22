@@ -33,7 +33,7 @@ async def create_teacher_groups_keyboard(username: str):
             group_name = group.get("name", "Без названия")
             group_uuid = group.get("uuid", "")
             group_url = group.get("urlName", "")
-            keyboard.button(text=group_name, callback_data=f"group_{group_uuid}_{group_url}")
+            keyboard.button(text=group_name, callback_data=f"group*{group_uuid}*{group_url}")
 
     keyboard.adjust(1)
     return keyboard

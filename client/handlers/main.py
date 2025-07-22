@@ -54,11 +54,11 @@ async def show_my_groups(message: Message, state: FSMContext):
 
 
 
-@router.callback_query(F.data.startswith("group_"), TeacherStates.choosing_group)
+@router.callback_query(F.data.startswith("group*"), TeacherStates.choosing_group)
 async def select_group_callback(callback: CallbackQuery, state: FSMContext):
     try:
-        group_uuid = callback.data.split("_")[1]
-        group_url = callback.data.split("_")[2]
+        group_uuid = callback.data.split("*")[1]
+        group_url = callback.data.split("*")[2]
         await state.update_data(selected_group_uuid=group_uuid)
         await state.update_data(selected_group_url=group_url)
         await callback.message.edit_text(
@@ -246,12 +246,10 @@ async def request_amount_to_subtract(callback: CallbackQuery, state: FSMContext)
         await callback.answer()
 
 
-
-
 @router.message(F.text, TeacherStates.entering_amount_to_add)
 async def process_adding_amount(message: Message, state: FSMContext):
     if not message.text.isdigit() or int(message.text) <= 0:
-        await message.answer("Ошибка. Пожалуйста, введите целое положительное число.")
+        await message.answer("❌ Ошибка. Пожалуйста, введите целое положительное число.")
         return
 
     amount = int(message.text)
@@ -260,39 +258,71 @@ async def process_adding_amount(message: Message, state: FSMContext):
     teacher_username = message.from_user.username
 
     client = TeacherAPIClient()
-    response = await client.add_balance(child_username=child_username, teacher_username=teacher_username, amount=amount)
-    if response:
-        await message.answer(f"✅ Успешно начислено `{amount}` КК ученику `{child_username}`.", parse_mode="Markdown")
-        await message.answer(
-            "Вы снова в меню группы. Выберите следующее действие:",
-            reply_markup=create_group_keyboard()
+    try:
+        response = await client.add_balance(
+            child_username=child_username,
+            teacher_username=teacher_username,
+            amount=amount
         )
-        await state.set_state(TeacherStates.in_group_menu)
-    else:
-        await message.answer("Ошибка начисления, попробуйте еще раз")
+        if response:
+            await message.answer(
+                f"✅ Успешно начислено `{amount}` КК ученику `{child_username}`.",
+                parse_mode="Markdown"
+            )
+            await message.answer(
+                "Вы снова в меню группы. Выберите следующее действие:",
+                reply_markup=create_group_keyboard()
+            )
+            await state.set_state(TeacherStates.in_group_menu)
+        else:
+            await message.answer("❌ Ошибка начисления, попробуйте еще раз")
 
+    except Exception as e:
+        await message.answer(f"❌ Произошла ошибка: {str(e)}")
+        print(f"Ошибка в process_adding_amount: {e}")
+    finally:
+        await client.close()
 
 
 @router.message(F.text, TeacherStates.entering_amount_to_subtract)
 async def process_subtracting_amount(message: Message, state: FSMContext):
     if not message.text.isdigit() or int(message.text) <= 0:
-        await message.answer("Ошибка. Пожалуйста, введите целое положительное число.")
+        await message.answer("❌ Ошибка. Пожалуйста, введите целое положительное число.")
         return
 
     amount = int(message.text)
     data = await state.get_data()
     child_username = data.get("selected_child_username")
     teacher_username = message.from_user.username
+
+
     client = TeacherAPIClient()
-    if await client.subtract_balance(child_username=child_username, teacher_username=teacher_username, amount=amount):
-        await message.answer(f"✅ Успешно списано `{amount}` КК у ученика `{child_username}`.", parse_mode="Markdown")
-        await message.answer(
-            "Вы снова в меню группы. Выберите следующее действие:",
-            reply_markup=create_group_keyboard()
+    try:
+        response = await client.subtract_balance(
+            child_username=child_username,
+            teacher_username=teacher_username,
+            amount=amount
         )
-        await state.set_state(TeacherStates.in_group_menu)
-    else:
-        await message.answer("Ошибка списания, попробуйте еще раз")
+
+
+        if response:
+            await message.answer(
+                f"✅ Успешно списано `{amount}` КК у ученика `{child_username}`.",
+                parse_mode="Markdown"
+            )
+            await message.answer(
+                "Вы снова в меню группы. Выберите следующее действие:",
+                reply_markup=create_group_keyboard()
+            )
+            await state.set_state(TeacherStates.in_group_menu)
+        else:
+            await message.answer("❌ Ошибка списания, попробуйте еще раз")
+
+    except Exception as e:
+        await message.answer(f"❌ Произошла ошибка: {str(e)}")
+        print(f"Ошибка в process_subtracting_amount: {e}")
+    finally:
+        await client.close()
 
 
 
