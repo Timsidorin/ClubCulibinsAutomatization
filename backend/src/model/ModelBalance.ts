@@ -18,14 +18,10 @@ export class ModelBalance {
         }
     }
 
-    public async updateBalance(tgUsername: string, operation: boolean, summ: number): Promise<IAnswer<string>> {
+    public async updateBalance(uuidUser: string, operation: boolean, summ: number): Promise<IAnswer<string>> {
         try {
-            let uuid = await User.findOne({
-                where: {tgUsername: tgUsername},
-                attributes: ['uuid'],
-            })
             const operationForBalance = operation ? sequelize.literal(`money + ${summ}`) : sequelize.literal(`money - ${summ}`);
-            let oldBalance = await Balance.findOne({where: {uuidUser: uuid?.uuid}});
+            let oldBalance = await Balance.findOne({where: {uuidUser: uuidUser}});
             if ((!operation) && oldBalance?.dataValues.money < summ) {
                 return {code: 500, message: 'Не хватает средств на балансе'}
             }
@@ -34,7 +30,7 @@ export class ModelBalance {
                     money: operationForBalance,
                 },
                 {
-                    where: {uuidUser: uuid?.uuid}
+                    where: {uuidUser: uuidUser}
                 });
             return {code: 200, message: 'Успешное обновление счета'}
         } catch {

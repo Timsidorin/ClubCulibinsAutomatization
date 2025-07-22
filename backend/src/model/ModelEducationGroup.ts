@@ -119,17 +119,18 @@ export class ModelEducationGroup {
         }
     }
 
-    public async addChildrens(data: IAddChildren<Pick<IUser, 'tgUsername'>>): Promise<IAnswer<string>> {
+// Всё правильно, если childrens - это string[]
+    public async addChildrens(data: IAddChildren<string>): Promise<IAnswer<string>> {
         try {
-            let dataInsert: any = [];
-            data.childrens.forEach((children) => {
-                dataInsert.push({uuidGroup: data.uuidGroup, tgUsername: children});
-            });
-            console.log(dataInsert);
+            const dataInsert = data.childrens.map(uuidUser => ({
+                uuidGroup: data.uuidGroup,
+                uuidUser
+            }));
+
             await EducationGroupMember.bulkCreate(dataInsert);
             return {code: 200, message: 'Успешное заполнение группы'};
         } catch (error) {
-            throw new Error(`Произошла ошибка при создании`);
+            throw new Error(`Произошла ошибка при создании: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -144,10 +145,10 @@ export class ModelEducationGroup {
         }
     }
 
-    public async deleteChildren(tgUsername: string, uuidGroup: string): Promise<IAnswer<string>> {
+    public async deleteChildren(uuidUser: string, uuidGroup: string): Promise<IAnswer<string>> {
         try {
             await EducationGroupMember.destroy({
-                where: {tgUsername: tgUsername, uuidGroup: uuidGroup},
+                where: {uuidUser: uuidUser, uuidGroup: uuidGroup},
             })
             return {code: 200, message: 'Успешное удаление'};
         } catch {

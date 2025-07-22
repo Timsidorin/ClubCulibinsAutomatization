@@ -13,12 +13,9 @@ import {sequelize} from "../config/database/database";
 export class ModelBountyLog {
     public async create(data: IBalanceLog): Promise<boolean> {
         try {
-            const [teacher, child] = await Promise.all([
-                User.findOne({where: {tgUsername: data.tgTeacher}, attributes: ['uuid']}),
-                User.findOne({where: {tgUsername: data.tgUsername}, attributes: ['uuid']}),
-            ]);
+            const teacher= await User.findOne({where: {tgUsername: data.tgTeacher}, attributes: ['uuid']});
 
-            if (!teacher || !child) {
+            if (!teacher) {
                 return false;
             }
 
@@ -27,7 +24,7 @@ export class ModelBountyLog {
 
             await BountyLog.create({
                 uuidTeacher: teacher.uuid,
-                uuidChild: child.uuid,
+                uuidChild: data.uuidUser,
                 operation: data.operation,
                 money: data.summ,
                 createdAt: date,
@@ -59,12 +56,6 @@ export class ModelBountyLog {
         if (filters.tgTeacher) {
             teacher = await User.findOne({where: {tgUsername: filters.tgTeacher}, attributes: ['uuid']});
             filters.uuidTeacher = teacher?.uuid;
-        }
-
-        if (filters.tgChild) {
-            child = await User.findOne({where: {tgUsername: filters.tgChild}, attributes: ['uuid']});
-            delete filters.tgChild;
-            filters.uuidChild = child?.uuid;
         }
         //Удаляем ненужные поля
         delete filters.tgTeacher;

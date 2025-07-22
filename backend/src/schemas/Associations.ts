@@ -16,8 +16,8 @@ export function setupAssociations() {
     EducationGroup.belongsTo(User, {foreignKey: "uuidUser", targetKey: "uuid"});
 
     //User <-> EducationGroupMember (1:N)
-    User.hasMany(EducationGroupMember, {foreignKey: "tgUsername", sourceKey: "tgUsername"});
-    EducationGroupMember.belongsTo(User, {foreignKey: "tgUsername", targetKey: "tgUsername"});
+    User.hasMany(EducationGroupMember, {foreignKey: "uuidUser", sourceKey: "uuid"});
+    EducationGroupMember.belongsTo(User, {foreignKey: "uuidUser", targetKey: "uuid"});
 
     //EducationGroup <-> EducationGroupMember (1:N)
     EducationGroup.hasMany(EducationGroupMember, {foreignKey: "uuidGroup", sourceKey: "uuid"});

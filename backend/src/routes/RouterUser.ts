@@ -4,8 +4,9 @@ import bodyParser from "body-parser";
 //Контроллеры
 import {ControllerUser} from "../controllers/ControllerUser";
 //Схемы для валидации
-import {SchemasCreate, SchemasRegister, SchemasUpdateUser} from "../middleware/validator/schemas/SchemasUser";
-import {SchemasTgUsername} from "../middleware/validator/schemas/SchemasUniversal";
+import {SchemasCreate, SchemasRegister} from "../middleware/validator/schemas/SchemasUser";
+//Промежуточное
+import {checkTypeParametr} from "../middleware/checkTypeParametr";
 
 const router: Router = Router();
 const controllerUser: ControllerUser = new ControllerUser();
@@ -61,17 +62,19 @@ router.patch('/register', jsonParser, async (req: Request, res: Response) => {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 });
-router.get('/:tgUsername', async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Пользователь']
-    #swagger.parameters['tgUsername'] = {
-        description: 'tg Username'
-        }
     */
     try {
-        SchemasTgUsername.parse(req.params.tgUsername);
-        let userData = await controllerUser.getDataUser(req.params.tgUsername);
-        res.status(userData.code).send({data: userData});
+        let id = checkTypeParametr(req.params.id);
+        if (id) {
+            let userData = await controllerUser.getDataUser(id);
+            res.status(userData.code).send({data: userData});
+        } else {
+            res.status(500).send({message: 'Невалидные данные'});
+        }
+
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
@@ -91,7 +94,7 @@ router.get('/get/all', async (req: Request, res: Response) => {
         res.status(500).send({data: JSON.parse(e.message)});
     }
 });
-router.put('/:tgUsername', jsonParser, async (req: Request, res: Response) => {
+router.put('/:id', jsonParser, async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Пользователь']
     #swagger.parameters['body'] = {
@@ -108,22 +111,30 @@ router.put('/:tgUsername', jsonParser, async (req: Request, res: Response) => {
     }
     */
     try {
-        let data = {...req.body, tgUsername: req.params.tgUsername};
-        SchemasUpdateUser.parse(data);
-        let answer = await controllerUser.updateUser(data);
-        res.status(answer.code).send(answer);
+        let id = checkTypeParametr(req.params.id);
+        if (id) {
+            let data = {...req.body, ...id};
+            let answer = await controllerUser.updateUser(data);
+            res.status(answer.code).send(answer);
+        } else {
+            res.status(500).send({message: 'Невалидные данные'});
+        }
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 });
-router.delete('/:tgUsername', async (req: Request, res: Response) => {
+router.delete('/:id', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Пользователь']
     */
     try {
-        let answer = await controllerUser.deleteUser(req.params.tgUsername);
-        SchemasTgUsername.parse(req.params.tgUsername);
-        res.status(answer.code).send(answer);
+        let id = checkTypeParametr(req.params.id);
+        if (id) {
+            let answer = await controllerUser.deleteUser(id);
+            res.status(answer.code).send(answer);
+        } else {
+            res.status(500).send({message: 'Невалидные данные'});
+        }
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }
@@ -131,14 +142,19 @@ router.delete('/:tgUsername', async (req: Request, res: Response) => {
 router.get('/get/role', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Пользователь']
-       #swagger.parameters['tgUsername'] = {
+       #swagger.parameters['id'] = {
         description: 'Получить роль пользователя'
         }
     */
     try {
-        let paramsType = req.query.tgUsername;
-        let answer = await controllerUser.getUserRole(paramsType);
-        res.status(answer.code).send(answer)
+        let id = checkTypeParametr(String(req.query.id));
+        if (id) {
+            let answer = await controllerUser.getUserRole(id);
+            res.status(answer.code).send(answer)
+        } else {
+            res.status(500).send({message: 'Невалидные данные'});
+        }
+
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }

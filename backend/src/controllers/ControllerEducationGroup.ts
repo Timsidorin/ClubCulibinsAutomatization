@@ -18,7 +18,7 @@ export class ControllerEducationGroup {
         return await this.EducationGroup.getAllGroups(tgUsername);
     }
 
-    public async addChildrens(data: IAddChildren<Pick<IUser, 'tgUsername'>>): Promise<IAnswer<string>> {
+    public async addChildrens(data: IAddChildren<string>): Promise<IAnswer<string>> {
         return await this.EducationGroup.addChildrens(data);
     }
 
@@ -26,8 +26,8 @@ export class ControllerEducationGroup {
         return this.EducationGroup.deleteEducationGroup(uuid);
     }
 
-    public async deleteChildren(tgUsername: string, uuidGroup: string): Promise<IAnswer<string>> {
-        return await this.EducationGroup.deleteChildren(tgUsername, uuidGroup);
+    public async deleteChildren(uuidUser: string, uuidGroup: string): Promise<IAnswer<string>> {
+        return await this.EducationGroup.deleteChildren(uuidUser, uuidGroup);
     }
 
     public async connectWithGroup(tgUsername: string, uuid: string): Promise<IAnswer<string>> {

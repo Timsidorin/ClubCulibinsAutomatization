@@ -1,10 +1,13 @@
 import {sequelize} from "../config/database/database";
 import {Model, DataTypes} from "sequelize";
 
-export class EducationGroupMember extends Model {}
+export class EducationGroupMember extends Model {
+    declare uuidUser: string;
+    declare uuidGroup: string;
+}
 
 EducationGroupMember.init({
-    tgUsername: {
+    uuidUser: {
         type: DataTypes.STRING,
     },
     uuidGroup: {

@@ -12,11 +12,11 @@ export class ControllerBalance {
     private ModelBalance: ModelBalance = new ModelBalance();
     private ModelBountyLog: ModelBountyLog = new ModelBountyLog();
 
-    public async updateBalance(tgUsername: string, operation: boolean, summ: number, tgTeacher: string): Promise<IAnswer<object>> {
+    public async updateBalance(uuidUser: string, operation: boolean, summ: number, tgTeacher: string): Promise<IAnswer<object>> {
         //Обновляем баланс и создаем логи о транзакции
-        let updateOperation = await this.ModelBalance.updateBalance(tgUsername, operation, summ);
+        let updateOperation = await this.ModelBalance.updateBalance(uuidUser, operation, summ);
         let updateLog = await this.ModelBountyLog.create({
-            tgUsername: tgUsername,
+            uuidUser: uuidUser,
             operation: operation,
             summ: summ,
             tgTeacher: tgTeacher

@@ -21,7 +21,7 @@ router.patch("/update", jsonParser, async (req: Request, res: Response) => {
         in: 'body',
         description: 'Обновление баланса',
         schema: {
-            tgUsername: '@string',
+            uuidUser: '@string',
             tgTeacher: '@string',
             operation: true,
             summ: 0,
@@ -30,7 +30,7 @@ router.patch("/update", jsonParser, async (req: Request, res: Response) => {
     */
     try {
         SchemasUpdateBalance.parse(req.body);
-        let answer: IAnswer<object> = await controllerBalance.updateBalance(req.body.tgUsername, req.body.operation, req.body.summ, req.body.tgTeacher);
+        let answer: IAnswer<object> = await controllerBalance.updateBalance(req.body.uuidUser, req.body.operation, req.body.summ, req.body.tgTeacher);
         res.status(answer.code).send({message: answer});
     } catch (error: any) {
         res.status(500).send(JSON.parse(error));
@@ -57,7 +57,7 @@ router.get("/logs", jsonParser, async (req: Request, res: Response) => {
     #swagger.parameters['tgTeacher'] = {
         description: 'Получение логов по фильтрам'
     },
-        #swagger.parameters['tgChild'] = {
+        #swagger.parameters['uuidChild'] = {
         description: 'Получение логов по фильтрам'
     },
     #swagger.parameters['operation'] = {
@@ -79,7 +79,7 @@ router.get("/logs", jsonParser, async (req: Request, res: Response) => {
     try {
         let filters = {
             tgTeacher: req.query?.tgTeacher?.toString(),
-            tgChild: req.query?.tgChild?.toString(),
+            uuidChild: req.query?.uuidChild?.toString(),
             operation: req.query?.operation?.toString(),
             money: Number(req.query.summ),
             equalSign: Number(req.query.equalSign),

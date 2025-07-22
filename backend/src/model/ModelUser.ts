@@ -2,7 +2,7 @@
 import {User} from "../schemas/User";
 import {PersonalData} from "../schemas/PersonalData";
 //Типизация
-import {IUser} from "../interfaces/IUser";
+import {ITgUsername, IUser, IUuid} from "../interfaces/IUser";
 import {IAnswer} from "../interfaces/IAnswer";
 //Утилиты
 import {sequelize} from "../config/database/database";
@@ -40,10 +40,10 @@ export class ModelUser {
         }
     }
 
-    public async getDataUser(tgUsername: string): Promise<IAnswer<object>> {
+    public async getDataUser(id: ITgUsername | IUuid): Promise<IAnswer<object>> {
         try {
             const user = await User.findOne({
-                where: {tgUsername},
+                where: {...id},
                 include: [{
                     model: PersonalData,
                     required: false,
@@ -60,6 +60,7 @@ export class ModelUser {
                 }
             };
         } catch (e: any) {
+            console.log(e)
             return {code: e.parent.code, message: e.errors[0].path};
         }
     }
@@ -83,28 +84,33 @@ export class ModelUser {
 
     public async updateUser(data: IUser): Promise<IAnswer<string>> {
         try {
-            let userData = await User.findOne({
-                where: {tgUsername: data.tgUsername}
-            });
-            let uuid: string = userData?.dataValues.uuid ?? '';
+            let id: {uuidUser: string};
+            if (data.tgUsername) {
+                let userData = await User.findOne({
+                    where: {tgUsername: data.tgUsername}
+                });
+                id = {uuidUser: userData?.dataValues.uuid ?? ''};
+            } else {
+                id = {uuidUser: data.uuid}
+            }
+
             await PersonalData.update(
                 {...data},
                 {
-                    where: {
-                        uuidUser: uuid
-                    }
+                    where: {...id}
                 })
             return {code: 200, message: 'Успешное обновление'};
         } catch (e: any) {
+            console.log(e)
             return {code: 500, message: 'Произошла ошибка'};
         }
     }
 
-    public async deleteUser(tgUsername: string): Promise<IAnswer<string>> {
+    public async deleteUser(id: ITgUsername | IUuid): Promise<IAnswer<string>> {
         const transaction = await sequelize.transaction();
         try {
             const user = await User.findOne({
-                where: {tgUsername},
+                where: {...id},
                 transaction
             });
 
@@ -125,10 +131,10 @@ export class ModelUser {
         }
     }
 
-    public async getUserRole(tgUsername: unknown): Promise<IAnswer<string>> {
+    public async getUserRole(id: ITgUsername | IUuid): Promise<IAnswer<string>> {
         try {
             let user = await User.findOne({
-                where: {tgUsername: tgUsername}
+                where: {...id}
             });
             if (!user) {
                 return {code: 500, message: 'Такого юзера нет'};

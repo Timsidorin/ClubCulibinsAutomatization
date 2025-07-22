@@ -9,5 +9,5 @@ export const SchemasCreateEducationGroup = z.object({
 
 export const SchemasAddChildrens = z.object({
     uuidGroup: z.uuid(),
-    childrens: z.array(z.string().regex(/^@/)),
+    childrens: z.array(z.uuid()),
 })

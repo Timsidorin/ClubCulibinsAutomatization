@@ -11,5 +11,5 @@ export interface IEducationGroupCreate {
 
 export interface IAddChildren<T> {
     uuidGroup: string;
-    childrens: T[];
+    childrens: Array<T>;
 }

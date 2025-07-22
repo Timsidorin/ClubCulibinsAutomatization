@@ -72,7 +72,7 @@ router.post("/add-childrens", jsonParser, async (req: Request, res: Response) =>
         description: 'Создание учебной группы',
         schema: {
             uuidGroup: 'uuid',
-            childrens: ['tgUsername'],
+            childrens: ['uuid'],
         }
     }
     */
@@ -97,16 +97,16 @@ router.delete('/:uuid', jsonParser, async (req: Request, res: Response) => {
         res.status(500).send({message: JSON.parse(e.message)});
     }
 });
-router.delete('/children/:tgUsername/:uuidGroup', async (req: Request, res: Response) => {
+router.delete('/children/:uuidUser/:uuidGroup', async (req: Request, res: Response) => {
     /*
     #swagger.tags = ['Учебная группа']
     */
     try {
-        let tgUsername = req.params.tgUsername;
+        let uuidUser = req.params.uuidUser;
         let uuidGroup = req.params.uuidGroup;
-        SchemasTgUsername.parse(tgUsername);
+        SchemasUuid.parse(uuidUser);
         SchemasUuid.parse(uuidGroup);
-        let response = await controllerEducationGroup.deleteChildren(tgUsername, uuidGroup);
+        let response = await controllerEducationGroup.deleteChildren(uuidUser, uuidGroup);
         res.status(response.code).send({message: response.message});
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});

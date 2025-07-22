@@ -1,5 +1,5 @@
 export interface IBalanceLog {
-    tgUsername: string,
+    uuidUser: string,
     operation: boolean,
     summ: number,
     tgTeacher: string,
@@ -7,7 +7,7 @@ export interface IBalanceLog {
 
 export interface IFilterLogs {
     tgTeacher: string | undefined;
-    tgChild: string | undefined;
+    uuidChild: string | undefined;
     operation: string | undefined;
     money: number | undefined;
     equalSign: number | undefined;

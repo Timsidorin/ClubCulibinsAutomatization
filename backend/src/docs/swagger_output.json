@@ -101,7 +101,7 @@
         }
       }
     },
-    "/user/{tgUsername}": {
+    "/user/{id}": {
       "get": {
         "tags": [
           "Пользователь"
@@ -109,11 +109,10 @@
         "description": "",
         "parameters": [
           {
-            "name": "tgUsername",
+            "name": "id",
             "in": "path",
             "required": true,
-            "type": "string",
-            "description": "tg Username"
+            "type": "string"
           }
         ],
         "responses": {
@@ -129,7 +128,7 @@
         "description": "",
         "parameters": [
           {
-            "name": "tgUsername",
+            "name": "id",
             "in": "path",
             "required": true,
             "type": "string"
@@ -182,7 +181,7 @@
         "description": "",
         "parameters": [
           {
-            "name": "tgUsername",
+            "name": "id",
             "in": "path",
             "required": true,
             "type": "string"
@@ -227,7 +226,7 @@
         "description": "",
         "parameters": [
           {
-            "name": "tgUsername",
+            "name": "id",
             "description": "Получить роль пользователя",
             "in": "query",
             "type": "string"
@@ -331,7 +330,7 @@
                 "childrens": {
                   "type": "array",
                   "example": [
-                    "tgUsername"
+                    "uuid"
                   ],
                   "items": {
                     "type": "string"
@@ -369,7 +368,7 @@
         }
       }
     },
-    "/education-group/children/{tgUsername}/{uuidGroup}": {
+    "/education-group/children/{uuidUser}/{uuidGroup}": {
       "delete": {
         "tags": [
           "Учебная группа"
@@ -377,7 +376,7 @@
         "description": "",
         "parameters": [
           {
-            "name": "tgUsername",
+            "name": "uuidUser",
             "in": "path",
             "required": true,
             "type": "string"
@@ -505,7 +504,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "tgUsername": {
+                "uuidUser": {
                   "type": "string",
                   "example": "@string"
                 },
@@ -567,7 +566,7 @@
             "type": "string"
           },
           {
-            "name": "tgChild",
+            "name": "uuidChild",
             "description": "Получение логов по фильтрам",
             "in": "query",
             "type": "string"

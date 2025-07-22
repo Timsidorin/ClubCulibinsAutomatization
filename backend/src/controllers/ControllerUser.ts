@@ -1,6 +1,7 @@
 //Типизация
 import {IUser} from "../interfaces/IUser";
 import {User} from "../schemas/User";
+import {ITgUsername, IUuid} from "../interfaces/IUser";
 //Классы для агрегации
 import {ModelBalance} from "../model/ModelBalance";
 import {ModelUser} from "../model/ModelUser";
@@ -29,8 +30,8 @@ export class ControllerUser {
         return await this.User.registerUser(body);
     }
 
-    public async getDataUser(tgUsername: string): Promise<IAnswer<object>> {
-        return await this.User.getDataUser(tgUsername);
+    public async getDataUser(id: ITgUsername | IUuid): Promise<IAnswer<object>> {
+        return await this.User.getDataUser(id);
     }
 
     public async getAllUsers(typeUser: any): Promise<IAnswer<User[]>> {
@@ -41,11 +42,11 @@ export class ControllerUser {
         return await this.User.updateUser(data);
     }
 
-    public async deleteUser(tgId: string): Promise<IAnswer<string>> {
-        return await this.User.deleteUser(tgId);
+    public async deleteUser(id: ITgUsername | IUuid): Promise<IAnswer<string>> {
+        return await this.User.deleteUser(id);
     }
 
-    public async getUserRole(userName: unknown): Promise<IAnswer<string>> {
-        return await this.User.getUserRole(userName);
+    public async getUserRole(id: ITgUsername | IUuid): Promise<IAnswer<string>> {
+        return await this.User.getUserRole(id);
     }
 }
