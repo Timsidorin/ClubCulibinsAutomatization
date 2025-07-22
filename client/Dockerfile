@@ -9,15 +9,27 @@ RUN npm run build
 # --- Этап 2: Финальный образ с Python ("final") ---
 FROM python:3.10-slim
 WORKDIR /app
+
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем и устанавливаем Python зависимости
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ----- ИЗМЕНЕНИЕ ЗДЕСЬ -----
-# Копируем все файлы и папки из текущей директории (включая main.py и handlers/)
-COPY . .
+# Копируем только необходимые файлы приложения
+COPY main.py .
+COPY handlers/ ./handlers/
+COPY core/ ./core/
+COPY *.py ./
 
-# Копируем собранный фронтенд из этапа "builder"
-COPY --from=builder /app/dist ./static
+# Создаем директорию для статики и копируем собранный фронтенд
+RUN mkdir -p ./mini_app/dist
+COPY --from=builder /app/dist ./mini_app/dist
 
 EXPOSE 8002
+
+# Используем переменные окружения для хоста и порта
 CMD ["python", "main.py"]
