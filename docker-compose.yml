@@ -36,8 +36,8 @@ services:
 
   info_bot:
     build:
-      context: ./info_bot
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./info_bot/Dockerfile
     env_file:
       - .env
     ports:

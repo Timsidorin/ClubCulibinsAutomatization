@@ -8,7 +8,7 @@ import os
 
 class Configs(BaseSettings):
 
-    HOST: str = "localhost"
+    HOST: str = "0.0.0.0"
     PORT: int = 8001
     TOKEN_INFO_BOT: Optional[str] = Field(default="TOKEN_INFO_BOT", env="TOKEN_INFO_BOT")
 
