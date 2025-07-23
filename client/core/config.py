@@ -8,7 +8,7 @@ from pygments.lexers import configs
 
 class Configs(BaseSettings):
     # ------------ Веб-сервер ------------
-    HOST: str = "localhost"
+    HOST: str = "0.0.0.0"
     PORT: int = 8002
     BOT_TOKEN: Optional[str] = Field(default="TOKEN", env="BOT_TOKEN")
     PUBLIC_URL: Optional[str] = Field(default="PUBLIC_URL", env="PUBLIC_URL")
