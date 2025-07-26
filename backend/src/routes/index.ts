@@ -10,7 +10,7 @@ import swaggerFile from '../docs/swagger_output.json';
 
 export function useRouter(app: Express): void {
     //Сваггер
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
     //Пользователь
     app.use('/user', RouterUser);
     //Учебная группа

@@ -18,11 +18,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 app = FastAPI()
 
-origins = [
-    "http://localhost",
-    "http://localhost:5173",
-    "http://localhost:3000",
-]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -147,5 +143,4 @@ async def send_notification_endpoint(payload: NotificationPayload):
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host=configs.HOST, port=configs.PORT)

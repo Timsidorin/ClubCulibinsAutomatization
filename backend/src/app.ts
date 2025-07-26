@@ -23,8 +23,8 @@ async function startServer() {
         // Подключаем роутер
         useRouter(app);
 
-        app.listen(port, () => {
-            console.log(`Swagger UI: http://localhost:${port}/api-docs`);
+        app.listen(port, '0.0.0.0', () => {
+            console.log(`Swagger UI: http://localhost:${port}/docs`);
         });
 
     } catch (error) {

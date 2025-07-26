@@ -11,7 +11,8 @@ export default defineConfig({
     vueDevTools(),
   ],
   define: {
-    __BASE__URL__: JSON.stringify('http://localhost:3000'),
+    __BASE__URL__: JSON.stringify('https://147.45.146.30/api'),
+    __INFO_BOT__URL: JSON.stringify('https://147.45.146.30/notifications'),
   },
   resolve: {
     alias: {

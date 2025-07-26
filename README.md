@@ -60,7 +60,11 @@
 ``INFO_BOT_URL`` - Хост бота уведомлений
 
 
+### Запуск Docker
 
+``docker compose up -d`` - run containers
+
+``docker-compose down``  - stop containers
 
 
 

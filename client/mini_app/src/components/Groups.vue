@@ -360,17 +360,25 @@ export default {
     };
 
     const fetchGroups = async () => {
-      isLoading.value = true;
-      errorMessage.value = '';
-      try {
+    isLoading.value = true;
+    errorMessage.value = '';
+    try {
         const response = await groupsApiClient.getAllGroups();
         const groupsData = response?.message?.groups || [];
         if (Array.isArray(groupsData)) {
             groups.value = groupsData.map(groupData => {
                 const personalData = groupData.User?.PersonalDatum;
                 let teacherNameFormatted = 'Не назначен';
-                if (personalData?.lastName && personalData?.name && personalData?.secondName) {
-                    teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.${personalData.secondName[0]}.`;
+
+                // Исправленная логика форматирования имени
+                if (personalData?.lastName && personalData?.name) {
+                    if (personalData.secondName) {
+                        // Если есть отчество: Иванов И.И.
+                        teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.${personalData.secondName[0]}.`;
+                    } else {
+                        // Если нет отчества: Иванов И.
+                        teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.`;
+                    }
                 }
 
                 const participantIds = (groupData.EducationGroupMembers || [])
@@ -392,14 +400,15 @@ export default {
             groups.value = [];
             errorMessage.value = 'Получены некорректные данные от сервера.';
         }
-      } catch (error) {
-          console.error('Ошибка при загрузке групп:', error);
-          errorMessage.value = 'Не удалось загрузить список групп. Попробуйте позже.';
-          groups.value = [];
-      } finally {
-          isLoading.value = false;
-      }
-    };
+    } catch (error) {
+        console.error('Ошибка при загрузке групп:', error);
+        errorMessage.value = 'Не удалось загрузить список групп. Попробуйте позже.';
+        groups.value = [];
+    } finally {
+        isLoading.value = false;
+    }
+};
+
 
     const fetchStudents = async () => {
       try {

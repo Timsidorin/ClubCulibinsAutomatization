@@ -3,17 +3,16 @@ from pydantic import Field
 from typing import Optional
 import os
 
-from pygments.lexers import configs
 
 
 class Configs(BaseSettings):
     # ------------ Веб-сервер ------------
     HOST: str = "0.0.0.0"
     PORT: int = 8002
-    BOT_TOKEN: Optional[str] = Field(default="TOKEN", env="BOT_TOKEN")
-    PUBLIC_URL: Optional[str] = Field(default="PUBLIC_URL", env="PUBLIC_URL")
-    API_URL: Optional[str] = Field(default="API_URL", env="API_URL")
-    INFO_BOT_URL: Optional[str] = Field(default="INFO_BOT_URL", env="INFO_BOT_URL")
+    BOT_TOKEN: Optional[str] = Field(default=None, env="BOT_TOKEN")
+    PUBLIC_URL: Optional[str] = Field(default=None, env="PUBLIC_URL")
+    API_URL: Optional[str] = Field(default=None, env="API_URL")
+    INFO_BOT_URL: Optional[str] = Field(default="http://localhost:8001", env="INFO_BOT_URL")
 
 
     model_config = SettingsConfigDict(
