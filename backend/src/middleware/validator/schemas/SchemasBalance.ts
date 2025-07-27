@@ -10,7 +10,6 @@ export const SchemasUpdateBalance = z.object({
 export const SchemasLogsBalance = z.object({
     tgTeacher: z.optional(z.string().regex(/^@/)),
     uuidUser: z.optional(z.uuid()),
-    operation: z.optional(z.boolean('FALSE - вычитание TRUE - сложение')),
     equalSign: z.optional(z.union([z.number(), z.nan()])),
     summ: z.optional(z.union([z.number(), z.nan()])),
 })
