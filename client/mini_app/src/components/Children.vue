@@ -26,7 +26,6 @@
 
     <div v-else class="children-list">
       <div v-for="child in filteredChildren" :key="child.id" class="child-item">
-        <input type="checkbox" :value="child.id" v-model="selectedChildren">
         <div class="child-details">
           <h4>
             {{ child.lastName }}  {{ child.name }}  {{ child.secondName }}
@@ -398,9 +397,7 @@ export default {
   position: relative;
 }
 
-.child-item input[type="checkbox"] {
-  margin-right: 8px;
-}
+
 
 .child-details {
   flex: 1;

@@ -94,7 +94,17 @@
             <label for="telegramUsername">Username Telegram *</label>
             <div class="input-with-prefix">
               <span class="input-prefix">@</span>
-              <input id="telegramUsername" v-model="newTeacher.telegramUsername" type="text" class="form-input with-prefix" placeholder="username" required @input="validateUsername" />
+             <input 
+                  id="telegramUsername" 
+                  v-model="newTeacher.telegramUsername" 
+                  type="text" 
+                  class="form-input with-prefix" 
+                  :class="{ 'disabled': isEditing }"
+                  placeholder="username" 
+                  required 
+                  :disabled="isEditing"
+                  @input="validateUsername" 
+                />
             </div>
             <div v-if="usernameError" class="error-message">{{ usernameError }}</div>
           </div>
@@ -139,13 +149,13 @@ export default {
     const newTeacher = ref(new Teachers());
 
     const isFormValid = computed(() => {
-      return (
-        newTeacher.value.lastName.trim() &&
-        newTeacher.value.firstName.trim() &&
-        newTeacher.value.telegramUsername.trim() &&
-        !usernameError.value
-      );
-    });
+  return (
+    newTeacher.value.lastName.trim() &&
+    newTeacher.value.firstName.trim() &&
+    newTeacher.value.telegramUsername.trim() &&
+    (isEditing.value || !usernameError.value) 
+  );
+});
 
     const filteredTeachers = computed(() => {
       if (!searchQuery.value) return teachers.value;
@@ -227,18 +237,23 @@ export default {
     };
 
     const editTeacher = (teacher) => {
-      isEditing.value = true;
-      currentTeacherId.value = teacher.id;
-      newTeacher.value = new Teachers({
-        id: teacher.id,
-        firstName: teacher.firstName,
-        lastName: teacher.lastName,
-        middleName: teacher.middleName,
-        telegramUsername: teacher.telegramUsername,
-        email: teacher.email
-      });
-      showModal.value = true;
-    };
+  isEditing.value = true;
+  currentTeacherId.value = teacher.id;
+  
+  const cleanUsername = teacher.telegramUsername.startsWith('@') 
+    ? teacher.telegramUsername.slice(1) 
+    : teacher.telegramUsername;
+  
+  newTeacher.value = new Teachers({
+    id: teacher.id,
+    firstName: teacher.firstName, 
+    lastName: teacher.lastName,
+    middleName: teacher.middleName,
+    telegramUsername: cleanUsername, 
+    email: teacher.email
+  });
+  showModal.value = true;
+};
 
     const closeModal = () => {
       showModal.value = false;
@@ -252,10 +267,14 @@ export default {
     };
 
     const validateUsername = () => {
-      const username = newTeacher.value.telegramUsername;
-      if (username.startsWith('@')) {
-        newTeacher.value.telegramUsername = username.slice(1);
-      }
+  if (isEditing.value) {
+    usernameError.value = '';
+    return;
+  }
+  const username = newTeacher.value.telegramUsername;
+  if (username.startsWith('@')) {
+    newTeacher.value.telegramUsername = username.slice(1);
+  }
 
       const usernameRegex = /^[a-zA-Z0-9_]{5,32}$/;
       if (username && !usernameRegex.test(newTeacher.value.telegramUsername)) {
@@ -781,6 +800,19 @@ export default {
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.form-input:disabled {
+  background-color: var(--tg-border);
+  color: var(--tg-text-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-input.disabled {
+  background-color: var(--tg-border);
+  color: var(--tg-text-light);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 </style>
 

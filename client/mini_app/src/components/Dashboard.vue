@@ -60,27 +60,26 @@
               </button>
             </div>
 
-            <div class="filters-grid">
-              <div class="filter-group">
-                <label class="filter-label">Учитель</label>
-                <select class="filter-select" v-model="filters.tgTeacher" @change="applyFiltersImmediate">
-                  <option value="">Все</option>
-                  <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.tgUsername">
-                    {{ teacher.firstName }} {{ teacher.lastName }}
-                  </option>
-                </select>
-              </div>
+                   <div class="filters-grid">
+                         <div class="filter-group">
+  <label class="filter-label">Учитель</label>
+  <select class="filter-select" v-model="filters.tgTeacher" @change="applyFiltersImmediate">
+    <option value="">Все</option>
+    <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.telegramUsername">
+      {{ teacher.firstName }} {{ teacher.lastName }}
+    </option>
+  </select>
+</div>
 
-              <div class="filter-group">
-                <label class="filter-label">Ребенок</label>
-                <select class="filter-select" v-model="filters.tgChild" @change="applyFiltersImmediate">
-                  <option value="">Все</option>
-                  <option v-for="child in children" :key="child.uuid" :value="child.tgUsername">
-                    {{ child.PersonalDatum?.name }} {{ child.PersonalDatum?.lastName }}
-                  </option>
-                </select>
-              </div>
-
+                        <div class="filter-group">
+              <label class="filter-label">Ребенок</label>
+              <select class="filter-select" v-model="filters.tgChild" @change="applyFiltersImmediate">
+                <option value="">Все</option>
+                <option v-for="child in children" :key="child.uuid" :value="child.uuid">
+                  {{ child.PersonalDatum?.name }} {{ child.PersonalDatum?.lastName }}
+                </option>
+              </select>
+            </div>
               <div class="filter-group">
                 <label class="filter-label">Операция</label>
                 <select class="filter-select" v-model="filters.operation" @change="applyFiltersImmediate">
@@ -248,21 +247,19 @@ export default {
       summ: '',
       startDate: '',
       endDate: '',
-      equalSign: '1'
+      equalSign: 1
     });
 
     let filterTimeout = null;
 
     const formatDate = (date) => {
-      if (!date) return '';
-      return new Date(date).toLocaleString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    };
+  if (!date) return '';
+  return new Date(date).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
 
     const updateFeather = () => {
       nextTick(() => {
@@ -285,51 +282,57 @@ export default {
       }
     };
 
-    const applyFilters = () => {
-      if (filterTimeout) {
-        clearTimeout(filterTimeout);
-      }
+   const applyFilters = () => {
+  if (filterTimeout) {
+    clearTimeout(filterTimeout);
+  }
 
-      filterTimeout = setTimeout(() => {
-        const filterData = {};
+  filterTimeout = setTimeout(() => {
+    const filterData = {};
 
-        if (filters.value.tgTeacher) filterData.tgTeacher = filters.value.tgTeacher;
-        if (filters.value.tgChild) filterData.tgChild = filters.value.tgChild;
-        if (filters.value.operation) filterData.operation = filters.value.operation;
-        if (filters.value.summ) filterData.summ = filters.value.summ;
-        if (filters.value.startDate) filterData.startDate = filters.value.startDate;
-        if (filters.value.endDate) filterData.endDate = filters.value.endDate;
-        if (filters.value.equalSign && filters.value.summ) filterData.equalSign = filters.value.equalSign;
+    // Используем правильные имена параметров как в API
+    if (filters.value.tgTeacher) filterData.tgTeacher = filters.value.tgTeacher;
+    if (filters.value.tgChild) filterData.uuidChild = filters.value.tgChild; // ИСПРАВЛЕНО
+    if (filters.value.operation) filterData.operation = filters.value.operation;
+    if (filters.value.summ) filterData.summ = filters.value.summ;
+    
+    if (filters.value.startDate) {
+      filterData.startDate = filters.value.startDate + 'T00:00:00.000Z';
+    }
+    if (filters.value.endDate) {
+      filterData.endDate = filters.value.endDate + 'T23:59:59.999Z';
+    }
+    
+    if (filters.value.equalSign && filters.value.summ) {
+      filterData.equalSign = parseInt(filters.value.equalSign);
+    }
 
-        fetchLogs(filterData);
-      }, 300);
-    };
+    fetchLogs(filterData);
+  }, 300);
+};
 
-    const applyFiltersImmediate = () => {
-      const filterData = {};
+const applyFiltersImmediate = () => {
+  const filterData = {};
 
-      if (filters.value.tgTeacher) filterData.tgTeacher = filters.value.tgTeacher;
-      if (filters.value.tgChild) filterData.tgChild = filters.value.tgChild;
-      if (filters.value.operation) filterData.operation = filters.value.operation;
-      if (filters.value.summ) filterData.summ = filters.value.summ;
-      if (filters.value.startDate) filterData.startDate = filters.value.startDate;
-      if (filters.value.endDate) filterData.endDate = filters.value.endDate;
-      if (filters.value.equalSign && filters.value.summ) filterData.equalSign = filters.value.equalSign;
-      fetchLogs(filterData);
-    };
+  if (filters.value.tgTeacher) filterData.tgTeacher = filters.value.tgTeacher;
+  if (filters.value.tgChild) filterData.uuidChild = filters.value.tgChild;
+  if (filters.value.operation) filterData.operation = filters.value.operation;
+  if (filters.value.summ) filterData.summ = filters.value.summ;
+  
+  if (filters.value.startDate) {
+    filterData.startDate = filters.value.startDate + 'T00:00:00.000Z';
+  }
+  if (filters.value.endDate) {
+    filterData.endDate = filters.value.endDate + 'T23:59:59.999Z';
+  }
+  
+  if (filters.value.equalSign && filters.value.summ) {
+    filterData.equalSign = parseInt(filters.value.equalSign);
+  }
+  
+  fetchLogs(filterData);
+};
 
-    const clearFilters = () => {
-      filters.value = {
-        tgTeacher: '',
-        tgChild: '',
-        operation: '',
-        summ: '',
-        startDate: '',
-        endDate: '',
-        equalSign: '1'
-      };
-      fetchLogs();
-    };
 
     const fetchTeachers = async () => {
       try {
@@ -351,6 +354,19 @@ export default {
         teachers.value = [];
       }
     };
+
+    const clearFilters = () => {
+  filters.value = {
+    tgTeacher: '',
+    tgChild: '',
+    operation: '',
+    summ: '',
+    startDate: '',
+    endDate: '',
+    equalSign: 1 
+  };
+  fetchLogs();
+};
 
     const fetchChildren = async () => {
       try {
