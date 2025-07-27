@@ -370,26 +370,26 @@ export default {
                 const personalData = groupData.User?.PersonalDatum;
                 let teacherNameFormatted = 'Не назначен';
 
-                // Исправленная логика форматирования имени
                 if (personalData?.lastName && personalData?.name) {
                     if (personalData.secondName) {
-                        // Если есть отчество: Иванов И.И.
                         teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.${personalData.secondName[0]}.`;
                     } else {
-                        // Если нет отчества: Иванов И.
+
                         teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.`;
                     }
                 }
 
-                const participantIds = (groupData.EducationGroupMembers || [])
-                    .map(member => member.User?.uuid)
-                    .filter(Boolean);
+                const participantIds = [...new Set(
+                    (groupData.EducationGroupMembers || [])
+                        .map(member => member.User?.uuid)
+                        .filter(Boolean)
+                )];
 
                 return {
                     id: groupData.uuid || Date.now().toString(),
                     name: groupData.name || 'Без названия',
                     description: groupData.description || '',
-                    studentsCount: (groupData.EducationGroupMembers || []).length,
+                    studentsCount: participantIds.length,
                     teacherName: teacherNameFormatted,
                     studentIds: participantIds,
                     teacherId: groupData.uuidUser || null,
@@ -408,7 +408,6 @@ export default {
         isLoading.value = false;
     }
 };
-
 
     const fetchStudents = async () => {
       try {
