@@ -15,7 +15,7 @@ async function startServer() {
         const port = 3000;
 
         app.use(cors({
-            origin: '*',
+            origin: [String(process.env.DATABASE_PASSWORD), String(process.env.DATABASE_PASSWORD)],
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization']
         }));
