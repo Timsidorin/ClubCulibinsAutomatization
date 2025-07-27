@@ -2,14 +2,16 @@
 import {IUser} from "../interfaces/IUser";
 import {User} from "../schemas/User";
 import {ITgUsername, IUuid} from "../interfaces/IUser";
+import {IAnswer} from "../interfaces/IAnswer";
 //Классы для агрегации
 import {ModelBalance} from "../model/ModelBalance";
 import {ModelUser} from "../model/ModelUser";
-import {IAnswer} from "../interfaces/IAnswer";
+import {ModelEducationGroup} from "../model/ModelEducationGroup";
 
 export class ControllerUser {
     User: ModelUser = new ModelUser();
     Balance: ModelBalance = new ModelBalance();
+    Group: ModelEducationGroup = new ModelEducationGroup();
 
     public async createUser(body: Omit<IUser, 'tgId'>): Promise<IAnswer<string>> {
         try {
@@ -43,7 +45,17 @@ export class ControllerUser {
     }
 
     public async deleteUser(id: ITgUsername | IUuid): Promise<IAnswer<string>> {
-        return await this.User.deleteUser(id);
+        try {
+            let role = await this.User.getUserRole(id);
+            if (role.message=== '3') {
+                await this.Group.deleteChildren(id);
+                await this.Balance.deleteBalance(id);
+            }
+            return await this.User.deleteUser(id);
+        } catch {
+            return {code: 500, message: 'Произошла ошибка'};
+        }
+
     }
 
     public async getUserRole(id: ITgUsername | IUuid): Promise<IAnswer<string>> {

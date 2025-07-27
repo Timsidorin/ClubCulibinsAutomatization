@@ -3,6 +3,7 @@ import {Balance} from "../schemas/Balance";
 import {User} from "../schemas/User";
 //Типизация
 import {IAnswer} from "../interfaces/IAnswer";
+import {ITgUsername, IUuid} from "../interfaces/IUser";
 //Утилиты
 import {sequelize} from "../config/database/database";
 
@@ -64,6 +65,18 @@ export class ModelBalance {
             return {code: 200, message: balances.length > 0 ? balances : 'Нет данных'}
         } catch {
             return {code: 500, message: 'Произошла ошибка'}
+        }
+    }
+
+    public async deleteBalance(uuidUser: ITgUsername | IUuid): Promise<void> {
+        try {
+            if (typeof uuidUser === 'object' && uuidUser !== null && 'uuid' in uuidUser) {
+                let r = await Balance.destroy({
+                    where: {uuidUser: uuidUser.uuid}
+                });
+            }
+        } catch {
+            throw new Error('Произошла ошибка');
         }
     }
 }

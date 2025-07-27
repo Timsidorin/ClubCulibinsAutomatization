@@ -5,7 +5,7 @@ import bodyParser from "body-parser";
 import {ControllerEducationGroup} from "../controllers/ControllerEducationGroup";
 //Схемы для валидации
 import {SchemasCreateEducationGroup, SchemasAddChildrens} from "../middleware/validator/schemas/SchemasEducationGroup";
-import {SchemasTgUsername, SchemasUuidAndTgName, SchemasUuid} from "../middleware/validator/schemas/SchemasUniversal";
+import {SchemasUuidAndTgName, SchemasUuid} from "../middleware/validator/schemas/SchemasUniversal";
 
 const router: Router = Router();
 const controllerEducationGroup: ControllerEducationGroup = new ControllerEducationGroup();
@@ -106,8 +106,12 @@ router.delete('/children/:uuidUser/:uuidGroup', async (req: Request, res: Respon
         let uuidGroup = req.params.uuidGroup;
         SchemasUuid.parse(uuidUser);
         SchemasUuid.parse(uuidGroup);
-        let response = await controllerEducationGroup.deleteChildren(uuidUser, uuidGroup);
-        res.status(response.code).send({message: response.message});
+        if (uuidUser) {
+            let response = await controllerEducationGroup.deleteChildren(uuidUser, uuidGroup);
+            res.status(response.code).send({message: response.message});
+        } else {
+            res.status(500).send({message: 'Произошла ошибка'});
+        }
     } catch (e: any) {
         res.status(500).send({message: JSON.parse(e.message)});
     }

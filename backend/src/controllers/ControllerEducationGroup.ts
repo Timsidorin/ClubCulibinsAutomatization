@@ -1,6 +1,6 @@
 //Типизация
 import {IEducationGroupCreate, IAddChildren} from "../interfaces/IEducationGroup";
-import {IUser} from "../interfaces/IUser";
+import {ITgUsername, IUuid} from "../interfaces/IUser";
 import {IAnswer} from "../interfaces/IAnswer";
 //Модель из БД
 import {EducationGroup} from "../schemas/EducationGroup";
@@ -26,7 +26,7 @@ export class ControllerEducationGroup {
         return this.EducationGroup.deleteEducationGroup(uuid);
     }
 
-    public async deleteChildren(uuidUser: string, uuidGroup: string): Promise<IAnswer<string>> {
+    public async deleteChildren(uuidUser: ITgUsername | IUuid | string, uuidGroup: string): Promise<IAnswer<string>> {
         return await this.EducationGroup.deleteChildren(uuidUser, uuidGroup);
     }
 

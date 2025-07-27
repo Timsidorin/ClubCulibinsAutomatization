@@ -6,7 +6,7 @@ import {Balance} from "../schemas/Balance";
 import {EducationGroupMember} from "../schemas/EducationGroupMember";
 //Типизация
 import {IAddChildren, IEducationGroupCreate} from "../interfaces/IEducationGroup";
-import {IUser} from "../interfaces/IUser";
+import {ITgUsername, IUuid} from "../interfaces/IUser";
 import {IAnswer} from "../interfaces/IAnswer";
 //Утилиты
 import {sequelize} from "../config/database/database";
@@ -137,18 +137,29 @@ export class ModelEducationGroup {
         try {
             await EducationGroup.destroy({
                 where: {uuid}
-            })
+            });
+            await EducationGroupMember.destroy({
+                where: {uuidGroup: uuid}
+            });
             return {code: 200, message: 'Успешное удаление'};
         } catch {
             throw new Error(`Произошла ошибка, обратитесь к админу!`);
         }
     }
 
-    public async deleteChildren(uuidUser: string, uuidGroup: string): Promise<IAnswer<string>> {
+    public async deleteChildren(uuidUser: ITgUsername | IUuid | string, uuidGroup?: string): Promise<IAnswer<string>> {
         try {
-            await EducationGroupMember.destroy({
-                where: {uuidUser: uuidUser, uuidGroup: uuidGroup},
-            })
+            if (uuidGroup) {
+                await EducationGroupMember.destroy({
+                    where: {uuidUser: uuidUser, uuidGroup: uuidGroup},
+                })
+            } else {
+                if (typeof uuidUser === 'object' && uuidUser !== null && 'uuid' in uuidUser) {
+                    await EducationGroupMember.destroy({
+                        where: {uuidUser: uuidUser.uuid},
+                    });
+                }
+            }
             return {code: 200, message: 'Успешное удаление'};
         } catch {
             throw new Error(`Обратитесь к админу`);
