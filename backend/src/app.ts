@@ -15,7 +15,7 @@ async function startServer() {
         const port = 3000;
 
         app.use(cors({
-            origin: [String(process.env.DATABASE_PASSWORD), String(process.env.DATABASE_PASSWORD)],
+            origin: process.env.CORS_HTTPS || process.env.CORS_HTTP || false,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization']
         }));
@@ -32,5 +32,3 @@ async function startServer() {
         process.exit(1);
     }
 }
-
-startServer();
