@@ -509,7 +509,7 @@ export default {
       console.error('Ошибка при удалении группы:', error);
       errorMessage.value = 'Не удалось удалить группу. Попробуйте снова.';
     } finally {
-      isLoading.value = false; 
+      isLoading.value = false;
     }
   }
 };
@@ -574,7 +574,7 @@ export default {
         return;
       }
 
-      const isConfirmed = confirm(
+      const isConfirmed = Telegram.WebApp.showConfirm(
         `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`
       );
 
