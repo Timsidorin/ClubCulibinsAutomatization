@@ -326,20 +326,27 @@ export default {
       }
     };
 
-    const deleteTeacher = async (teacher) => {
-  if (Telegram.WebApp.showConfirm(`Вы уверены, что хотите удалить учителя "${teacher.fullName}"?`)) {
-    isLoading.value = true;
-    errorMessage.value = '';
-    try {
-      await apiClient.deleteTeacher(teacher.telegramUsername);
-      await fetchTeachers();
-    } catch (error) {
-      console.error('Ошибка при удалении учителя:', error);
-      errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
-      isLoading.value = false;
-    }
-  }
-};
+    const deleteTeacher = (teacher) => {
+      Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите удалить учителя "${teacher.fullName}"?`,
+        async (confirmed) => {
+          if (!confirmed) return;
+
+          isLoading.value = true;
+          errorMessage.value = '';
+
+          try {
+            await apiClient.deleteTeacher(teacher.telegramUsername);
+            await fetchTeachers();
+          } catch (error) {
+            console.error('Ошибка при удалении учителя:', error);
+            errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
+          } finally {
+            isLoading.value = false;
+          }
+        }
+      );
+    };
 
 
     const toggleActions = (teacherId) => {

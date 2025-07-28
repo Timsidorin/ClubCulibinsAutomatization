@@ -327,36 +327,38 @@ export default {
       );
     });
 
-    const sendGroupBalance = async (group) => {
+    const sendGroupBalance = (group) => {
       if (!group.urlName || group.urlName.trim() === '') {
         showAppAlert('У этой группы не указана публичная ссылка. Добавьте ее в настройках группы.');
         return;
       }
 
-      const isConfirmed = Telegram.WebApp.showConfirm(`Вы уверены, что хотите отправить отчет по балансу группы "${group.name}" в связанный чат?`);
-      if (!isConfirmed) {
-        return;
-      }
+      Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите отправить отчет по балансу группы "${group.name}" в связанный чат?`,
+        async (confirmed) => {
+          if (!confirmed) return;
 
-      isLoading.value = true;
-      errorMessage.value = '';
+          isLoading.value = true;
+          errorMessage.value = '';
 
-      try {
-        const reportText = `Отчет по балансу для группы: ${group.name}`;
+          try {
+            const reportText = `Отчет по балансу для группы: ${group.name}`;
 
-        await InfoBotAPIClient.sendNotification({
-          chat_identifier: group.urlName,
-          uuid_group:group.id,
-          text: reportText
-        });
-      } catch (error) {
-        console.error('Ошибка при отправке отчета о балансе:', error);
-        const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
-        errorMessage.value = `Не удалось отправить отчет: ${detail}`;
-        showAppAlert(errorMessage.value);
-      } finally {
-        isLoading.value = false;
-      }
+            await InfoBotAPIClient.sendNotification({
+              chat_identifier: group.urlName,
+              uuid_group: group.id,
+              text: reportText
+            });
+          } catch (error) {
+            console.error('Ошибка при отправке отчета о балансе:', error);
+            const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+            errorMessage.value = `Не удалось отправить отчет: ${detail}`;
+            showAppAlert(errorMessage.value);
+          } finally {
+            isLoading.value = false;
+          }
+        }
+      );
     };
 
     const fetchGroups = async () => {
@@ -574,40 +576,40 @@ export default {
   }
 };
 
-    const removeStudentFromGroup = async (student) => {
+    const removeStudentFromGroup = (student) => {
       if (!student.id || !currentGroup.value.id) {
         showAppAlert('Ошибка: Не удается определить студента или группу');
         return;
       }
 
-      const isConfirmed = Telegram.WebApp.showConfirm(
-        `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`
+      Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`,
+        async (confirmed) => {
+          if (!confirmed) return;
+
+          isLoading.value = true;
+          errorMessage.value = '';
+
+          try {
+            await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
+
+            selectedStudents.value = selectedStudents.value.filter(
+              id => id !== student.id
+            );
+
+            await fetchGroups();
+            await fetchStudents();
+
+          } catch (error) {
+            console.error('Ошибка при удалении студента из группы:', error);
+            const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+            errorMessage.value = `Не удалось удалить студента: ${detail}`;
+            showAppAlert(errorMessage.value);
+          } finally {
+            isLoading.value = false;
+          }
+        }
       );
-
-      if (!isConfirmed) {
-        return;
-      }
-
-      isLoading.value = true;
-      errorMessage.value = '';
-
-      try {
-        await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
-
-        selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
-
-        await fetchGroups();
-        await fetchStudents();
-
-
-      } catch (error) {
-        console.error('Ошибка при удалении студента из группы:', error);
-        const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
-        errorMessage.value = `Не удалось удалить студента: ${detail}`;
-        showAppAlert(errorMessage.value);
-      } finally {
-        isLoading.value = false;
-      }
     };
 
     const isStudentInGroup = (studentId) => {
@@ -649,19 +651,26 @@ export default {
       }
     };
 
-    const unassignTeacher = async (group) => {
-      if (Telegram.WebApp.showConfirm(`Вы уверены, что хотите отвязать учителя от группы "${group.name}"?`)) {
-        isLoading.value = true;
-        errorMessage.value = '';
-        try {
-          await groupsApiClient.UntieTeacher(group.id);
-          await fetchGroups();
-        } catch (error) {
-          errorMessage.value = 'Не удалось отвязать учителя. Попробуйте снова.';
-        } finally {
-          isLoading.value = false;
+    const unassignTeacher = (group) => {
+      Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите отвязать учителя от группы "${group.name}"?`,
+        async (confirmed) => {
+          if (!confirmed) return;
+
+          isLoading.value = true;
+          errorMessage.value = '';
+
+          try {
+            await groupsApiClient.UntieTeacher(group.id);
+            await fetchGroups();
+          } catch (error) {
+            console.error('Ошибка при отвязке учителя:', error);
+            errorMessage.value = 'Не удалось отвязать учителя. Попробуйте снова.';
+          } finally {
+            isLoading.value = false;
+          }
         }
-      }
+      );
     };
 
     const updateFeather = () => {

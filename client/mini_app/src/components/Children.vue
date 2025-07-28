@@ -278,25 +278,34 @@ export default {
       }
     };
 
-    const deleteChild = async (child) => {
-  if (!child.id) {
-    alert('Нет uuid для удаления');
-    return;
-  }
-  if (Telegram.WebApp.showConfirm(`Вы уверены, что хотите удалить ребенка "${child.name} ${child.lastName}"?`)) {
-    isLoading.value = true;
-    errorMessage.value = '';
-    try {
-      await apiClient.deleteChild(child.id);
-      await loadChildren();
-    } catch (error) {
-      if (error.response) console.error('Ответ сервера (ошибка удаления):', error.response);
-      errorMessage.value = 'Не удалось удалить ребенка. Попробуйте снова.';
-      isLoading.value = false;
-    }
+    const deleteChild = (child) => {
+      if (!child.id) {
+        alert('Нет uuid для удаления');
+        return;
+      }
 
-  }
-};
+      Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите удалить ребенка "${child.name} ${child.lastName}"?`,
+        async (confirmed) => {
+          if (!confirmed) return;
+
+          isLoading.value = true;
+          errorMessage.value = '';
+
+          try {
+            await apiClient.deleteChild(child.id);
+            await loadChildren();
+          } catch (error) {
+            if (error.response) {
+              console.error('Ответ сервера (ошибка удаления):', error.response);
+            }
+            errorMessage.value = 'Не удалось удалить ребенка. Попробуйте снова.';
+          } finally {
+            isLoading.value = false;
+          }
+        }
+      );
+    };
 
 
     const initializeTelegram = () => {
