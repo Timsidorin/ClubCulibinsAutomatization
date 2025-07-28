@@ -141,6 +141,16 @@ export default {
       note: ''
     });
 
+
+    const updateFeather = () => {
+  nextTick(() => {
+    if (window.feather) {
+      window.feather.replace();
+    }
+  });
+};
+
+
     const filteredChildren = computed(() => {
       if (!searchQuery.value) return children.value;
       return children.value.filter(child =>
@@ -167,54 +177,54 @@ export default {
     };
 
     const loadChildren = async () => {
-      isLoading.value = true;
-      errorMessage.value = '';
-      try {
-        const [childrenResponse, balancesResponse] = await Promise.all([
-          apiClient.getAllChildren(3),
-          balanceApiClient.ChildBalanceGet()
-        ]);
+  isLoading.value = true;
+  errorMessage.value = '';
+  try {
+    const [childrenResponse, balancesResponse] = await Promise.all([
+      apiClient.getAllChildren(3),
+      balanceApiClient.ChildBalanceGet()
+    ]);
 
-        let childrenData = [];
-        childrenData = childrenResponse.data.message;
+    let childrenData = [];
+    childrenData = childrenResponse.data.message;
 
-        let balancesData = [];
-        balancesData = balancesResponse.message;
+    let balancesData = [];
+    balancesData = balancesResponse.message;
 
-        const balanceMap = new Map();
-        balancesData.forEach(balanceEntry => {
-          const username = balanceEntry.User?.tgUsername;
-          if (username) {
-            balanceMap.set(username.replace('@', ''), balanceEntry.money);
-          }
-        });
-
-        children.value = childrenData.map(childData => {
-          const username = childData.tgUsername ? childData.tgUsername.replace('@', '') : null;
-          const balance = username ? balanceMap.get(username) || 0 : 0;
-
-          return {
-            id: childData.uuid,
-            tgUsername: childData.tgUsername || '',
-            name: childData.PersonalDatum?.name || '',
-            lastName: childData.PersonalDatum?.lastName || '',
-            secondName: childData.PersonalDatum?.secondName || '',
-            phoneNumber: childData.PersonalDatum?.phoneNumber || '',
-            dateOfBirth: childData.PersonalDatum?.dateOfBirth ? childData.PersonalDatum.dateOfBirth.split('T')[0] : '',
-            coins: balance,
-            group: childData.group || '—'
-          };
-        });
-
-      } catch (error) {
-        errorMessage.value = `Не удалось загрузить список детей. ${error.message}`;
-        children.value = [];
-      } finally {
-        isLoading.value = false;
+    const balanceMap = new Map();
+    balancesData.forEach(balanceEntry => {
+      const childUuid = balanceEntry.User?.uuid; 
+      if (childUuid) {
+        balanceMap.set(childUuid, balanceEntry.money);
       }
-    };
+    });
+
+    children.value = childrenData.map(childData => {
+      const balance = balanceMap.get(childData.uuid) || 0;
+
+      return {
+        id: childData.uuid,
+        tgUsername: childData.tgUsername || '',
+        name: childData.PersonalDatum?.name || '',
+        lastName: childData.PersonalDatum?.lastName || '',
+        secondName: childData.PersonalDatum?.secondName || '',
+        phoneNumber: childData.PersonalDatum?.phoneNumber || '',
+        dateOfBirth: childData.PersonalDatum?.dateOfBirth ? childData.PersonalDatum.dateOfBirth.split('T')[0] : '',
+        coins: balance,
+        group: childData.group || '—'
+      };
+    });
+
+  } catch (error) {
+    errorMessage.value = `Не удалось загрузить список детей. ${error.message}`;
+    children.value = [];
+  } finally {
+    isLoading.value = false;
+  }
+};
 
     const openAddChildModal = () => {
+      isLoading.value = false;
       showModal.value = true;
       isEditing.value = false;
       currentChildId.value = null;
@@ -225,6 +235,7 @@ export default {
     };
 
     const editChild = (child) => {
+      isLoading.value = false;
       isEditing.value = true;
       currentChildId.value = child.id;
       Object.assign(newChild.value, { ...child, note: '' });
@@ -232,6 +243,7 @@ export default {
     };
 
     const closeModal = () => {
+      isLoading.value = false;
       showModal.value = false;
     };
 
@@ -267,35 +279,25 @@ export default {
     };
 
     const deleteChild = async (child) => {
-      if (!child.id) {
-        alert('Нет uuid для удаления');
-        return;
-      }
-      if (confirm(`Вы уверены, что хотите удалить ребенка "${child.name} ${child.lastName}"?`)) {
-        isLoading.value = true;
-        errorMessage.value = '';
-        try {
-          await apiClient.deleteChild(child.id);
-          await loadChildren();
-        } catch (error) {
-          if (error.response) console.error('Ответ сервера (ошибка удаления):', error.response);
-          errorMessage.value = 'Не удалось удалить ребенка. Попробуйте снова.';
-        } finally {
-          isLoading.value = false;
-        }
-      }
-    };
+  if (!child.id) {
+    alert('Нет uuid для удаления');
+    return;
+  }
+  if (confirm(`Вы уверены, что хотите удалить ребенка "${child.name} ${child.lastName}"?`)) {
+    isLoading.value = true;
+    errorMessage.value = '';
+    try {
+      await apiClient.deleteChild(child.id);
+      await loadChildren(); 
+    } catch (error) {
+      if (error.response) console.error('Ответ сервера (ошибка удаления):', error.response);
+      errorMessage.value = 'Не удалось удалить ребенка. Попробуйте снова.';
+      isLoading.value = false; 
+    }
 
-    const filterChildren = () => {};
-    const distributeCoins = () => {};
+  }
+};
 
-    const updateFeather = () => {
-      nextTick(() => {
-        if (window.feather) {
-          window.feather.replace();
-        }
-      });
-    };
 
     const initializeTelegram = () => {
       if (window.Telegram && window.Telegram.WebApp) {
@@ -315,8 +317,6 @@ export default {
       searchQuery,
       selectedChildren,
       filteredChildren,
-      filterChildren,
-      distributeCoins,
       showModal,
       isEditing,
       openAddChildModal,

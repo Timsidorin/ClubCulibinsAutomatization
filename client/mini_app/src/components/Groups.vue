@@ -454,6 +454,7 @@ export default {
     };
 
     const addNewGroup = () => {
+      isLoading.value = false;
       showGroupModal.value = true;
       isEditingGroup.value = false;
       currentGroupId.value = null;
@@ -461,6 +462,7 @@ export default {
     };
 
     const editGroup = (group) => {
+      isLoading.value = false;
       showGroupModal.value = true;
       isEditingGroup.value = true;
       currentGroupId.value = group.id;
@@ -497,20 +499,21 @@ export default {
     };
 
     const deleteGroup = async (group) => {
-      if (confirm(`Вы уверены, что хотите удалить группу "${group.name}"?`)) {
-        isLoading.value = true;
-        errorMessage.value = '';
-        try {
-          await groupsApiClient.deleteGroup(group.id);
-          await fetchGroups();
-        } catch (error) {
-          console.error('Ошибка при удалении группы:', error);
-          errorMessage.value = 'Не удалось удалить группу. Попробуйте снова.';
-        } finally {
-          isLoading.value = false;
-        }
-      }
-    };
+  if (confirm(`Вы уверены, что хотите удалить группу "${group.name}"?`)) {
+    isLoading.value = true;
+    errorMessage.value = '';
+    try {
+      await groupsApiClient.deleteGroup(group.id);
+      await fetchGroups();
+    } catch (error) {
+      console.error('Ошибка при удалении группы:', error);
+      errorMessage.value = 'Не удалось удалить группу. Попробуйте снова.';
+    } finally {
+      isLoading.value = false; 
+    }
+  }
+};
+
 
     const addStudentsToGroup = async (group) => {
   currentGroup.value = group;
