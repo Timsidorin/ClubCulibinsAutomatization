@@ -94,16 +94,16 @@
             <label for="telegramUsername">Username Telegram *</label>
             <div class="input-with-prefix">
               <span class="input-prefix">@</span>
-             <input 
-                  id="telegramUsername" 
-                  v-model="newTeacher.telegramUsername" 
-                  type="text" 
-                  class="form-input with-prefix" 
+             <input
+                  id="telegramUsername"
+                  v-model="newTeacher.telegramUsername"
+                  type="text"
+                  class="form-input with-prefix"
                   :class="{ 'disabled': isEditing }"
-                  placeholder="username" 
-                  required 
+                  placeholder="username"
+                  required
                   :disabled="isEditing"
-                  @input="validateUsername" 
+                  @input="validateUsername"
                 />
             </div>
             <div v-if="usernameError" class="error-message">{{ usernameError }}</div>
@@ -153,7 +153,7 @@ export default {
     newTeacher.value.lastName.trim() &&
     newTeacher.value.firstName.trim() &&
     newTeacher.value.telegramUsername.trim() &&
-    (isEditing.value || !usernameError.value) 
+    (isEditing.value || !usernameError.value)
   );
 });
 
@@ -238,20 +238,20 @@ export default {
     };
 
     const editTeacher = (teacher) => {
-      isLoading.value = false; 
+      isLoading.value = false;
   isEditing.value = true;
   currentTeacherId.value = teacher.id;
-  
-  const cleanUsername = teacher.telegramUsername.startsWith('@') 
-    ? teacher.telegramUsername.slice(1) 
+
+  const cleanUsername = teacher.telegramUsername.startsWith('@')
+    ? teacher.telegramUsername.slice(1)
     : teacher.telegramUsername;
-  
+
   newTeacher.value = new Teachers({
     id: teacher.id,
-    firstName: teacher.firstName, 
+    firstName: teacher.firstName,
     lastName: teacher.lastName,
     middleName: teacher.middleName,
-    telegramUsername: cleanUsername, 
+    telegramUsername: cleanUsername,
     email: teacher.email
   });
   showModal.value = true;
@@ -327,16 +327,16 @@ export default {
     };
 
     const deleteTeacher = async (teacher) => {
-  if (confirm(`Вы уверены, что хотите удалить учителя "${teacher.fullName}"?`)) {
+  if (Telegram.WebApp.showConfirm(`Вы уверены, что хотите удалить учителя "${teacher.fullName}"?`)) {
     isLoading.value = true;
     errorMessage.value = '';
     try {
       await apiClient.deleteTeacher(teacher.telegramUsername);
-      await fetchTeachers(); 
+      await fetchTeachers();
     } catch (error) {
       console.error('Ошибка при удалении учителя:', error);
       errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
-      isLoading.value = false; 
+      isLoading.value = false;
     }
   }
 };

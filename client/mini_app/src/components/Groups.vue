@@ -333,7 +333,7 @@ export default {
         return;
       }
 
-      const isConfirmed = confirm(`Вы уверены, что хотите отправить отчет по балансу группы "${group.name}" в связанный чат?`);
+      const isConfirmed = Telegram.WebApp.showConfirm(`Вы уверены, что хотите отправить отчет по балансу группы "${group.name}" в связанный чат?`);
       if (!isConfirmed) {
         return;
       }
@@ -499,7 +499,7 @@ export default {
     };
 
     const deleteGroup = async (group) => {
-  if (confirm(`Вы уверены, что хотите удалить группу "${group.name}"?`)) {
+  if (Telegram.WebApp.showConfirm(`Вы уверены, что хотите удалить группу "${group.name}"?`)) {
     isLoading.value = true;
     errorMessage.value = '';
     try {
@@ -644,7 +644,7 @@ export default {
     };
 
     const unassignTeacher = async (group) => {
-      if (confirm(`Вы уверены, что хотите отвязать учителя от группы "${group.name}"?`)) {
+      if (Telegram.WebApp.showConfirm(`Вы уверены, что хотите отвязать учителя от группы "${group.name}"?`)) {
         isLoading.value = true;
         errorMessage.value = '';
         try {

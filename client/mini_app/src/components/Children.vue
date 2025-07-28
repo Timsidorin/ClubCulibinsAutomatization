@@ -193,7 +193,7 @@ export default {
 
     const balanceMap = new Map();
     balancesData.forEach(balanceEntry => {
-      const childUuid = balanceEntry.User?.uuid; 
+      const childUuid = balanceEntry.User?.uuid;
       if (childUuid) {
         balanceMap.set(childUuid, balanceEntry.money);
       }
@@ -283,16 +283,16 @@ export default {
     alert('Нет uuid для удаления');
     return;
   }
-  if (confirm(`Вы уверены, что хотите удалить ребенка "${child.name} ${child.lastName}"?`)) {
+  if (Telegram.WebApp.showConfirm(`Вы уверены, что хотите удалить ребенка "${child.name} ${child.lastName}"?`)) {
     isLoading.value = true;
     errorMessage.value = '';
     try {
       await apiClient.deleteChild(child.id);
-      await loadChildren(); 
+      await loadChildren();
     } catch (error) {
       if (error.response) console.error('Ответ сервера (ошибка удаления):', error.response);
       errorMessage.value = 'Не удалось удалить ребенка. Попробуйте снова.';
-      isLoading.value = false; 
+      isLoading.value = false;
     }
 
   }
