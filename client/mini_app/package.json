@@ -11,6 +11,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@telegram-apps/sdk": "^3.11.4",
     "axios": "^1.10.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.17",

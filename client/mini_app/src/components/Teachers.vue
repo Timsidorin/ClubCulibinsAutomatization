@@ -230,6 +230,7 @@ export default {
     };
 
     const addNewTeacher = () => {
+      isLoading.value = false;
       showModal.value = true;
       isEditing.value = false;
       currentTeacherId.value = null;
@@ -237,6 +238,7 @@ export default {
     };
 
     const editTeacher = (teacher) => {
+      isLoading.value = false; 
   isEditing.value = true;
   currentTeacherId.value = teacher.id;
   
@@ -256,6 +258,7 @@ export default {
 };
 
     const closeModal = () => {
+      isLoading.value = false;
       showModal.value = false;
       resetForm();
     };
@@ -324,19 +327,20 @@ export default {
     };
 
     const deleteTeacher = async (teacher) => {
-      if (confirm(`Вы уверены, что хотите удалить учителя "${teacher.fullName}"?`)) {
-        isLoading.value = true;
-        errorMessage.value = '';
-        try {
-          await apiClient.deleteTeacher(teacher.telegramUsername);
-          await fetchTeachers();
-        } catch (error) {
-          errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
-        } finally {
-          isLoading.value = false;
-        }
-      }
-    };
+  if (confirm(`Вы уверены, что хотите удалить учителя "${teacher.fullName}"?`)) {
+    isLoading.value = true;
+    errorMessage.value = '';
+    try {
+      await apiClient.deleteTeacher(teacher.telegramUsername);
+      await fetchTeachers(); 
+    } catch (error) {
+      console.error('Ошибка при удалении учителя:', error);
+      errorMessage.value = 'Не удалось удалить учителя. Попробуйте снова.';
+      isLoading.value = false; 
+    }
+  }
+};
+
 
     const toggleActions = (teacherId) => {
       activeCardId.value = activeCardId.value === teacherId ? null : teacherId;

@@ -15,12 +15,15 @@ export class ControllerBalance {
     public async updateBalance(uuidUser: string, operation: boolean, summ: number, tgTeacher: string): Promise<IAnswer<object>> {
         //Обновляем баланс и создаем логи о транзакции
         let updateOperation = await this.ModelBalance.updateBalance(uuidUser, operation, summ);
-        let updateLog = await this.ModelBountyLog.create({
-            uuidUser: uuidUser,
-            operation: operation,
-            summ: summ,
-            tgTeacher: tgTeacher
-        });
+        let updateLog = false;
+        if (updateOperation.code !== 500) {
+            updateLog = await this.ModelBountyLog.create({
+                uuidUser: uuidUser,
+                operation: operation,
+                summ: summ,
+                tgTeacher: tgTeacher
+            });
+        }
         return {
             code: updateOperation.code, message: {
                 resultOperation: updateOperation.message,

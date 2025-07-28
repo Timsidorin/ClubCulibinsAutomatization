@@ -10,7 +10,7 @@ def create_admin_keyboard():
             [
                 InlineKeyboardButton(
                     text="🚀 Открыть админ-панель",
-                    web_app=WebAppInfo(url=configs.PUBLIC_URL)
+                    web_app=WebAppInfo(url=configs.PUBLIC_URL),
 
                 )
             ]
