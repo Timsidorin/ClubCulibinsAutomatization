@@ -442,6 +442,7 @@ const applyFiltersImmediate = () => {
   padding: 16px;
   max-width: 100%;
   background: var(--tg-bg-color, #f8f9fa);
+  min-height: 100vh;
 }
 
 /* Статистические карточки */
@@ -528,7 +529,7 @@ const applyFiltersImmediate = () => {
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--tg-border, #e9ecef);
-  overflow: hidden;
+  overflow: visible; /* ИСПРАВЛЕНО: убран overflow: hidden */
   margin-bottom: 24px;
 }
 
@@ -621,27 +622,11 @@ const applyFiltersImmediate = () => {
   align-items: end;
 }
 
-/* На больших экранах делаем 3 колонки в первой строке и 3 во второй */
-@media (min-width: 1200px) {
-  .filters-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-}
-
-/* На средних экранах - 2 колонки */
-@media (min-width: 768px) and (max-width: 1199px) {
-  .filters-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-}
-
 .filter-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 0; /* Важно для корректного сжатия */
+  min-width: 0;
 }
 
 .filter-label {
@@ -697,17 +682,19 @@ const applyFiltersImmediate = () => {
   min-width: 0;
 }
 
-/* Таблица */
+/* ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ТАБЛИЦА - ВИДНЫ ВСЕ ЗАПИСИ */
 .table-container {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
   border: 1px solid #e9ecef;
+  width: 100%;
+  /* УБРАНЫ ВСЕ ОГРАНИЧЕНИЯ ВЫСОТЫ И OVERFLOW */
 }
 
 .table-wrapper {
-  overflow-x: auto;
+  width: 100%;
+  /* УБРАНЫ ВСЕ ОГРАНИЧЕНИЯ ВЫСОТЫ И OVERFLOW */
 }
 
 .logs-table {
@@ -798,7 +785,7 @@ const applyFiltersImmediate = () => {
   text-align: right;
 }
 
-/* Состояния - исправлено центрирование пустого состояния */
+/* Состояния */
 .empty-state-cell {
   text-align: center !important;
   padding: 40px 20px !important;
@@ -897,10 +884,26 @@ const applyFiltersImmediate = () => {
   height: 16px;
 }
 
+/* Адаптивность */
+@media (min-width: 1200px) {
+  .filters-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
 /* Мобильная адаптивность */
 @media (max-width: 767px) {
   .dashboard {
     padding: 12px;
+    min-height: 100vh;
   }
 
   .stats-grid {
@@ -973,6 +976,15 @@ const applyFiltersImmediate = () => {
   .action-btn {
     padding: 14px 20px;
   }
+
+  /* Таблица на мобильных - с горизонтальным скроллом если нужно */
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .logs-table {
+    min-width: 600px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1029,7 +1041,6 @@ const applyFiltersImmediate = () => {
   }
 }
 
-/* Очень маленькие экраны */
 @media (max-width: 480px) {
   .dashboard {
     padding: 4px;
@@ -1134,3 +1145,6 @@ const applyFiltersImmediate = () => {
   }
 }
 </style>
+
+
+

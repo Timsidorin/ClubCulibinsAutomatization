@@ -20,10 +20,7 @@ async function forceFullscreen() {
       const tg = window.Telegram.WebApp
       tg.ready()
       tg.expand()
-      document.documentElement.style.height = '100vh'
-      document.body.style.height = '100vh'
-      document.body.style.margin = '0'
-      document.body.style.padding = '0'
+
     }
   }
   
@@ -31,10 +28,8 @@ async function forceFullscreen() {
     const app = document.getElementById('app')
     if (app) {
       app.style.width = '100vw'
-      app.style.height = '100vh'
-      app.style.position = 'fixed'
-      app.style.top = '0'
-      app.style.left = '0'
+      app.style.minHeight = '100vh' 
+      
     }
   }, 100)
 }

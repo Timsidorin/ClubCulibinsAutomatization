@@ -20,7 +20,7 @@
 
 body.modal-open {
     overflow: hidden;
-  }
+}
 
 /* Темная тема */
 body.dark-theme {
@@ -38,10 +38,9 @@ body.dark-theme {
     padding: 0;
 }
 
-html, body {
+html {
     width: 100%;
     height: 100%;
-    overflow-x: hidden;
 }
 
 body {
@@ -51,16 +50,21 @@ body {
     line-height: 1.6;
     min-height: 100vh;
     width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
 }
 
 #app {
     width: 100%;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 .app-container {
     display: flex;
-    width: 100vw;
+    width: 100%;
     min-height: 100vh;
 }
 
@@ -147,15 +151,11 @@ body {
 
 /* Основной контент */
 .main-content {
-    flex-grow: 1;
+    flex: 1;
     padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
     overflow-y: auto;
-    width: 100%;
-    max-width: none;
     background: transparent;
+    min-height: 0;
 }
 
 /* Заголовок */
@@ -310,8 +310,6 @@ body {
     width: 100%;
 }
 
-
-
 .stat-icon {
     width: 60px;
     height: 60px;
@@ -328,7 +326,6 @@ body {
     height: 28px;
     color: var(--tg-blue);
 }
-
 
 .stat-content h3 {
     font-size: 0.9em;
@@ -839,7 +836,6 @@ body {
 
 /* Модальные окна */
 .modal {
-    display: none;
     position: fixed;
     z-index: 1001;
     left: 0;
@@ -848,9 +844,16 @@ body {
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.modal:not(.show) {
+    display: none;
+}
+
+.modal.show {
+    display: flex;
 }
 
 .modal-content {
@@ -875,6 +878,41 @@ body {
     display: flex;
     justify-content: center;
     gap: 15px;
+}
+
+/* Стили для таблицы логов - ИСПРАВЛЕННАЯ ВЕРСИЯ */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+}
+
+.table-wrapper {
+    overflow: auto;
+    max-height: 400px;
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.logs-table thead th {
+    background: linear-gradient(135deg, #0088cc 0%, #0066aa 100%);
+    color: white;
+    padding: 16px;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 /* Скроллбар */
@@ -913,13 +951,8 @@ body {
 }
 
 @media (max-width: 768px) {
-    body {
-        overflow-x: hidden;
-    }
-
     .app-container {
         flex-direction: column;
-        width: 100vw;
     }
 
     .sidebar-nav {
@@ -1025,6 +1058,14 @@ body {
 
     .activity-time {
         align-self: flex-start;
+    }
+
+    .table-wrapper {
+        max-height: 300px;
+    }
+    
+    .logs-table {
+        min-width: 600px;
     }
 }
 
@@ -1151,6 +1192,10 @@ body {
         width: 30px;
         height: 30px;
     }
+
+    .table-wrapper {
+        max-height: 250px;
+    }
 }
 
 @media (max-width: 360px) {
@@ -1197,50 +1242,4 @@ body {
     .group-card {
         padding: 12px;
     }
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  width: 100%;
-  height: 100%;
-  height: 100vh;
-  height: 100dvh; /* Dynamic viewport height */
-}
-
-body {
-  width: 100%;
-  height: 100%;
-  height: 100vh;
-  height: 100dvh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-}
-
-#app {
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-.app-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
 }
