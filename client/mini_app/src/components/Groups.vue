@@ -512,18 +512,19 @@ export default {
     };
 
     const deleteGroup = async (group) => {
-      const isConfirmed = Telegram.WebApp.showConfirm(
-        `Вы уверены, что хотите удалить группу "${group.name}"?`
-      );
-
-      if (!isConfirmed) return;
-
-      isLoading.value = true;
-      errorMessage.value = '';
-
       try {
+        const isConfirmed = await Telegram.WebApp.showConfirm(
+          `Вы уверены, что хотите удалить группу "${group.name}"?`
+        );
+
+        if (!isConfirmed) return;
+
+        isLoading.value = true;
+        errorMessage.value = '';
+
         await groupsApiClient.deleteGroup(group.id);
         await fetchGroups();
+
       } catch (error) {
         console.error('Ошибка при удалении группы:', error);
         errorMessage.value = 'Не удалось удалить группу. Попробуйте снова.';
