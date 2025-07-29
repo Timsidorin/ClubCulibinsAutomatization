@@ -79,9 +79,17 @@
         </div>
 
         <form @submit.prevent="submitTeacher" class="teacher-form">
-          <div class="form-group">
+          <div v-if="isEditing" class="form-group">
           <label for="role">Роль *</label>
-            <select v-model="newRole" id="role" class="form-select" :disabled="isEditing">
+            <select v-model="newTeacher.typeUser" id="role" class="form-select" :disabled="true">
+              <option disabled>Выберите роль</option>
+              <option value="2">Администратор</option>
+              <option value="1">Учитель</option>
+            </select>
+          </div>
+          <div v-else class="form-group">
+            <label for="role">Роль *</label>
+            <select v-model="newRole" id="role" class="form-select" :disabled="false">
               <option disabled>Выберите роль</option>
               <option value="2">Администратор</option>
               <option value="1">Учитель</option>
@@ -156,7 +164,7 @@ export default {
     const activeCardId = ref(null);
 
     const newTeacher = ref(new Teachers());
-    const newRole = ref('');
+    const newRole = ref(1);
     const isFormValid = computed(() => {
   return (
     newTeacher.value.lastName.trim() &&
@@ -261,7 +269,8 @@ export default {
     lastName: teacher.lastName,
     middleName: teacher.middleName,
     telegramUsername: cleanUsername,
-    email: teacher.email
+    email: teacher.email,
+    type: teacher.typeUser,
   });
   showModal.value = true;
 };
