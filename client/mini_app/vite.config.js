@@ -11,8 +11,8 @@ export default defineConfig({
     vueDevTools(),
   ],
   define: {
-    __BASE__URL__: JSON.stringify('https://147.45.146.30/api'),
-    __INFO_BOT__URL: JSON.stringify('https://147.45.146.30/notifications'),
+    __BASE__URL__: JSON.stringify('https://balanskk.ru/api'),
+    __INFO_BOT__URL: JSON.stringify('https://balanskk.ru/notifications'),
   },
   resolve: {
     alias: {

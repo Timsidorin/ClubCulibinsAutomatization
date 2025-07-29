@@ -3,12 +3,15 @@ version: '3.8'
 services:
   nginx:
     image: nginx:alpine
+    user: "0:0"  # Запуск от root для доступа к сертификатам
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ../nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ../nginx/ssl:/etc/nginx/ssl
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ../nginx/ssl:/etc/nginx/ssl  # Папка с сертификатами
+      - /etc/letsencrypt:/etc/letsencrypt:ro  # Let's Encrypt сертификаты
+      - /var/www/html:/var/www/html
     depends_on:
       - server
       - client
@@ -46,7 +49,7 @@ services:
     networks:
       - backend
 
-  info_bot:  # ✅ Fixed: Properly indented under services
+  info_bot:
     build:
       context: .                  
       dockerfile: ./info_bot/Dockerfile
