@@ -513,12 +513,6 @@ export default {
 
     const deleteGroup = async (group) => {
       try {
-        const isConfirmed = await Telegram.WebApp.showConfirm(
-          `Вы уверены, что хотите удалить группу "${group.name}"?`
-        );
-
-        if (!isConfirmed) return;
-
         isLoading.value = true;
         errorMessage.value = '';
 
