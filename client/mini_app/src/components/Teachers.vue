@@ -1,15 +1,15 @@
 <template>
   <div class="teachers">
     <div class="section-header">
-      <h2>Управление учителями</h2>
+      <h2>Управление сотрудниками</h2>
       <button class="btn btn-primary" @click="addNewTeacher" :disabled="isLoading">
         <i data-feather="plus"></i>
-        Добавить учителя
+        Добавить сотрудника
       </button>
     </div>
 
     <div class="search-bar">
-      <input type="text" v-model="searchQuery" placeholder="Поиск по имени учителя...">
+      <input type="text" v-model="searchQuery" placeholder="Поиск по имени сотрудника...">
     </div>
 
     <div v-if="isLoading" class="loading-state">
@@ -25,6 +25,7 @@
         :class="{ 'actions-visible': activeCardId === teacher.id }"
       >
         <div class="teacher-details">
+          <h4 class="text-primary">{{ teacher.typeUser === 1 ? 'Учитель' : 'Администратор' }}</h4>
           <h4> <i data-feather="user"></i>  {{ teacher.fullName }}</h4>
           <p>
             Telegram: <a v-if="teacher.telegramUsername">{{ teacher.telegramUsername }}</a><a v-else>—</a><br>
@@ -53,18 +54,18 @@
       <div class="empty-icon">
         <i data-feather="user-check"></i>
       </div>
-      <h3>Пока нет учителей</h3>
-      <p>Добавьте первого учителя для начала работы</p>
+      <h3>Пока нет сотрудников</h3>
+      <p>Добавьте первого сотрудника для начала работы</p>
       <button class="btn btn-primary" @click="addNewTeacher" :disabled="isLoading">
         <i data-feather="plus"></i>
-        Добавить первого учителя
+        Добавить первого сотрудника
       </button>
     </div>
 
-    <div v-if="showModal" class="modal" @click.self="closeModal">
+    <div v-if="showModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>{{ isEditing ? 'Редактировать учителя' : 'Добавить нового учителя' }}</h3>
+          <h3>{{ isEditing ? 'Редактировать сотрудника' : 'Добавить нового сотрудника' }}</h3>
           <button class="close-btn" @click="closeModal">
             <i data-feather="x"></i>
           </button>
@@ -78,6 +79,14 @@
         </div>
 
         <form @submit.prevent="submitTeacher" class="teacher-form">
+          <div class="form-group">
+          <label for="role">Роль *</label>
+            <select v-model="newRole" id="role" class="form-select" :disabled="isEditing">
+              <option disabled>Выберите роль</option>
+              <option value="2">Администратор</option>
+              <option value="1">Учитель</option>
+            </select>
+          </div>
           <div class="form-group">
             <label for="lastName">Фамилия *</label>
             <input id="lastName" v-model="newTeacher.lastName" type="text" class="form-input" placeholder="Введите фамилию" required />
@@ -147,7 +156,7 @@ export default {
     const activeCardId = ref(null);
 
     const newTeacher = ref(new Teachers());
-
+    const newRole = ref('');
     const isFormValid = computed(() => {
   return (
     newTeacher.value.lastName.trim() &&
@@ -239,12 +248,12 @@ export default {
 
     const editTeacher = (teacher) => {
       isLoading.value = false;
-  isEditing.value = true;
-  currentTeacherId.value = teacher.id;
+      isEditing.value = true;
+      currentTeacherId.value = teacher.id;
 
-  const cleanUsername = teacher.telegramUsername.startsWith('@')
-    ? teacher.telegramUsername.slice(1)
-    : teacher.telegramUsername;
+      const cleanUsername = teacher.telegramUsername.startsWith('@')
+        ? teacher.telegramUsername.slice(1)
+        : teacher.telegramUsername;
 
   newTeacher.value = new Teachers({
     id: teacher.id,
@@ -386,7 +395,8 @@ export default {
       validateUsername,
       editTeacher,
       deleteTeacher,
-      toggleActions
+      toggleActions,
+      newRole
     };
   }
 };

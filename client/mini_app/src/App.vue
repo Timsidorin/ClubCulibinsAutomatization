@@ -48,7 +48,6 @@ import Dashboard from './components/Dashboard.vue'
 import Groups from './components/Groups.vue'
 import Teachers from './components/Teachers.vue'
 import Children from './components/Children.vue'
-import { viewport } from '@telegram-apps/sdk'
 
 export default {
   name: 'App',
@@ -60,7 +59,7 @@ export default {
     Dashboard,
     Groups,
     Teachers,
-    Children
+    Children,
   },
   setup() {
     const currentSection = ref('dashboard')
@@ -88,7 +87,7 @@ export default {
         dashboard: 'Dashboard',
         groups: 'Groups',
         teachers: 'Teachers',
-        children: 'Children'
+        children: 'Children',
       }
       return components[currentSection.value] || 'Dashboard'
     })
@@ -96,21 +95,21 @@ export default {
     const initTelegramWebApp = () => {
   if (window.Telegram && window.Telegram.WebApp) {
     const tg = window.Telegram.WebApp
-    
+
     tg.ready()
-    
+
     // Принудительное расширение
     tg.expand()
-    
+
     // Установка полноэкранного режима через все доступные методы
     if (tg.requestFullscreen) {
       tg.requestFullscreen()
     }
-    
+
     // Скрытие элементов интерфейса Telegram
     tg.headerColor = 'secondary_bg_color'
     tg.backgroundColor = 'bg_color'
-    
+
     // Остальная логика...
     const user = tg.initDataUnsafe?.user
     if (user) {
@@ -130,7 +129,7 @@ export default {
     tg.MainButton.setText('Сохранить')
     tg.MainButton.hide()
   }
-  
+
   setTimeout(() => {
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.expand()
@@ -166,8 +165,6 @@ export default {
     onMounted(() => {
       initTelegramWebApp()
     })
-
-
 
     return {
       currentSection,

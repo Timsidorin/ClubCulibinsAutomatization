@@ -89,7 +89,7 @@
     </div>
 
     <!-- Модальное окно для создания/редактирования группы -->
-    <div v-if="showGroupModal" class="modal" @click.self="closeGroupModal">
+    <div v-if="showGroupModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
           <h3>{{ isEditingGroup ? 'Редактировать группу' : 'Добавить новую группу' }}</h3>
@@ -146,7 +146,7 @@
     </div>
 
 <!-- Модальное окно для добавления участников в группу -->
-<div v-if="showStudentsModal" class="modal" @click.self="closeStudentsModal">
+<div v-if="showStudentsModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
       <h3>Управление участниками группы "{{ currentGroup.name }}"</h3>
@@ -211,7 +211,7 @@
 </div>
 
     <!-- Модальное окно для привязки учителя к группе -->
-    <div v-if="showTeacherModal" class="modal" @click.self="closeTeacherModal">
+    <div v-if="showTeacherModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
           <h3>Привязать учителя к группе "{{ currentGroup.name }}"</h3>
@@ -223,7 +223,7 @@
           <input
             type="text"
             v-model="teacherSearchQuery"
-            placeholder="Поиск по имени учителя..."
+            placeholder="Поиск по имени сотрудника..."
           />
         </div>
         <div class="teachers-list" v-if="filteredTeachers.length > 0">
@@ -327,36 +327,37 @@ export default {
       );
     });
 
-    const sendGroupBalance = async (group) => {
+    const sendGroupBalance = (group) => {
       if (!group.urlName || group.urlName.trim() === '') {
         showAppAlert('У этой группы не указана публичная ссылка. Добавьте ее в настройках группы.');
         return;
       }
 
-      const isConfirmed = confirm(`Вы уверены, что хотите отправить отчет по балансу группы "${group.name}" в связанный чат?`);
-      if (!isConfirmed) {
-        return;
-      }
+      Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите отправить отчет по балансу группы "${group.name}" в связанный чат?`,
+        async (confirmed) => {
+          if (!confirmed) return;
 
-      isLoading.value = true;
-      errorMessage.value = '';
+          isLoading.value = true;
+          errorMessage.value = '';
 
-      try {
-        const reportText = `Отчет по балансу для группы: ${group.name}`;
-
-        await InfoBotAPIClient.sendNotification({
-          chat_identifier: group.urlName,
-          uuid_group:group.id,
-          text: reportText
-        });
-      } catch (error) {
-        console.error('Ошибка при отправке отчета о балансе:', error);
-        const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
-        errorMessage.value = `Не удалось отправить отчет: ${detail}`;
-        showAppAlert(errorMessage.value);
-      } finally {
-        isLoading.value = false;
-      }
+          try {
+            const reportText = `Отчет по балансу для группы: ${group.name}`;
+            await InfoBotAPIClient.sendNotification({
+              chat_identifier: group.urlName,
+              uuid_group: group.id,
+              text: reportText
+            });
+          } catch (error) {
+            console.error('Ошибка при отправке отчета о балансе:', error);
+            const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+            errorMessage.value = `Не удалось отправить отчет: ${detail}`;
+            showAppAlert(errorMessage.value);
+          } finally {
+            isLoading.value = false;
+          }
+        }
+      );
     };
 
     const fetchGroups = async () => {
@@ -457,14 +458,14 @@ export default {
   console.log('addNewGroup вызвана');
   console.log('isLoading до:', isLoading.value);
   console.log('showGroupModal до:', showGroupModal.value);
-  
+
   showGroupModal.value = true;
   isEditingGroup.value = false;
   currentGroupId.value = null;
   newGroup.value = { name: '', description: '', urlName: '' };
-  
+
   console.log('showGroupModal после:', showGroupModal.value);
-  
+
   nextTick(() => {
     console.log('nextTick выполнен');
     if (window.feather) {
@@ -511,20 +512,25 @@ export default {
     };
 
     const deleteGroup = async (group) => {
-  if (confirm(`Вы уверены, что хотите удалить группу "${group.name}"?`)) {
-    isLoading.value = true;
-    errorMessage.value = '';
-    try {
-      await groupsApiClient.deleteGroup(group.id);
-      await fetchGroups();
-    } catch (error) {
-      console.error('Ошибка при удалении группы:', error);
-      errorMessage.value = 'Не удалось удалить группу. Попробуйте снова.';
-    } finally {
-      isLoading.value = false; 
-    }
-  }
-};
+      const isConfirmed = await Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите удалить группу "${group.name}"?`
+      );
+
+      if (!isConfirmed) return;
+
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      try {
+        await groupsApiClient.deleteGroup(group.id);
+        await fetchGroups();
+      } catch (error) {
+        console.error('Ошибка при удалении группы:', error);
+        errorMessage.value = 'Не удалось удалить группу. Попробуйте снова.';
+      } finally {
+        isLoading.value = false;
+      }
+    };
 
 
     const addStudentsToGroup = async (group) => {
@@ -580,40 +586,37 @@ export default {
   }
 };
 
-    const removeStudentFromGroup = async (student) => {
+    const removeStudentFromGroup = (student) => {
       if (!student.id || !currentGroup.value.id) {
         showAppAlert('Ошибка: Не удается определить студента или группу');
         return;
       }
 
-      const isConfirmed = confirm(
-        `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`
+      Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`,
+        async (confirmed) => {
+          if (!confirmed) return;
+
+          isLoading.value = true;
+          errorMessage.value = '';
+
+          try {
+            await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
+
+            selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
+
+            await fetchGroups();
+            await fetchStudents();
+          } catch (error) {
+            console.error('Ошибка при удалении студента из группы:', error);
+            const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+            errorMessage.value = `Не удалось удалить студента: ${detail}`;
+            showAppAlert(errorMessage.value);
+          } finally {
+            isLoading.value = false;
+          }
+        }
       );
-
-      if (!isConfirmed) {
-        return;
-      }
-
-      isLoading.value = true;
-      errorMessage.value = '';
-
-      try {
-        await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
-
-        selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
-
-        await fetchGroups();
-        await fetchStudents();
-
-
-      } catch (error) {
-        console.error('Ошибка при удалении студента из группы:', error);
-        const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
-        errorMessage.value = `Не удалось удалить студента: ${detail}`;
-        showAppAlert(errorMessage.value);
-      } finally {
-        isLoading.value = false;
-      }
     };
 
     const isStudentInGroup = (studentId) => {
@@ -655,19 +658,26 @@ export default {
       }
     };
 
-    const unassignTeacher = async (group) => {
-      if (confirm(`Вы уверены, что хотите отвязать учителя от группы "${group.name}"?`)) {
-        isLoading.value = true;
-        errorMessage.value = '';
-        try {
-          await groupsApiClient.UntieTeacher(group.id);
-          await fetchGroups();
-        } catch (error) {
-          errorMessage.value = 'Не удалось отвязать учителя. Попробуйте снова.';
-        } finally {
-          isLoading.value = false;
+    const unassignTeacher = (group) => {
+      Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите отвязать учителя от группы "${group.name}"?`,
+        async (confirmed) => {
+          if (!confirmed) return;
+
+          isLoading.value = true;
+          errorMessage.value = '';
+
+          try {
+            await groupsApiClient.UntieTeacher(group.id);
+            await fetchGroups();
+          } catch (error) {
+            console.error('Ошибка при отвязке учителя:', error);
+            errorMessage.value = 'Не удалось отвязать учителя. Попробуйте снова.';
+          } finally {
+            isLoading.value = false;
+          }
         }
-      }
+      );
     };
 
     const updateFeather = () => {

@@ -6,7 +6,7 @@
       </div>
       <ul>
         <li v-for="item in navigationItems" :key="item.section">
-          <a 
+          <a
             href="#"
             :class="['nav-link', { active: currentSection === item.section }]"
             @click.prevent="$emit('navigate', item.section)"
@@ -18,10 +18,10 @@
       </ul>
     </nav>
   </template>
-  
+
   <script>
   import { onMounted } from 'vue'
-  
+
   export default {
     name: 'Sidebar',
     props: {
@@ -35,22 +35,20 @@
       const navigationItems = [
         { section: 'dashboard', title: 'Обзор', icon: 'home' },
         { section: 'groups', title: 'Группы', icon: 'users' },
-        { section: 'teachers', title: 'Учителя', icon: 'user-check' },
+        { section: 'teachers', title: 'Сотрудники', icon: 'user-check' },
         { section: 'children', title: 'Дети', icon: 'smile' },
-       
       ]
-  
+
       onMounted(() => {
         // Initialize Feather icons
         if (window.feather) {
           window.feather.replace()
         }
       })
-  
+
       return {
         navigationItems
       }
     }
   }
   </script>
-  

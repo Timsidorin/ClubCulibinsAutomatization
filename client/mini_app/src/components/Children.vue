@@ -62,11 +62,13 @@
       </button>
     </div>
 
-    <div v-if="showModal" class="modal" @click.self="closeModal">
+    <div v-if="showModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
           <h3>{{ isEditing ? 'Редактировать ребенка' : 'Добавить нового ребенка' }}</h3>
-          <button class="close-btn" @click="closeModal"><i data-feather="x"></i></button>
+          <button class="close-btn" @click="closeModal">
+            <i data-feather="x"></i>
+          </button>
         </div>
         <form @submit.prevent="submitChild" class="child-form">
          <div class="form-group">

@@ -31,7 +31,7 @@
       const navigationItems = [
         { section: 'dashboard', title: 'Обзор', icon: 'home' },
         { section: 'groups', title: 'Группы', icon: 'users' },
-        { section: 'teachers', title: 'Учителя', icon: 'user-check' },
+        { section: 'teachers', title: 'Сотрудники', icon: 'user-check' },
         { section: 'children', title: 'Дети', icon: 'smile' },
       ]
 

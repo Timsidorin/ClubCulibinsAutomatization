@@ -35,7 +35,7 @@ export default {
     const sectionTitles = {
       dashboard: 'Обзор',
       groups: 'Группы',
-      teachers: 'Учителя',
+      teachers: 'Сотрудники',
       children: 'Дети',
     }
 
