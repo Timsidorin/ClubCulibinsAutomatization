@@ -545,7 +545,7 @@ export default {
       selectedStudents.value = [];
     };
 
-    const saveStudentsToGroup = async () => {
+   const saveStudentsToGroup = async () => {
   isLoading.value = true;
   errorMessage.value = '';
   try {
@@ -561,6 +561,7 @@ export default {
       isLoading.value = false;
       return;
     }
+
     const allUuids = [
       ...(currentGroup.value.studentIds || []),
       ...newSelectedUuids
@@ -572,8 +573,12 @@ export default {
     };
 
     await groupsApiClient.addChildrens(addData);
+    currentGroup.value.studentIds = allUuids;
+    currentGroup.value.studentsCount = allUuids.length;
+
     closeStudentsModal();
     await fetchGroups();
+
   } catch (error) {
     errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
   } finally {
@@ -581,38 +586,40 @@ export default {
   }
 };
 
+
     const removeStudentFromGroup = (student) => {
-      if (!student.id || !currentGroup.value.id) {
-        showAppAlert('Ошибка: Не удается определить студента или группу');
-        return;
+  if (!student.id || !currentGroup.value.id) {
+    showAppAlert('Ошибка: Не удается определить студента или группу');
+    return;
+  }
+
+  Telegram.WebApp.showConfirm(
+    `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`,
+    async (confirmed) => {
+      if (!confirmed) return;
+
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      try {
+        await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
+
+        currentGroup.value.studentIds = currentGroup.value.studentIds.filter(id => id !== student.id);
+        currentGroup.value.studentsCount = currentGroup.value.studentIds.length;
+        selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
+        await fetchGroups();
+        await fetchStudents();
+      } catch (error) {
+        const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+        errorMessage.value = `Не удалось удалить студента: ${detail}`;
+        showAppAlert(errorMessage.value);
+      } finally {
+        isLoading.value = false;
       }
+    }
+  );
+};
 
-      Telegram.WebApp.showConfirm(
-        `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`,
-        async (confirmed) => {
-          if (!confirmed) return;
-
-          isLoading.value = true;
-          errorMessage.value = '';
-
-          try {
-            await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
-
-            selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
-
-            await fetchGroups();
-            await fetchStudents();
-          } catch (error) {
-            console.error('Ошибка при удалении студента из группы:', error);
-            const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
-            errorMessage.value = `Не удалось удалить студента: ${detail}`;
-            showAppAlert(errorMessage.value);
-          } finally {
-            isLoading.value = false;
-          }
-        }
-      );
-    };
 
     const isStudentInGroup = (studentId) => {
       return currentGroup.value.studentIds?.includes(studentId) || false;
