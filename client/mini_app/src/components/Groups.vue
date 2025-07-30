@@ -529,11 +529,11 @@ export default {
 
 
     const addStudentsToGroup = async (group) => {
-      currentGroup.value = group;
-      await fetchStudents();
-      selectedStudents.value = [...(group.studentIds || [])];
-      showStudentsModal.value = true;
-    };
+  currentGroup.value = group;
+  selectedStudents.value = [];
+  await fetchStudents();
+  showStudentsModal.value = true;
+};
     const isStudentMember = computed(() => {
   return (studentId) => {
     return currentGroup.value.studentIds?.includes(studentId) || false;
@@ -545,76 +545,81 @@ export default {
       selectedStudents.value = [];
     };
 
-    const saveStudentsToGroup = async () => {
+   const saveStudentsToGroup = async () => {
+  isLoading.value = true;
+  errorMessage.value = '';
+  try {
+    const newSelectedUuids = selectedStudents.value.filter(studentId =>
+      !currentGroup.value.studentIds?.includes(studentId)
+    ).map(studentId => {
+      const student = students.value.find(s => s.id === studentId);
+      return student ? student.id : null;
+    }).filter(uuid => uuid !== null);
+
+    if (newSelectedUuids.length === 0) {
+      errorMessage.value = 'Не выбраны новые ученики для добавления в группу.';
+      isLoading.value = false;
+      return;
+    }
+
+    const allUuids = [
+      ...(currentGroup.value.studentIds || []),
+      ...newSelectedUuids
+    ];
+
+    const addData = {
+      uuidGroup: currentGroup.value.id,
+      childrens: allUuids
+    };
+
+    await groupsApiClient.addChildrens(addData);
+    currentGroup.value.studentIds = allUuids;
+    currentGroup.value.studentsCount = allUuids.length;
+
+    closeStudentsModal();
+    await fetchGroups();
+
+  } catch (error) {
+    errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+
+    const removeStudentFromGroup = (student) => {
+  if (!student.id || !currentGroup.value.id) {
+    showAppAlert('Ошибка: Не удается определить студента или группу');
+    return;
+  }
+
+  Telegram.WebApp.showConfirm(
+    `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`,
+    async (confirmed) => {
+      if (!confirmed) return;
+
       isLoading.value = true;
       errorMessage.value = '';
+
       try {
-        // Фильтруем только тех, кого ещё нет в группе
-        const newSelectedUuids = selectedStudents.value.filter(studentId =>
-          !currentGroup.value.studentIds?.includes(studentId)
-        );
+        await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
 
-        if (newSelectedUuids.length === 0) {
-          errorMessage.value = 'Не выбраны новые ученики для добавления в группу.';
-          isLoading.value = false;
-          return;
-        }
-
-        // Отправляем ТОЛЬКО новых учеников
-        const addData = {
-          uuidGroup: currentGroup.value.id,
-          childrens: newSelectedUuids // ← только новые
-        };
-
-        await groupsApiClient.addChildrens(addData);
-
-        // Закрываем модалку и обновляем данные
-        closeStudentsModal();
-        await fetchGroups(); // чтобы обновить количество учеников и состав
-
-        // Опционально: сбросить список выбранных после успешного добавления
-        selectedStudents.value = [];
+        currentGroup.value.studentIds = currentGroup.value.studentIds.filter(id => id !== student.id);
+        currentGroup.value.studentsCount = currentGroup.value.studentIds.length;
+        selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
+        await fetchGroups();
+        await fetchStudents();
       } catch (error) {
-        console.error('Ошибка при добавлении учеников:', error);
-        errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
+        const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+        errorMessage.value = `Не удалось удалить студента: ${detail}`;
         showAppAlert(errorMessage.value);
       } finally {
         isLoading.value = false;
       }
-    };
+    }
+  );
+};
 
-    const removeStudentFromGroup = (student) => {
-      if (!student.id || !currentGroup.value.id) {
-        showAppAlert('Ошибка: Не удается определить студента или группу');
-        return;
-      }
-
-      Telegram.WebApp.showConfirm(
-        `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`,
-        async (confirmed) => {
-          if (!confirmed) return;
-
-          isLoading.value = true;
-          errorMessage.value = '';
-
-          try {
-            await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
-
-            selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
-
-            await fetchGroups();
-            await fetchStudents();
-          } catch (error) {
-            console.error('Ошибка при удалении студента из группы:', error);
-            const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
-            errorMessage.value = `Не удалось удалить студента: ${detail}`;
-            showAppAlert(errorMessage.value);
-          } finally {
-            isLoading.value = false;
-          }
-        }
-      );
-    };
 
     const isStudentInGroup = (studentId) => {
       return currentGroup.value.studentIds?.includes(studentId) || false;
