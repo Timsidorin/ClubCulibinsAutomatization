@@ -48,14 +48,16 @@ class NotificationPayload(BaseModel):
 
 
 def format_member_data(member_data):
-    """Форматирует данные участника для отображения"""
     try:
         user = member_data.get('User', {})
         personal_datum = user.get('PersonalDatum', {})
 
         name = personal_datum.get('name', 'Неизвестно')
         last_name = personal_datum.get('lastName', '')
-        full_name = f"{name} {last_name}".strip()
+        if last_name:
+            short_name = f"{last_name}{name[0]}."
+        else:
+            short_name = name
 
         balance = user.get('Balance')
         if balance is not None:
@@ -66,7 +68,7 @@ def format_member_data(member_data):
         else:
             balance_value = 0
 
-        return full_name, balance_value
+        return short_name, balance_value
 
     except Exception as e:
         logging.error(f"Ошибка форматирования данных участника: {e}")
