@@ -54,24 +54,24 @@
             Участники
           </button>
 
-        <button v-if="!group.teacherId" class="btn btn-primary" @click="assignTeacherToGroup(group)" :disabled="isLoading">
+          <button v-if="!group.teacherId" class="btn btn-primary" @click="assignTeacherToGroup(group)" :disabled="isLoading">
             <i data-feather="user-check"></i>
-          Назначить преподавателя
-        </button>
+            Назначить преподавателя
+          </button>
 
-        <button v-else class="btn btn-danger" @click="unassignTeacher(group)" :disabled="isLoading">
-         <i data-feather="user-x"></i>
-          Отвязать преподавателя
-        </button>
+          <button v-else class="btn btn-danger" @click="unassignTeacher(group)" :disabled="isLoading">
+            <i data-feather="user-x"></i>
+            Отвязать преподавателя
+          </button>
 
           <button class="btn btn-danger" @click="deleteGroup(group)" :disabled="isLoading">
             <i data-feather="trash-2"></i>
             Удалить
           </button>
           <button class="btn btn-info" @click="sendGroupBalance(group)" :disabled="isLoading">
-    <i data-feather="send"></i>
-    Отправить баланс в чат
-  </button>
+            <i data-feather="send"></i>
+            Отправить баланс в чат
+          </button>
         </div>
       </div>
     </div>
@@ -120,19 +120,19 @@
             ></textarea>
           </div>
           <div class="form-group">
-    <label for="groupLink">Ссылка на чат</label>
-    <input
-      id="groupLink"
-      v-model="newGroup.urlName"
-      type="text"
-      class="form-input"
-      placeholder="t.me/username_группы"
-    />
-    <p class="form-text">
-    Введите публичную ссылку на чат, если она есть.<br>
-    Без нее невозможно будет отправить баланс группы в чат!
-  </p>
-  </div>
+            <label for="groupLink">Ссылка на чат</label>
+            <input
+              id="groupLink"
+              v-model="newGroup.urlName"
+              type="text"
+              class="form-input"
+              placeholder="t.me/username_группы"
+            />
+            <p class="form-text">
+              Введите публичную ссылку на чат, если она есть.<br>
+              Без нее невозможно будет отправить баланс группы в чат!
+            </p>
+          </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" @click="closeGroupModal">
               Отмена
@@ -145,70 +145,70 @@
       </div>
     </div>
 
-<!-- Модальное окно для добавления участников в группу -->
-<div v-if="showStudentsModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Управление участниками группы "{{ currentGroup.name }}"</h3>
-      <button class="close-btn" @click="closeStudentsModal">
-        <i data-feather="x"></i>
-      </button>
-    </div>
-    <div class="search-bar">
-      <input
-        type="text"
-        v-model="studentSearchQuery"
-        placeholder="Поиск по имени ребенка..."
-      />
-    </div>
-    <div class="students-list" v-if="filteredStudents.length > 0">
-      <div
-        v-for="student in filteredStudents"
-        :key="student.id"
-        class="student-item"
-        :class="{ 'is-member': isStudentMember(student.id) }"
-      >
-        <input
-          type="checkbox"
-          :value="student.id"
-          v-model="selectedStudents"
-          :disabled="isStudentMember(student.id)"
-        />
-        <div class="student-details">
-          <h4>
-            {{ student.lastName }} {{ student.name }} {{ student.secondName }}
-            <span v-if="isStudentMember(student.id)" class="member-badge">Участник</span>
-          </h4>
+    <!-- Модальное окно для добавления участников в группу -->
+    <div v-if="showStudentsModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Управление участниками группы "{{ currentGroup.name }}"</h3>
+          <button class="close-btn" @click="closeStudentsModal">
+            <i data-feather="x"></i>
+          </button>
         </div>
-        <div class="student-actions">
+        <div class="search-bar">
+          <input
+            type="text"
+            v-model="studentSearchQuery"
+            placeholder="Поиск по имени ребенка..."
+          />
+        </div>
+        <div class="students-list" v-if="filteredStudents.length > 0">
+          <div
+            v-for="student in filteredStudents"
+            :key="student.id"
+            class="student-item"
+            :class="{ 'is-member': isStudentMember(student.id) }"
+          >
+            <input
+              type="checkbox"
+              :value="student.id"
+              v-model="selectedStudents"
+              :disabled="isStudentMember(student.id)"
+            />
+            <div class="student-details">
+              <h4>
+                {{ student.lastName }} {{ student.name }} {{ student.secondName }}
+                <span v-if="isStudentMember(student.id)" class="member-badge">Участник</span>
+              </h4>
+            </div>
+            <div class="student-actions">
+              <button
+                v-if="isStudentMember(student.id)"
+                class="btn btn-icon btn-danger-icon"
+                @click.stop="removeStudentFromGroup(student)"
+                title="Удалить из группы"
+                :disabled="isLoading">
+                <i data-feather="user-minus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state-small" v-else>
+          <p>Нет доступных учеников</p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" @click="closeStudentsModal">
+            Отмена
+          </button>
           <button
-            v-if="isStudentMember(student.id)"
-            class="btn btn-icon btn-danger-icon"
-            @click.stop="removeStudentFromGroup(student)"
-            title="Удалить из группы"
-            :disabled="isLoading">
-            <i data-feather="user-minus"></i>
+            class="btn btn-primary"
+            @click="saveStudentsToGroup"
+            :disabled="selectedStudents.filter(id => !isStudentMember(id)).length === 0 || isLoading"
+          >
+            Добавить новых ({{ selectedStudents.filter(id => !isStudentMember(id)).length }})
           </button>
         </div>
       </div>
     </div>
-    <div class="empty-state-small" v-else>
-      <p>Нет доступных учеников</p>
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-secondary" @click="closeStudentsModal">
-        Отмена
-      </button>
-      <button
-        class="btn btn-primary"
-        @click="saveStudentsToGroup"
-        :disabled="selectedStudents.filter(id => !isStudentMember(id)).length === 0 || isLoading"
-      >
-        Добавить новых ({{ selectedStudents.filter(id => !isStudentMember(id)).length }})
-      </button>
-    </div>
-  </div>
-</div>
 
     <!-- Модальное окно для привязки учителя к группе -->
     <div v-if="showTeacherModal" class="modal">
@@ -361,54 +361,54 @@ export default {
     };
 
     const fetchGroups = async () => {
-    isLoading.value = true;
-    errorMessage.value = '';
-    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+      try {
         const response = await groupsApiClient.getAllGroups();
         const groupsData = response?.message?.groups || [];
         if (Array.isArray(groupsData)) {
-            groups.value = groupsData.map(groupData => {
-                const personalData = groupData.User?.PersonalDatum;
-                let teacherNameFormatted = 'Не назначен';
+          groups.value = groupsData.map(groupData => {
+            const personalData = groupData.User?.PersonalDatum;
+            let teacherNameFormatted = 'Не назначен';
 
-                if (personalData?.lastName && personalData?.name) {
-                    if (personalData.secondName) {
-                        teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.${personalData.secondName[0]}.`;
-                    } else {
+            if (personalData?.lastName && personalData?.name) {
+              if (personalData.secondName) {
+                teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.${personalData.secondName[0]}.`;
+              } else {
 
-                        teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.`;
-                    }
-                }
+                teacherNameFormatted = `${personalData.lastName} ${personalData.name[0]}.`;
+              }
+            }
 
-                const participantIds = [...new Set(
-                    (groupData.EducationGroupMembers || [])
-                        .map(member => member.User?.uuid)
-                        .filter(Boolean)
-                )];
+            const participantIds = [...new Set(
+              (groupData.EducationGroupMembers || [])
+                .map(member => member.User?.uuid)
+                .filter(Boolean)
+            )];
 
-                return {
-                    id: groupData.uuid || Date.now().toString(),
-                    name: groupData.name || 'Без названия',
-                    description: groupData.description || '',
-                    studentsCount: participantIds.length,
-                    teacherName: teacherNameFormatted,
-                    studentIds: participantIds,
-                    teacherId: groupData.uuidUser || null,
-                    urlName: groupData.urlName || ''
-                };
-            });
+            return {
+              id: groupData.uuid || Date.now().toString(),
+              name: groupData.name || 'Без названия',
+              description: groupData.description || '',
+              studentsCount: participantIds.length,
+              teacherName: teacherNameFormatted,
+              studentIds: participantIds,
+              teacherId: groupData.uuidUser || null,
+              urlName: groupData.urlName || ''
+            };
+          });
         } else {
-            groups.value = [];
-            errorMessage.value = 'Получены некорректные данные от сервера.';
+          groups.value = [];
+          errorMessage.value = 'Получены некорректные данные от сервера.';
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Ошибка при загрузке групп:', error);
         errorMessage.value = 'Не удалось загрузить список групп. Попробуйте позже.';
         groups.value = [];
-    } finally {
+      } finally {
         isLoading.value = false;
-    }
-};
+      }
+    };
 
     const fetchStudents = async () => {
       try {
@@ -455,24 +455,24 @@ export default {
     };
 
     const addNewGroup = () => {
-  console.log('addNewGroup вызвана');
-  console.log('isLoading до:', isLoading.value);
-  console.log('showGroupModal до:', showGroupModal.value);
+      console.log('addNewGroup вызвана');
+      console.log('isLoading до:', isLoading.value);
+      console.log('showGroupModal до:', showGroupModal.value);
 
-  showGroupModal.value = true;
-  isEditingGroup.value = false;
-  currentGroupId.value = null;
-  newGroup.value = { name: '', description: '', urlName: '' };
+      showGroupModal.value = true;
+      isEditingGroup.value = false;
+      currentGroupId.value = null;
+      newGroup.value = { name: '', description: '', urlName: '' };
 
-  console.log('showGroupModal после:', showGroupModal.value);
+      console.log('showGroupModal после:', showGroupModal.value);
 
-  nextTick(() => {
-    console.log('nextTick выполнен');
-    if (window.feather) {
-      window.feather.replace();
-    }
-  });
-};
+      nextTick(() => {
+        console.log('nextTick выполнен');
+        if (window.feather) {
+          window.feather.replace();
+        }
+      });
+    };
 
     const editGroup = (group) => {
       isLoading.value = false;
@@ -529,97 +529,92 @@ export default {
 
 
     const addStudentsToGroup = async (group) => {
-  currentGroup.value = group;
-  selectedStudents.value = [];
-  await fetchStudents();
-  showStudentsModal.value = true;
-};
+      currentGroup.value = group;
+      await fetchStudents();
+      selectedStudents.value = [...(group.studentIds || [])];
+      showStudentsModal.value = true;
+    };
     const isStudentMember = computed(() => {
-  return (studentId) => {
-    return currentGroup.value.studentIds?.includes(studentId) || false;
-  };
-});
+      return (studentId) => {
+        return currentGroup.value.studentIds?.includes(studentId) || false;
+      };
+    });
 
     const closeStudentsModal = () => {
       showStudentsModal.value = false;
       selectedStudents.value = [];
     };
 
-   const saveStudentsToGroup = async () => {
-  isLoading.value = true;
-  errorMessage.value = '';
-  try {
-    const newSelectedUuids = selectedStudents.value.filter(studentId =>
-      !currentGroup.value.studentIds?.includes(studentId)
-    ).map(studentId => {
-      const student = students.value.find(s => s.id === studentId);
-      return student ? student.id : null;
-    }).filter(uuid => uuid !== null);
-
-    if (newSelectedUuids.length === 0) {
-      errorMessage.value = 'Не выбраны новые ученики для добавления в группу.';
-      isLoading.value = false;
-      return;
-    }
-
-    const allUuids = [
-      ...(currentGroup.value.studentIds || []),
-      ...newSelectedUuids
-    ];
-
-    const addData = {
-      uuidGroup: currentGroup.value.id,
-      childrens: allUuids
-    };
-
-    await groupsApiClient.addChildrens(addData);
-    currentGroup.value.studentIds = allUuids;
-    currentGroup.value.studentsCount = allUuids.length;
-
-    closeStudentsModal();
-    await fetchGroups();
-
-  } catch (error) {
-    errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-
-    const removeStudentFromGroup = (student) => {
-  if (!student.id || !currentGroup.value.id) {
-    showAppAlert('Ошибка: Не удается определить студента или группу');
-    return;
-  }
-
-  Telegram.WebApp.showConfirm(
-    `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`,
-    async (confirmed) => {
-      if (!confirmed) return;
-
+    const saveStudentsToGroup = async () => {
       isLoading.value = true;
       errorMessage.value = '';
-
       try {
-        await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
+        // Фильтруем только тех, кого ещё нет в группе
+        const newSelectedUuids = selectedStudents.value.filter(studentId =>
+          !currentGroup.value.studentIds?.includes(studentId)
+        );
 
-        currentGroup.value.studentIds = currentGroup.value.studentIds.filter(id => id !== student.id);
-        currentGroup.value.studentsCount = currentGroup.value.studentIds.length;
-        selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
-        await fetchGroups();
-        await fetchStudents();
+        if (newSelectedUuids.length === 0) {
+          errorMessage.value = 'Не выбраны новые ученики для добавления в группу.';
+          isLoading.value = false;
+          return;
+        }
+
+        // Отправляем ТОЛЬКО новых учеников
+        const addData = {
+          uuidGroup: currentGroup.value.id,
+          childrens: newSelectedUuids // ← только новые
+        };
+
+        await groupsApiClient.addChildrens(addData);
+
+        // Закрываем модалку и обновляем данные
+        closeStudentsModal();
+        await fetchGroups(); // чтобы обновить количество учеников и состав
+
+        // Опционально: сбросить список выбранных после успешного добавления
+        selectedStudents.value = [];
       } catch (error) {
-        const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
-        errorMessage.value = `Не удалось удалить студента: ${detail}`;
+        console.error('Ошибка при добавлении учеников:', error);
+        errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
         showAppAlert(errorMessage.value);
       } finally {
         isLoading.value = false;
       }
-    }
-  );
-};
+    };
 
+    const removeStudentFromGroup = (student) => {
+      if (!student.id || !currentGroup.value.id) {
+        showAppAlert('Ошибка: Не удается определить студента или группу');
+        return;
+      }
+
+      Telegram.WebApp.showConfirm(
+        `Вы уверены, что хотите удалить "${student.lastName} ${student.name}" из группы "${currentGroup.value.name}"?`,
+        async (confirmed) => {
+          if (!confirmed) return;
+
+          isLoading.value = true;
+          errorMessage.value = '';
+
+          try {
+            await groupsApiClient.deleteChildren(student.id, currentGroup.value.id);
+
+            selectedStudents.value = selectedStudents.value.filter(id => id !== student.id);
+
+            await fetchGroups();
+            await fetchStudents();
+          } catch (error) {
+            console.error('Ошибка при удалении студента из группы:', error);
+            const detail = error.response?.data?.detail || error.message || 'Произошла неизвестная ошибка.';
+            errorMessage.value = `Не удалось удалить студента: ${detail}`;
+            showAppAlert(errorMessage.value);
+          } finally {
+            isLoading.value = false;
+          }
+        }
+      );
+    };
 
     const isStudentInGroup = (studentId) => {
       return currentGroup.value.studentIds?.includes(studentId) || false;
