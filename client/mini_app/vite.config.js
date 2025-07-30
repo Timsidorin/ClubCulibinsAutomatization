@@ -11,7 +11,7 @@ export default defineConfig({
     vueDevTools(),
   ],
   define: {
-    __BASE__URL__: JSON.stringify('http://localhost:3000'),
+    __BASE__URL__: JSON.stringify('https://balanskk.ru'),
     __INFO_BOT__URL: JSON.stringify('https://balanskk.ru/notifications'),
   },
   resolve: {
