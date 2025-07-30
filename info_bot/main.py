@@ -1,5 +1,5 @@
 # main.py для бота-оповещателя
-import datetime
+from datetime import datetime, timezone, timedelta
 import logging
 from typing import Union
 from aiogram import Bot
@@ -110,7 +110,7 @@ async def send_notification_endpoint(payload: NotificationPayload):
                         table_rows.append(f'{str(i) + ".":<3}{"Ошибка данных":<20}{"0":>10}')
 
                 final_text = "\n".join(table_rows)
-                current_time = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
+                current_time = datetime.now(timezone(timedelta(hours=10))).strftime("%d.%m.%Y %H:%M")
 
                 group_name = "Группа"
                 if members_response and isinstance(members_response, dict):

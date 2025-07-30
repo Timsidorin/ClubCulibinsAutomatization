@@ -24,14 +24,21 @@
         class="teacher-item"
         :class="{ 'actions-visible': activeCardId === teacher.id }"
       >
-        <div class="teacher-details">
-          <h4 class="text-primary">{{ teacher.typeUser === 1 ? 'Учитель' : 'Администратор' }}</h4>
-          <h4> <i data-feather="user"></i>  {{ teacher.fullName }}</h4>
-          <p>
-            Telegram: <a v-if="teacher.telegramUsername">{{ teacher.telegramUsername }}</a><a v-else>—</a><br>
-            Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}
-          </p>
-        </div>
+    <div class="teacher-details">
+  <h4 class="role-label" :class="teacher.typeUser === 1 ? 'role-teacher' : 'role-admin'">
+    {{ teacher.typeUser === 1 ? 'Учитель' : 'Администратор' }}
+  </h4>
+  <h4 class="employee-name"> 
+    <i data-feather="user"></i>  
+    {{ teacher.fullName }}
+  </h4>
+  <p>
+    Telegram: <a v-if="teacher.telegramUsername">{{ teacher.telegramUsername }}</a><a v-else>—</a>
+    <template v-if="teacher.typeUser === 1">
+      <br>Группы: {{ teacher.groups && teacher.groups.length > 0 ? teacher.groups.join(', ') : 'Не назначены' }}
+    </template>
+  </p>
+</div>
 
         <div class="actions-overlay" @click.stop="toggleActions(null)">
           <button class="btn btn-secondary" @click.stop="editTeacher(teacher)" :disabled="isLoading">
@@ -170,7 +177,7 @@ export default {
     newTeacher.value.lastName.trim() &&
     newTeacher.value.firstName.trim() &&
     newTeacher.value.telegramUsername.trim() &&
-    (isEditing.value || !usernameError.value)
+    (isEditing.value || (!usernameError.value && newRole.value))
   );
 });
 
@@ -218,33 +225,42 @@ export default {
     };
 
     const fetchTeachers = async () => {
-      isLoading.value = true;
-      errorMessage.value = '';
-      try {
-        const teachersResponse = await apiClient.getAllTeachers(1);
-        let teachersData = [];
-        teachersData = teachersResponse.data.message;
+  isLoading.value = true;
+  errorMessage.value = '';
+  try {
+    // ИСПРАВЛЕНО: загружаем всех сотрудников (и учителей, и администраторов)
+    const [teachersResponse, adminsResponse] = await Promise.all([
+      apiClient.getAllTeachers(1), // Учителя
+      apiClient.getAllTeachers(2)  // Администраторы
+    ]);
 
-        // Получаем группы для всех учителей одним запросом
-        const teacherGroupsMap = await fetchAllTeachersGroups(teachersData);
+    let allStaffData = [];
+    
+    if (teachersResponse.data.message) {
+      allStaffData = allStaffData.concat(teachersResponse.data.message);
+    }
+    if (adminsResponse.data.message) {
+      allStaffData = allStaffData.concat(adminsResponse.data.message);
+    }
 
-        teachers.value = teachersData.map(teacherData => {
-          // Сопоставляем группы по UUID учителя
-          const uuid = teacherData.uuid;
-          const groupNames = teacherGroupsMap[uuid] || [];
-          return Teachers.fromApiObject(teacherData, groupNames);
-        });
+    const teacherGroupsMap = await fetchAllTeachersGroups(allStaffData);
 
-        console.log('Итоговый список учителей:', teachers.value);
+    teachers.value = allStaffData.map(staffData => {
+      const uuid = staffData.uuid;
+      const groupNames = teacherGroupsMap[uuid] || [];
+      return Teachers.fromApiObject(staffData, groupNames);
+    });
 
-      } catch (error) {
-        console.error('Ошибка при загрузке учителей:', error);
-        errorMessage.value = `Не удалось загрузить список учителей. ${error.message}`;
-        teachers.value = [];
-      } finally {
-        isLoading.value = false;
-      }
-    };
+    console.log('Итоговый список сотрудников:', teachers.value);
+
+  } catch (error) {
+    console.error('Ошибка при загрузке сотрудников:', error);
+    errorMessage.value = `Не удалось загрузить список сотрудников. ${error.message}`;
+    teachers.value = [];
+  } finally {
+    isLoading.value = false;
+  }
+};
 
     const addNewTeacher = () => {
       isLoading.value = false;
@@ -282,10 +298,11 @@ export default {
     };
 
     const resetForm = () => {
-      newTeacher.value = new Teachers();
-      usernameError.value = '';
-      errorMessage.value = '';
-    };
+  newTeacher.value = new Teachers();
+  newRole.value = 1;
+  usernameError.value = '';
+  errorMessage.value = '';
+};
 
     const validateUsername = () => {
   if (isEditing.value) {
@@ -316,33 +333,39 @@ export default {
     };
 
     const submitTeacher = async () => {
-      validateUsername();
-      if (!isFormValid.value) return;
+  validateUsername();
+  if (!isFormValid.value) return;
 
-      isLoading.value = true;
-      errorMessage.value = '';
+  isLoading.value = true;
+  errorMessage.value = '';
 
-      const teacherData = newTeacher.value.toApiObject();
-      teacherData.typeUser = 1;
+  const teacherData = newTeacher.value.toApiObject();
+  
+  if (isEditing.value) {
+    teacherData.typeUser = newTeacher.value.typeUser; 
+  } else {
+    teacherData.typeUser = parseInt(newRole.value);
+  }
 
-      try {
-        if (isEditing.value) {
-          await apiClient.updateTeacher(currentTeacherId.value, teacherData);
-        } else {
-          await apiClient.createTeacher(teacherData);
-        }
-        closeModal();
-        await fetchTeachers();
-      } catch (error) {
-        console.error('Ошибка при сохранении учителя:', error);
+  try {
+    if (isEditing.value) {
+      await apiClient.updateTeacher(currentTeacherId.value, teacherData);
+    } else {
+      await apiClient.createTeacher(teacherData);
+    }
+    closeModal();
+    await fetchTeachers();
+  } catch (error) {
+    console.error('Ошибка при сохранении учителя:', error);
 
-        if (error.response?.data?.message === "23505") {
-          errorMessage.value = 'Такой преподаватель уже существует!';
-        }
-      } finally {
-        isLoading.value = false;
-      }
-    };
+    if (error.response?.data?.message === "23505") {
+      errorMessage.value = 'Такой преподаватель уже существует!';
+    }
+  } finally {
+    isLoading.value = false;
+  }
+};
+
 
     const deleteTeacher = (teacher) => {
       Telegram.WebApp.showConfirm(
@@ -410,7 +433,6 @@ export default {
   }
 };
 </script>
-
 
 <style scoped>
 .modal-error {
@@ -509,14 +531,41 @@ export default {
   justify-content: center;
 }
 
-.teacher-details h4 {
-  font-size: 1.1em;
+/* ИСПРАВЛЕННЫЕ СТИЛИ ДЛЯ ЗАГОЛОВКОВ - БЕЗ ДУБЛИРОВАНИЯ */
+.teacher-details h4.role-label {
+  font-size: 0.9em;
   font-weight: 600;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
   color: var(--tg-text);
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.teacher-details h4.role-label.role-admin {
+  color: #ff6b35 !important;
+  font-weight: 700 !important;
+}
+
+.teacher-details h4.role-label.role-teacher {
+  color: var(--tg-blue) !important;
+  font-weight: 600 !important;
+}
+
+.teacher-details h4.employee-name {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: var(--tg-text) !important;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teacher-details h4.employee-name i {
+  width: 16px;
+  height: 16px;
+  color: var(--tg-text-light);
 }
 
 .teacher-details p {
@@ -751,6 +800,44 @@ export default {
   color: var(--tg-text-light);
 }
 
+.form-input:disabled {
+  background-color: var(--tg-border);
+  color: var(--tg-text-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-input.disabled {
+  background-color: var(--tg-border);
+  color: var(--tg-text-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--tg-border);
+  border-radius: var(--border-radius-button);
+  font-size: 1em;
+  outline: none;
+  transition: border-color var(--transition-speed);
+  background: var(--tg-card-bg);
+  color: var(--tg-text);
+  cursor: pointer;
+}
+
+.form-select:focus {
+  border-color: var(--tg-blue);
+}
+
+.form-select:disabled {
+  background-color: var(--tg-border);
+  color: var(--tg-text-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .input-with-prefix {
   position: relative;
   display: flex;
@@ -831,18 +918,7 @@ export default {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.form-input:disabled {
-  background-color: var(--tg-border);
-  color: var(--tg-text-light);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.form-input.disabled {
-  background-color: var(--tg-border);
-  color: var(--tg-text-light);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
 </style>
+
+
 

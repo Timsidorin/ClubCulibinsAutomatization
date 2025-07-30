@@ -529,11 +529,11 @@ export default {
 
 
     const addStudentsToGroup = async (group) => {
-  currentGroup.value = group;
-  selectedStudents.value = [];
-  await fetchStudents();
-  showStudentsModal.value = true;
-};
+      currentGroup.value = group;
+      await fetchStudents();
+      selectedStudents.value = [...(group.studentIds || [])];
+      showStudentsModal.value = true;
+    };
     const isStudentMember = computed(() => {
   return (studentId) => {
     return currentGroup.value.studentIds?.includes(studentId) || false;
@@ -546,40 +546,42 @@ export default {
     };
 
     const saveStudentsToGroup = async () => {
-  isLoading.value = true;
-  errorMessage.value = '';
-  try {
-    const newSelectedUuids = selectedStudents.value.filter(studentId =>
-      !currentGroup.value.studentIds?.includes(studentId)
-    ).map(studentId => {
-      const student = students.value.find(s => s.id === studentId);
-      return student ? student.id : null;
-    }).filter(uuid => uuid !== null);
+      isLoading.value = true;
+      errorMessage.value = '';
+      try {
+        // Фильтруем только тех, кого ещё нет в группе
+        const newSelectedUuids = selectedStudents.value.filter(studentId =>
+          !currentGroup.value.studentIds?.includes(studentId)
+        );
 
-    if (newSelectedUuids.length === 0) {
-      errorMessage.value = 'Не выбраны новые ученики для добавления в группу.';
-      isLoading.value = false;
-      return;
-    }
-    const allUuids = [
-      ...(currentGroup.value.studentIds || []),
-      ...newSelectedUuids
-    ];
+        if (newSelectedUuids.length === 0) {
+          errorMessage.value = 'Не выбраны новые ученики для добавления в группу.';
+          isLoading.value = false;
+          return;
+        }
 
-    const addData = {
-      uuidGroup: currentGroup.value.id,
-      childrens: allUuids
+        // Отправляем ТОЛЬКО новых учеников
+        const addData = {
+          uuidGroup: currentGroup.value.id,
+          childrens: newSelectedUuids // ← только новые
+        };
+
+        await groupsApiClient.addChildrens(addData);
+
+        // Закрываем модалку и обновляем данные
+        closeStudentsModal();
+        await fetchGroups(); // чтобы обновить количество учеников и состав
+
+        // Опционально: сбросить список выбранных после успешного добавления
+        selectedStudents.value = [];
+      } catch (error) {
+        console.error('Ошибка при добавлении учеников:', error);
+        errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
+        showAppAlert(errorMessage.value);
+      } finally {
+        isLoading.value = false;
+      }
     };
-
-    await groupsApiClient.addChildrens(addData);
-    closeStudentsModal();
-    await fetchGroups();
-  } catch (error) {
-    errorMessage.value = 'Не удалось добавить учеников в группу. Попробуйте снова.';
-  } finally {
-    isLoading.value = false;
-  }
-};
 
     const removeStudentFromGroup = (student) => {
       if (!student.id || !currentGroup.value.id) {
